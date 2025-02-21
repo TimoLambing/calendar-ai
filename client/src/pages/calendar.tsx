@@ -1,4 +1,5 @@
 import { CalendarCard } from "@/components/CalendarCard";
+import { PortfolioStats } from "@/components/PortfolioStats";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -25,6 +26,8 @@ export default function Calendar() {
             </Link>
           </div>
         </header>
+
+        <PortfolioStats data={mockData} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {mockData.map((day, index) => (

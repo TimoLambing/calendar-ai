@@ -4,7 +4,7 @@ import { Transaction, CoinBalance } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { TrendingUp, TrendingDown, Rocket, Skull, BookOpen, Plus } from "lucide-react";
+import { TrendingUp, TrendingDown, Rocket, Skull, Trophy, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -22,7 +22,7 @@ interface Props {
 
 export function CalendarCard({ date, value, previousDayValue, coins, transactions, notes, commentary }: Props) {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [diaryComment, setDiaryComment] = useState("");
+  const [comment, setComment] = useState("");
   const { toast } = useToast();
 
   const valueChange = previousDayValue ? ((value - previousDayValue) / previousDayValue) * 100 : 0;
@@ -37,21 +37,21 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
   const isHighLoss = valueChange < -30 && valueChange >= -50;
   const isExtremeLoss = valueChange < -50;
 
-  const handleAddDiaryEntry = async (transactionId: number) => {
+  const handleAddComment = async () => {
     try {
       await apiRequest('POST', '/api/diary-entries', {
-        transactionId,
-        comment: diaryComment
+        date: date.toISOString(),
+        comment
       });
       toast({
-        title: "Diary Entry Added",
+        title: "Comment Added",
         description: "Your trading note has been saved successfully."
       });
-      setDiaryComment("");
+      setComment("");
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to save diary entry",
+        description: "Failed to save comment",
         variant: "destructive"
       });
     }
@@ -87,7 +87,12 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
             )}>
               <CardContent className="p-4 h-full flex flex-col justify-between">
                 <div>
-                  <div className="text-sm font-medium">{date.toLocaleDateString()}</div>
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm font-medium">{date.toLocaleDateString()}</div>
+                    {valueChange > 0 && (
+                      <Trophy className="h-5 w-5 text-yellow-500" />
+                    )}
+                  </div>
                   <div className="text-2xl font-bold mt-2">
                     ${value.toLocaleString()}
                   </div>
@@ -117,12 +122,27 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
             <Card className="absolute w-full h-full backface-hidden [transform:rotateY(180deg)]">
               <CardContent className="p-4 h-full overflow-auto">
                 <div className="space-y-4">
-                  {coins.map((coin) => (
-                    <div key={coin.id} className="flex justify-between text-sm">
-                      <span>{coin.symbol}</span>
-                      <span>${parseFloat(coin.valueUsd.toString()).toLocaleString()}</span>
-                    </div>
-                  ))}
+                  {coins.map((coin) => {
+                    const prevDayCoin = transactions.find(t => t.symbol === coin.symbol);
+                    const performance = prevDayCoin 
+                      ? ((parseFloat(coin.valueUsd) - parseFloat(prevDayCoin.valueUsd)) / parseFloat(prevDayCoin.valueUsd)) * 100 
+                      : 0;
+
+                    return (
+                      <div key={coin.id} className="flex justify-between text-sm">
+                        <span>{coin.symbol}</span>
+                        <div className="text-right">
+                          <div>${parseFloat(coin.valueUsd.toString()).toLocaleString()}</div>
+                          <div className={cn(
+                            "text-xs",
+                            performance > 0 ? "text-green-600" : "text-red-600"
+                          )}>
+                            {performance > 0 ? "+" : ""}{performance.toFixed(2)}%
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
@@ -133,59 +153,21 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            Portfolio Details - {date.toLocaleDateString()}
+            Trading Notes - {date.toLocaleDateString()}
           </DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="font-medium">Transactions</h4>
-              <Button variant="outline" size="sm">
-                <BookOpen className="h-4 w-4 mr-2" />
-                Trading Diary
-              </Button>
-            </div>
-            {transactions.map((tx) => (
-              <div key={tx.id} className="space-y-2">
-                <div className="flex justify-between items-center p-2 bg-muted rounded-lg">
-                  <div>
-                    <span className={cn(
-                      "font-medium",
-                      tx.type === "BUY" ? "text-green-600" : "text-red-600"
-                    )}>{tx.type}</span>
-                    <span className="mx-2">{tx.symbol}</span>
-                    <span className="text-sm text-muted-foreground">
-                      ({parseFloat(tx.amount.toString()).toLocaleString()} coins)
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <div>${parseFloat(tx.valueUsd.toString()).toLocaleString()}</div>
-                    {tx.currentValue && (
-                      <div className={cn(
-                        "text-sm",
-                        parseFloat(tx.currentValue.toString()) > parseFloat(tx.valueUsd.toString())
-                          ? "text-green-600"
-                          : "text-red-600"
-                      )}>
-                        Current: ${parseFloat(tx.currentValue.toString()).toLocaleString()}
-                        ({(((parseFloat(tx.currentValue.toString()) / parseFloat(tx.valueUsd.toString())) - 1) * 100).toFixed(2)}%)
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Textarea
-                    placeholder="Add a note about this trade..."
-                    value={diaryComment}
-                    onChange={(e) => setDiaryComment(e.target.value)}
-                    className="text-sm"
-                  />
-                  <Button size="sm" onClick={() => handleAddDiaryEntry(tx.id)}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+            <Textarea
+              placeholder="Add your trading notes for this day..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="min-h-[100px]"
+            />
+            <Button onClick={handleAddComment} className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Note
+            </Button>
           </div>
         </div>
       </DialogContent>

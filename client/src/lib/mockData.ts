@@ -21,28 +21,29 @@ export const volatilityComments = {
   high_gain: { // Gains between 30-50%
     threshold: 30,
     comments: [
-      "Move over Warren Buffett, there's a new sheriff in town! 🤠",
-      "Time to screenshot this and never shut up about it! 📸",
-      "Lamborghini dealer just added you on LinkedIn! 🏎️",
-      "You're basically the Wolf of Meme Street now! 🐺"
+      "Woah, how's that new wife idea looking for ya? 💍",
+      "Tell me you're retarded enough not to take profit here? 🤡",
+      "Bruh, ain't no way you don't have insider information 🕵️",
+      "You're gonna show that to your wife now and gamble it away, right? 🎰",
+      "For the love of god, TAKE PROFIT. 💸"
     ]
   },
   extreme_loss: { // Losses > 50%
     threshold: -50,
     comments: [
-      "Achievement Unlocked: Diamond Hands of Steel! 💎",
-      "Time to update that McDonald's application... 🍔",
-      "Your portfolio just pulled a magic trick - it disappeared! 🎩",
-      "NGMI (Not Gonna Make It) status: Confirmed ⚰️"
+      "Why would anyone bet so poorly? 🤦‍♂️",
+      "Looks like you've nosedived into complete shitters here mate. 💩",
+      "Good gamble legend. 🎲",
+      "Your wife needs a new man. There's no way she can do worse than this. 💔"
     ]
   },
   high_loss: { // Losses between 30-50%
     threshold: -30,
     comments: [
-      "You could've retired your parents, but you bought $FARTCOIN instead! 💨",
-      "This is why your ex left you... 💔",
-      "Ramen noodles are actually quite nutritious! 🍜",
-      "Your financial advisor just blocked you on all social media! 🚫"
+      "Why would anyone bet so poorly? 🤦‍♂️",
+      "Looks like you've nosedived into complete shitters here mate. 💩",
+      "Good gamble legend. 🎲",
+      "Your wife needs a new man. There's no way she can do worse than this. 💔"
     ]
   }
 };

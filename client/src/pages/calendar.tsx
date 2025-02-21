@@ -6,8 +6,8 @@ import { ArrowLeft } from "lucide-react";
 import { generateMockData } from "@/lib/mockData";
 
 export default function Calendar() {
-  // Generate 28 days of mock data (February) and reverse it
-  const mockData = generateMockData(28).reverse();
+  // Generate mock data up to today, already in reverse chronological order
+  const mockData = generateMockData(28);
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,10 +32,10 @@ export default function Calendar() {
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {mockData.map((day, index) => (
             <CalendarCard
-              key={index}
+              key={day.date.toISOString()}
               date={day.date}
               value={day.totalValue}
-              previousDayValue={index < mockData.length - 1 ? mockData[index + 1].totalValue : undefined}
+              previousDayValue={mockData[index + 1]?.totalValue}
               coins={day.coins}
               transactions={day.transactions}
               notes={day.notes}

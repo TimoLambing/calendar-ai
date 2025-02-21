@@ -14,10 +14,10 @@ export function PortfolioStats({ data }: Props) {
   }).length;
 
   const lossDays = data.length - profitDays;
-  
+
   // Calculate coin performance
   const coinPerformance = new Map<string, number>();
-  
+
   data[0]?.coins.forEach(coin => {
     const firstPrice = parseFloat(coin.valueUsd);
     const lastPrice = parseFloat(data[data.length - 1]?.coins.find(c => c.symbol === coin.symbol)?.valueUsd || "0");
@@ -37,42 +37,48 @@ export function PortfolioStats({ data }: Props) {
 
   return (
     <div className="grid gap-4 mb-8 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex justify-between items-center">
+      <Card className="bg-gradient-to-br from-orange-400 to-orange-600">
+        <CardContent className="pt-4 pb-3">
+          <div className="flex justify-between items-center text-white">
             <div>
-              <p className="text-sm text-muted-foreground">Profitable Days</p>
-              <h3 className="text-2xl font-bold">{profitDays}</h3>
+              <p className="text-xs font-medium opacity-90">Profitable Days</p>
+              <h3 className="text-xl font-bold">{profitDays}</h3>
+              <p className="text-xs opacity-75">vs {lossDays} loss days</p>
             </div>
-            <Trophy className="h-8 w-8 text-yellow-500" />
+            <Trophy className="h-6 w-6 opacity-75" />
           </div>
-          <p className="text-xs text-muted-foreground mt-2">vs {lossDays} loss days</p>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">Best Performer</p>
-          <h3 className="text-2xl font-bold">{bestCoin[0]}</h3>
-          <p className="text-sm text-green-600">+{bestCoin[1].toFixed(2)}%</p>
+      <Card className="bg-gradient-to-br from-pink-400 to-pink-600">
+        <CardContent className="pt-4 pb-3">
+          <div className="text-white">
+            <p className="text-xs font-medium opacity-90">Best Performer</p>
+            <h3 className="text-xl font-bold">{bestCoin[0]}</h3>
+            <p className="text-xs opacity-75">+{bestCoin[1].toFixed(2)}%</p>
+          </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">Worst Performer</p>
-          <h3 className="text-2xl font-bold">{worstCoin[0]}</h3>
-          <p className="text-sm text-red-600">{worstCoin[1].toFixed(2)}%</p>
+      <Card className="bg-gradient-to-br from-blue-400 to-blue-600">
+        <CardContent className="pt-4 pb-3">
+          <div className="text-white">
+            <p className="text-xs font-medium opacity-90">Worst Performer</p>
+            <h3 className="text-xl font-bold">{worstCoin[0]}</h3>
+            <p className="text-xs opacity-75">{worstCoin[1].toFixed(2)}%</p>
+          </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">Portfolio Value</p>
-          <h3 className="text-2xl font-bold">${endValue.toLocaleString()}</h3>
-          <p className={`text-sm ${totalPerformance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {totalPerformance >= 0 ? '+' : ''}{totalPerformance.toFixed(2)}%
-          </p>
+      <Card className="bg-gradient-to-br from-green-400 to-green-600">
+        <CardContent className="pt-4 pb-3">
+          <div className="text-white">
+            <p className="text-xs font-medium opacity-90">Portfolio Value</p>
+            <h3 className="text-xl font-bold">${endValue.toLocaleString()}</h3>
+            <p className="text-xs opacity-75">
+              {totalPerformance >= 0 ? '+' : ''}{totalPerformance.toFixed(2)}%
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

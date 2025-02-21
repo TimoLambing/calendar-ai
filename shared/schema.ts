@@ -1,11 +1,12 @@
 import { pgTable, text, serial, integer, decimal, timestamp } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const wallets = pgTable("wallets", {
   id: serial("id").primaryKey(),
   address: text("address").notNull().unique(),
-  lastSync: timestamp("last_sync"),
+  lastSync: timestamp("last_sync").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const portfolioSnapshots = pgTable("portfolio_snapshots", {
@@ -33,7 +34,10 @@ export const transactions = pgTable("transactions", {
   valueUsd: decimal("value_usd").notNull(),
 });
 
-export const insertWalletSchema = createInsertSchema(wallets);
+export const insertWalletSchema = createInsertSchema(wallets).extend({
+  address: z.string().min(1, "Wallet address is required"),
+});
+
 export const insertPortfolioSnapshotSchema = createInsertSchema(portfolioSnapshots);
 export const insertCoinBalanceSchema = createInsertSchema(coinBalances);
 export const insertTransactionSchema = createInsertSchema(transactions);

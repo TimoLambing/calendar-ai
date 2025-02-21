@@ -18,23 +18,23 @@ const mockCoins: CoinBalance[] = [
 ];
 
 const mockTransactions: Transaction[] = [
-  { 
-    id: 1, 
-    walletId: 1, 
-    timestamp: new Date(), 
-    type: "BUY", 
-    symbol: "$GRIFFAIN", 
-    amount: "42069", 
-    valueUsd: "8500" 
+  {
+    id: 1,
+    walletId: 1,
+    timestamp: new Date(),
+    type: "BUY",
+    symbol: "$GRIFFAIN",
+    amount: "42069",
+    valueUsd: "8500"
   },
-  { 
-    id: 2, 
-    walletId: 1, 
-    timestamp: new Date(), 
-    type: "SELL", 
-    symbol: "$FARTCOIN", 
-    amount: "500000", 
-    valueUsd: "7500" 
+  {
+    id: 2,
+    walletId: 1,
+    timestamp: new Date(),
+    type: "SELL",
+    symbol: "$FARTCOIN",
+    amount: "500000",
+    valueUsd: "7500"
   }
 ];
 
@@ -94,7 +94,7 @@ export function generateMockData(days: number): DayData[] {
 
     // Add commentary based on performance
     let commentary;
-    if (Math.abs(percentChange) > 20) {
+    if (Math.abs(percentChange) > 20) { // Lower threshold from 30% to 20%
       commentary = percentChange > 0 ? getGainComment(roundedValue) : getLossComment(roundedValue);
     }
 

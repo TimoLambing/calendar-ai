@@ -6,8 +6,8 @@ import { ArrowLeft } from "lucide-react";
 import { generateMockData } from "@/lib/mockData";
 
 export default function Calendar() {
-  // Generate 28 days of mock data (February)
-  const mockData = generateMockData(28);
+  // Generate 28 days of mock data (February) and reverse it
+  const mockData = generateMockData(28).reverse();
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,7 +35,7 @@ export default function Calendar() {
               key={index}
               date={day.date}
               value={day.totalValue}
-              previousDayValue={index > 0 ? mockData[index - 1].totalValue : undefined}
+              previousDayValue={index < mockData.length - 1 ? mockData[index + 1].totalValue : undefined}
               coins={day.coins}
               transactions={day.transactions}
               notes={day.notes}

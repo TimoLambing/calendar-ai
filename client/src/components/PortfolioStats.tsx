@@ -7,20 +7,23 @@ interface Props {
 }
 
 export function PortfolioStats({ data }: Props) {
+  // Create chronological order array for calculations
+  const chronologicalData = [...data].reverse();
+
   // Calculate statistics
-  const profitDays = data.filter(day => {
-    const prevDay = data[data.indexOf(day) - 1];
-    return prevDay ? day.totalValue > prevDay.totalValue : false;
+  const profitDays = chronologicalData.filter((day, index) => {
+    if (index === 0) return false;
+    return day.totalValue > chronologicalData[index - 1].totalValue;
   }).length;
 
-  const lossDays = data.length - profitDays;
+  const lossDays = data.length - profitDays -1; // Subtract 1 for the first day
 
   // Calculate coin performance
   const coinPerformance = new Map<string, number>();
 
-  data[0]?.coins.forEach(coin => {
+  chronologicalData[0]?.coins.forEach(coin => {
     const firstPrice = parseFloat(coin.valueUsd);
-    const lastPrice = parseFloat(data[data.length - 1]?.coins.find(c => c.symbol === coin.symbol)?.valueUsd || "0");
+    const lastPrice = parseFloat(chronologicalData[chronologicalData.length - 1]?.coins.find(c => c.symbol === coin.symbol)?.valueUsd || "0");
     const performance = ((lastPrice - firstPrice) / firstPrice) * 100;
     coinPerformance.set(coin.symbol, performance);
   });
@@ -31,8 +34,8 @@ export function PortfolioStats({ data }: Props) {
   const worstCoin = performances.reduce((a, b) => a[1] < b[1] ? a : b);
 
   // Calculate total portfolio performance
-  const startValue = data[0]?.totalValue || 0;
-  const endValue = data[data.length - 1]?.totalValue || 0;
+  const startValue = chronologicalData[0]?.totalValue || 0;
+  const endValue = chronologicalData[chronologicalData.length - 1]?.totalValue || 0;
   const totalPerformance = ((endValue - startValue) / startValue) * 100;
 
   return (

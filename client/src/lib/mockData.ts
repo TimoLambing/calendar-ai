@@ -9,6 +9,62 @@ export interface DayData {
   commentary?: string;
 }
 
+// Configurable comments based on volatility ranges
+export const volatilityComments = {
+  extreme_gain: { // >50% gains
+    threshold: 50,
+    comments: [
+      "Mom, I made it! Time to buy that private island! 🏖️",
+      "Breaking News: Warren Buffett wants your autograph! 🖊️",
+      "Achievement Unlocked: Crypto Genius Level 9000! 🏆",
+      "Your portfolio just went more vertical than a SpaceX launch! 🚀"
+    ]
+  },
+  high_gain: { // 30-50% gains
+    threshold: 30,
+    comments: [
+      "Move over Warren Buffett, there's a new sheriff in town! 🤠",
+      "Time to screenshot this and never shut up about it! 📸",
+      "Lamborghini dealer just added you on LinkedIn! 🏎️",
+      "You're basically the Wolf of Meme Street now! 🐺"
+    ]
+  },
+  extreme_loss: { // >50% losses
+    threshold: -50,
+    comments: [
+      "Achievement Unlocked: Diamond Hands of Steel! 💎",
+      "Time to update that McDonald's application... 🍔",
+      "Your portfolio just pulled a magic trick - it disappeared! 🎩",
+      "NGMI (Not Gonna Make It) status: Confirmed ⚰️"
+    ]
+  },
+  high_loss: { // 30-50% losses
+    threshold: -30,
+    comments: [
+      "You could've retired your parents, but you bought $FARTCOIN instead! 💨",
+      "This is why your ex left you... 💔",
+      "Ramen noodles are actually quite nutritious! 🍜",
+      "Your financial advisor just blocked you on all social media! 🚫"
+    ]
+  }
+};
+
+// Helper function to get comment based on volatility
+function getVolatilityComment(percentChange: number): string | undefined {
+  let category;
+  if (percentChange > volatilityComments.extreme_gain.threshold) {
+    category = volatilityComments.extreme_gain;
+  } else if (percentChange > volatilityComments.high_gain.threshold) {
+    category = volatilityComments.high_gain;
+  } else if (percentChange < volatilityComments.extreme_loss.threshold) {
+    category = volatilityComments.extreme_loss;
+  } else if (percentChange < volatilityComments.high_loss.threshold) {
+    category = volatilityComments.high_loss;
+  }
+
+  return category?.comments[Math.floor(Math.random() * category.comments.length)];
+}
+
 const mockCoins: CoinBalance[] = [
   { id: 1, snapshotId: 1, symbol: "BTC", amount: "0.5", valueUsd: "25000" },
   { id: 2, snapshotId: 1, symbol: "ETH", amount: "4.2", valueUsd: "12600" },
@@ -37,38 +93,6 @@ const mockTransactions: Transaction[] = [
     valueUsd: "7500"
   }
 ];
-
-function getGainComment(value: number): string {
-  const comments = [
-    "Move over Warren Buffett, there's a new sheriff in town! 🤠",
-    "Congrats! You're now qualified to give financial advice on TikTok! 🎵",
-    "Time to screenshot this and never shut up about it! 📸",
-    "Your portfolio is performing better than your dating life! 💘",
-    "Look at you, trading AI tokens like you actually understand what AI means! 🤖",
-    "Your portfolio is higher than Snoop Dogg right now! 🌿",
-    "Time to quit your job and become a full-time meme coin trader! 🎮",
-    "Mom said it's my turn to be a crypto millionaire! 🎰",
-    "Lamborghini dealer just added you on LinkedIn! 🏎️",
-    "You're basically the Wolf of Meme Street now! 🐺"
-  ];
-  return comments[Math.floor(Math.random() * comments.length)];
-}
-
-function getLossComment(value: number): string {
-  const comments = [
-    "You could've retired your parents, but you bought $FARTCOIN instead! 💨",
-    "This is why your ex left you... 💔",
-    "Remember when you said 'Trust me bro, this is the future'? 🤡",
-    "Your portfolio is performing worse than a banana taped to a wall! 🍌",
-    "Time to update that LinkedIn profile... 💼",
-    "At least you'll have a great story for your grandkids! 👴",
-    "Congratulations! You've unlocked: Poverty Premium™ 🏆",
-    "Maybe it's time to start an OnlyFans? 📸",
-    "Ramen noodles are actually quite nutritious! 🍜",
-    "Your financial advisor just blocked you on all social media! 🚫"
-  ];
-  return comments[Math.floor(Math.random() * comments.length)];
-}
 
 export function generateMockData(days: number): DayData[] {
   const startDate = new Date(2024, 1, 1); // February 1st, 2024
@@ -101,11 +125,8 @@ export function generateMockData(days: number): DayData[] {
     const previousValue = i > 0 ? mockData[i - 1]?.totalValue : roundedValue;
     const percentChange = ((roundedValue - previousValue) / previousValue) * 100;
 
-    // Add commentary based on performance - only for high volatility (≥30%)
-    let commentary;
-    if (Math.abs(percentChange) >= 30) {
-      commentary = percentChange > 0 ? getGainComment(roundedValue) : getLossComment(roundedValue);
-    }
+    // Get commentary based on volatility thresholds
+    const commentary = getVolatilityComment(percentChange);
 
     const dayData = {
       date,

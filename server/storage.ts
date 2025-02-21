@@ -2,87 +2,67 @@ import {
   Wallet, InsertWallet,
   PortfolioSnapshot, InsertPortfolioSnapshot,
   CoinBalance, InsertCoinBalance,
-  Transaction, InsertTransaction
+  Transaction, InsertTransaction,
+  wallets, portfolioSnapshots, coinBalances, transactions
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Wallet operations
   getWallet(address: string): Promise<Wallet | undefined>;
   createWallet(wallet: InsertWallet): Promise<Wallet>;
-  
+
   // Portfolio operations
   createSnapshot(snapshot: InsertPortfolioSnapshot): Promise<PortfolioSnapshot>;
   getSnapshots(walletId: number): Promise<PortfolioSnapshot[]>;
-  
+
   // Coin balance operations
   addCoinBalance(balance: InsertCoinBalance): Promise<CoinBalance>;
   getCoinBalances(snapshotId: number): Promise<CoinBalance[]>;
-  
+
   // Transaction operations
   addTransaction(transaction: InsertTransaction): Promise<Transaction>;
   getTransactions(walletId: number): Promise<Transaction[]>;
 }
 
-export class MemStorage implements IStorage {
-  private wallets: Map<string, Wallet>;
-  private snapshots: Map<number, PortfolioSnapshot>;
-  private coinBalances: Map<number, CoinBalance[]>;
-  private transactions: Map<number, Transaction[]>;
-  private currentId: number;
-
-  constructor() {
-    this.wallets = new Map();
-    this.snapshots = new Map();
-    this.coinBalances = new Map();
-    this.transactions = new Map();
-    this.currentId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getWallet(address: string): Promise<Wallet | undefined> {
-    return Array.from(this.wallets.values()).find(w => w.address === address);
+    const [wallet] = await db.select().from(wallets).where(eq(wallets.address, address));
+    return wallet;
   }
 
   async createWallet(wallet: InsertWallet): Promise<Wallet> {
-    const id = this.currentId++;
-    const newWallet: Wallet = { ...wallet, id };
-    this.wallets.set(wallet.address, newWallet);
+    const [newWallet] = await db.insert(wallets).values(wallet).returning();
     return newWallet;
   }
 
   async createSnapshot(snapshot: InsertPortfolioSnapshot): Promise<PortfolioSnapshot> {
-    const id = this.currentId++;
-    const newSnapshot: PortfolioSnapshot = { ...snapshot, id };
-    this.snapshots.set(id, newSnapshot);
+    const [newSnapshot] = await db.insert(portfolioSnapshots).values(snapshot).returning();
     return newSnapshot;
   }
 
   async getSnapshots(walletId: number): Promise<PortfolioSnapshot[]> {
-    return Array.from(this.snapshots.values()).filter(s => s.walletId === walletId);
+    return db.select().from(portfolioSnapshots).where(eq(portfolioSnapshots.walletId, walletId));
   }
 
   async addCoinBalance(balance: InsertCoinBalance): Promise<CoinBalance> {
-    const id = this.currentId++;
-    const newBalance: CoinBalance = { ...balance, id };
-    const existingBalances = this.coinBalances.get(balance.snapshotId) || [];
-    this.coinBalances.set(balance.snapshotId, [...existingBalances, newBalance]);
+    const [newBalance] = await db.insert(coinBalances).values(balance).returning();
     return newBalance;
   }
 
   async getCoinBalances(snapshotId: number): Promise<CoinBalance[]> {
-    return this.coinBalances.get(snapshotId) || [];
+    return db.select().from(coinBalances).where(eq(coinBalances.snapshotId, snapshotId));
   }
 
   async addTransaction(transaction: InsertTransaction): Promise<Transaction> {
-    const id = this.currentId++;
-    const newTransaction: Transaction = { ...transaction, id };
-    const existingTransactions = this.transactions.get(transaction.walletId) || [];
-    this.transactions.set(transaction.walletId, [...existingTransactions, newTransaction]);
+    const [newTransaction] = await db.insert(transactions).values(transaction).returning();
     return newTransaction;
   }
 
   async getTransactions(walletId: number): Promise<Transaction[]> {
-    return this.transactions.get(walletId) || [];
+    return db.select().from(transactions).where(eq(transactions.walletId, walletId));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

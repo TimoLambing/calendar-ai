@@ -4,6 +4,7 @@ import { Transaction, CoinBalance } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { TrendingUp, TrendingDown, Rocket, Skull } from "lucide-react";
 
 interface Props {
   date: Date;
@@ -54,25 +55,30 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
                   </div>
                   {previousDayValue && (
                     <div className={cn(
-                      "text-sm mt-1 font-semibold",
+                      "text-sm mt-1 font-semibold flex items-center gap-1",
                       isPositive && "text-green-700",
                       isNegative && "text-red-700"
                     )}>
+                      {isPositive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                       {valueChange > 0 ? "+" : ""}{valueChange.toFixed(2)}%
                     </div>
                   )}
                 </div>
+                {isSignificant && commentary && (
+                  <div className="text-sm font-medium mt-2 flex items-start gap-2">
+                    {isPositive ? 
+                      <Rocket className="h-4 w-4 shrink-0 text-green-600" /> : 
+                      <Skull className="h-4 w-4 shrink-0 text-red-600" />
+                    }
+                    <span className="italic">{commentary}</span>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Back of card */}
             <Card className="absolute w-full h-full backface-hidden [transform:rotateY(180deg)]">
               <CardContent className="p-4 h-full overflow-auto">
-                {commentary && (
-                  <div className="text-sm font-medium mb-4 italic text-muted-foreground">
-                    "{commentary}"
-                  </div>
-                )}
                 <div className="space-y-2">
                   {coins.map((coin) => (
                     <div key={coin.id} className="flex justify-between text-sm">
@@ -112,13 +118,6 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
               </div>
             ))}
           </div>
-
-          {commentary && (
-            <div className="space-y-2">
-              <h4 className="font-medium">Daily Commentary</h4>
-              <p className="text-sm text-muted-foreground italic">"{commentary}"</p>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>

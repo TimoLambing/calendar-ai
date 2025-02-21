@@ -102,41 +102,43 @@ const mockTransactions: Transaction[] = [
   }
 ];
 
+// Update the generateMockData function to only show days up to today
 export function generateMockData(days: number): DayData[] {
-  const startDate = new Date(2024, 1, 1); // February 1st, 2024
-  let baseValue = 30000; // Starting value
+  const today = new Date(2025, 1, 21); // February 21, 2025
+  const baseValue = 70434; // Starting value for today
   const maxValue = 446780; // Peak value
-  const endValue = 70434; // Final crash value
-
-  const peakDay = Math.floor(days * 0.6); // Peak around 60% through the month
-  const mockData: DayData[] = [];
+  const minValue = 30000; // Minimum value
 
   const getRandomVolatility = (min: number, max: number) => {
     // Ensure we never get close to 0% change
     const minChange = Math.max(min, 1); // Minimum 1% change
-    const maxChange = Math.max(max, 45); // Maximum change increased to 45%
+    const maxChange = Math.max(max, 45); // Maximum 45% change
     return (Math.random() * (maxChange - minChange) + minChange) / 100;
   };
 
-  return Array.from({ length: days }, (_, i) => {
-    const date = new Date(startDate);
-    date.setDate(date.getDate() + i);
+  let currentValue = baseValue;
+  const mockData: DayData[] = [];
 
-    if (i < peakDay) {
-      // Rising phase - aggressive growth with minimum 1% daily change
-      const upVolatility = getRandomVolatility(1, 45);
-      baseValue *= (1 + upVolatility);
-      if (baseValue > maxValue) baseValue = maxValue;
+  // Generate data for past days up to today
+  for (let i = 0; i < days; i++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+
+    // Randomly decide if it's an up or down day
+    const isUpDay = Math.random() > 0.5;
+    const volatility = getRandomVolatility(1, 45);
+
+    if (isUpDay) {
+      currentValue *= (1 + volatility);
+      if (currentValue > maxValue) currentValue = maxValue;
     } else {
-      // Falling phase - aggressive decline with minimum 1% daily change
-      const downVolatility = getRandomVolatility(1, 45);
-      baseValue *= (1 - downVolatility);
-      if (baseValue < endValue) baseValue = endValue;
+      currentValue *= (1 - volatility);
+      if (currentValue < minValue) currentValue = minValue;
     }
 
-    const roundedValue = Math.round(baseValue);
-    const previousValue = i > 0 ? mockData[i - 1]?.totalValue : roundedValue;
-    const percentChange = ((roundedValue - previousValue) / previousValue) * 100;
+    const roundedValue = Math.round(currentValue);
+    const previousValue = mockData[mockData.length - 1]?.totalValue;
+    const percentChange = previousValue ? ((roundedValue - previousValue) / previousValue) * 100 : 0;
 
     // Get commentary based on volatility thresholds
     const commentary = getVolatilityComment(percentChange);
@@ -148,11 +150,15 @@ export function generateMockData(days: number): DayData[] {
         ...coin,
         valueUsd: Math.round(parseFloat(coin.valueUsd) * (1 + (Math.random() * 0.4 - 0.2))).toString()
       })),
-      transactions: mockTransactions,
+      transactions: mockTransactions.map(tx => ({
+        ...tx,
+        currentValue: Math.round(parseFloat(tx.valueUsd) * (1 + (Math.random() * 0.4 - 0.2))).toString()
+      })),
       commentary,
     };
 
     mockData.push(dayData);
-    return dayData;
-  });
+  }
+
+  return mockData;
 }

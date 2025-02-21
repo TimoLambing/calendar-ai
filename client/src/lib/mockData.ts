@@ -21,11 +21,11 @@ export const volatilityComments = {
   high_gain: { // Gains between 30-50%
     threshold: 30,
     comments: [
-      "Woah, how's that new wife idea looking for ya? 💍",
-      "Tell me you're retarded enough not to take profit here? 🤡",
-      "Bruh, ain't no way you don't have insider information 🕵️",
-      "You're gonna show that to your wife now and gamble it away, right? 🎰",
-      "For the love of god, TAKE PROFIT. 💸"
+      "Look at you, making money like a proper degen 🎲",
+      "Wen Lambo? No seriously, you might actually make it 🚗",
+      "Your wife's boyfriend will be proud of this one 👏",
+      "Time to screenshot this before it all goes to shit 📸",
+      "Finally some green in your life besides your wife's boyfriend 💚"
     ]
   },
   extreme_loss: { // Losses > 50%
@@ -40,10 +40,10 @@ export const volatilityComments = {
   high_loss: { // Losses between 30-50%
     threshold: -30,
     comments: [
-      "Why would anyone bet so poorly? 🤦‍♂️",
-      "Looks like you've nosedived into complete shitters here mate. 💩",
-      "Good gamble legend. 🎲",
-      "Your wife needs a new man. There's no way she can do worse than this. 💔"
+      "Congratulations, you played yourself 🎮",
+      "Have you tried not being poor? 💸",
+      "Time to delete the app and pretend this never happened 🙈",
+      "Your portfolio is as dead as your dating life 💀"
     ]
   }
 };

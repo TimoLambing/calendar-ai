@@ -3,23 +3,31 @@ import { PortfolioStats } from "@/components/PortfolioStats";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { generateMockData } from "@/lib/mockData";
+import { generateMockData, type DayData } from "@/lib/mockData";
 
 export default function Calendar() {
   // Generate mock data up to today, already in reverse chronological order
-  const mockData = generateMockData(28);
+  const rawData: DayData[] = generateMockData(28);
+  const mockData: DayData[] = rawData.filter((day: DayData, index: number): boolean => {
+    if (!day.totalValue) return false;
+    const prevDay = rawData[index + 1];
+    if (!prevDay) return true;
+
+    const percentChange: number = ((day.totalValue - prevDay.totalValue) / prevDay.totalValue) * 100;
+    return Math.abs(percentChange) >= 1;
+  });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <div className="container mx-auto px-4 py-8">
         <header className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Portfolio Calendar</h1>
-              <p className="text-muted-foreground mt-1">Track your daily portfolio performance</p>
+              <h1 className="text-3xl font-bold text-white">Portfolio Calendar</h1>
+              <p className="text-gray-400 mt-1">Track your daily portfolio performance</p>
             </div>
             <Link href="/">
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2 hover:bg-gray-700">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Dashboard
               </Button>
@@ -30,7 +38,7 @@ export default function Calendar() {
         <PortfolioStats data={mockData} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {mockData.map((day, index) => (
+          {mockData.map((day: DayData, index: number) => (
             <CalendarCard
               key={day.date.toISOString()}
               date={day.date}

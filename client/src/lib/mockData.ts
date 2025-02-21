@@ -78,14 +78,13 @@ export function generateMockData(days: number): DayData[] {
     if (i < peakDay) {
       // Rising phase - more aggressive growth
       const progress = i / peakDay;
-      const volatility = 0.25 + (Math.random() * 0.35); // Increased volatility (25-60%)
-      baseValue = baseValue * (1 + (volatility * progress));
+      baseValue = baseValue * (1 + (0.4 * progress + Math.random() * 0.2)); // Much more aggressive growth
       if (baseValue > maxValue) baseValue = maxValue;
     } else {
-      // Falling phase - more dramatic descent
+      // Falling phase - dramatic crash
       const remainingDays = days - peakDay;
-      const dropPerDay = (maxValue - endValue) / remainingDays;
-      baseValue = baseValue - dropPerDay * (1 + (Math.random() * 0.7)); // Increased drop rate
+      const progress = (i - peakDay) / remainingDays;
+      baseValue = maxValue - (maxValue - endValue) * (progress * (1 + Math.random() * 0.3));
       if (baseValue < endValue) baseValue = endValue;
     }
 

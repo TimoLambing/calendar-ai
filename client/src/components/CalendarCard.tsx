@@ -79,7 +79,7 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
             {/* Back of card */}
             <Card className="absolute w-full h-full backface-hidden [transform:rotateY(180deg)]">
               <CardContent className="p-4 h-full overflow-auto">
-                <div className="space-y-2">
+                <div className="space-y-4">
                   {coins.map((coin) => (
                     <div key={coin.id} className="flex justify-between text-sm">
                       <span>{coin.symbol}</span>

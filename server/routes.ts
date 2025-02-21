@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
-import { insertWalletSchema, insertPortfolioSnapshotSchema, insertTransactionSchema } from "@shared/schema";
+import { insertWalletSchema, insertPortfolioSnapshotSchema, insertTransactionSchema, insertTradingDiaryEntrySchema } from "@shared/schema";
 import { ZodError } from "zod";
 
 export async function registerRoutes(app: Express) {
@@ -91,6 +91,41 @@ export async function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Error fetching transactions:", error);
       res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+  });
+
+  // New Trading Diary routes
+  app.post("/api/diary-entries", async (req, res) => {
+    try {
+      const result = insertTradingDiaryEntrySchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: result.error.issues });
+      }
+      const entry = await storage.addDiaryEntry(result.data);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error creating diary entry:", error);
+      res.status(500).json({ error: "Failed to create diary entry" });
+    }
+  });
+
+  app.get("/api/transactions/:transactionId/diary-entries", async (req, res) => {
+    try {
+      const entries = await storage.getDiaryEntries(parseInt(req.params.transactionId));
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching diary entries:", error);
+      res.status(500).json({ error: "Failed to fetch diary entries" });
+    }
+  });
+
+  app.get("/api/diary-entries", async (req, res) => {
+    try {
+      const entries = await storage.getAllDiaryEntries();
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching all diary entries:", error);
+      res.status(500).json({ error: "Failed to fetch diary entries" });
     }
   });
 

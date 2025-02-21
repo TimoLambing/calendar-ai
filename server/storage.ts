@@ -3,7 +3,8 @@ import {
   PortfolioSnapshot, InsertPortfolioSnapshot,
   CoinBalance, InsertCoinBalance,
   Transaction, InsertTransaction,
-  wallets, portfolioSnapshots, coinBalances, transactions
+  TradingDiaryEntry, InsertTradingDiaryEntry,
+  wallets, portfolioSnapshots, coinBalances, transactions, tradingDiaryEntries
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -24,6 +25,11 @@ export interface IStorage {
   // Transaction operations
   addTransaction(transaction: InsertTransaction): Promise<Transaction>;
   getTransactions(walletId: number): Promise<Transaction[]>;
+
+  // Trading diary operations
+  addDiaryEntry(entry: InsertTradingDiaryEntry): Promise<TradingDiaryEntry>;
+  getDiaryEntries(transactionId: number): Promise<TradingDiaryEntry[]>;
+  getAllDiaryEntries(): Promise<TradingDiaryEntry[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -62,6 +68,21 @@ export class DatabaseStorage implements IStorage {
 
   async getTransactions(walletId: number): Promise<Transaction[]> {
     return db.select().from(transactions).where(eq(transactions.walletId, walletId));
+  }
+
+  async addDiaryEntry(entry: InsertTradingDiaryEntry): Promise<TradingDiaryEntry> {
+    const [newEntry] = await db.insert(tradingDiaryEntries).values(entry).returning();
+    return newEntry;
+  }
+
+  async getDiaryEntries(transactionId: number): Promise<TradingDiaryEntry[]> {
+    return db.select()
+      .from(tradingDiaryEntries)
+      .where(eq(tradingDiaryEntries.transactionId, transactionId));
+  }
+
+  async getAllDiaryEntries(): Promise<TradingDiaryEntry[]> {
+    return db.select().from(tradingDiaryEntries);
   }
 }
 

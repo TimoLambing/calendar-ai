@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Existing tables remain unchanged
 export const wallets = pgTable("wallets", {
   id: serial("id").primaryKey(),
   address: text("address").notNull().unique(),

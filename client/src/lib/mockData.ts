@@ -20,17 +20,16 @@ export const volatilityComments = {
   extreme_gain: { // Gains > 50%
     threshold: 50,
     comments: [
-      // Add your custom comments here for extreme gains
-      "To the moon! 🚀 Next stop: Mars!",
-      "Crypto genius or lucky gambler? Who cares, you're rich! 💎",
-      "Time to buy that NFT of a rock you always wanted! 🪨",
-      "Your portfolio is so high it needs a space suit! 👨‍🚀"
+      "Woah, how's that new wife idea looking for ya? 💍",
+      "Tell me you're retarded enough not to take profit here? 🤡",
+      "Bruh, ain't no way you don't have insider information 🕵️",
+      "You're gonna show that to your wife now and gamble it away, right? 🎰",
+      "For the love of god, TAKE PROFIT. 💸"
     ]
   },
   high_gain: { // Gains between 30-50%
     threshold: 30,
     comments: [
-      // Add your high gain comments here
       "Move over Warren Buffett, there's a new sheriff in town! 🤠",
       "Time to screenshot this and never shut up about it! 📸",
       "Lamborghini dealer just added you on LinkedIn! 🏎️",
@@ -40,7 +39,6 @@ export const volatilityComments = {
   extreme_loss: { // Losses > 50%
     threshold: -50,
     comments: [
-      // Add your extreme loss comments here
       "Achievement Unlocked: Diamond Hands of Steel! 💎",
       "Time to update that McDonald's application... 🍔",
       "Your portfolio just pulled a magic trick - it disappeared! 🎩",
@@ -50,7 +48,6 @@ export const volatilityComments = {
   high_loss: { // Losses between 30-50%
     threshold: -30,
     comments: [
-      // Add your high loss comments here
       "You could've retired your parents, but you bought $FARTCOIN instead! 💨",
       "This is why your ex left you... 💔",
       "Ramen noodles are actually quite nutritious! 🍜",

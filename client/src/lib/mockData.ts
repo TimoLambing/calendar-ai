@@ -9,38 +9,48 @@ export interface DayData {
   commentary?: string;
 }
 
-// Configurable comments based on volatility ranges
+// You can customize the comments for each volatility range by editing the comments arrays below
+// Volatility ranges are defined by their thresholds:
+// - extreme_gain: > 50% gains
+// - high_gain: 30-50% gains
+// - extreme_loss: < -50% losses
+// - high_loss: -30% to -50% losses
+
 export const volatilityComments = {
-  extreme_gain: { // >50% gains
+  extreme_gain: { // Gains > 50%
     threshold: 50,
     comments: [
-      "Mom, I made it! Time to buy that private island! 🏖️",
-      "Breaking News: Warren Buffett wants your autograph! 🖊️",
-      "Achievement Unlocked: Crypto Genius Level 9000! 🏆",
-      "Your portfolio just went more vertical than a SpaceX launch! 🚀"
+      // Add your custom comments here for extreme gains
+      "To the moon! 🚀 Next stop: Mars!",
+      "Crypto genius or lucky gambler? Who cares, you're rich! 💎",
+      "Time to buy that NFT of a rock you always wanted! 🪨",
+      "Your portfolio is so high it needs a space suit! 👨‍🚀"
     ]
   },
-  high_gain: { // 30-50% gains
+  high_gain: { // Gains between 30-50%
     threshold: 30,
     comments: [
+      // Add your high gain comments here
       "Move over Warren Buffett, there's a new sheriff in town! 🤠",
       "Time to screenshot this and never shut up about it! 📸",
       "Lamborghini dealer just added you on LinkedIn! 🏎️",
       "You're basically the Wolf of Meme Street now! 🐺"
     ]
   },
-  extreme_loss: { // >50% losses
+  extreme_loss: { // Losses > 50%
     threshold: -50,
     comments: [
+      // Add your extreme loss comments here
       "Achievement Unlocked: Diamond Hands of Steel! 💎",
       "Time to update that McDonald's application... 🍔",
       "Your portfolio just pulled a magic trick - it disappeared! 🎩",
       "NGMI (Not Gonna Make It) status: Confirmed ⚰️"
     ]
   },
-  high_loss: { // 30-50% losses
+  high_loss: { // Losses between 30-50%
     threshold: -30,
     comments: [
+      // Add your high loss comments here
       "You could've retired your parents, but you bought $FARTCOIN instead! 💨",
       "This is why your ex left you... 💔",
       "Ramen noodles are actually quite nutritious! 🍜",

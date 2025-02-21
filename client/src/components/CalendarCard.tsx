@@ -12,14 +12,16 @@ interface Props {
   coins: CoinBalance[];
   transactions: Transaction[];
   notes?: string;
+  commentary?: string;
 }
 
-export function CalendarCard({ date, value, previousDayValue, coins, transactions, notes }: Props) {
+export function CalendarCard({ date, value, previousDayValue, coins, transactions, notes, commentary }: Props) {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const valueChange = previousDayValue ? ((value - previousDayValue) / previousDayValue) * 100 : 0;
   const isPositive = valueChange > 0;
   const isNegative = valueChange < 0;
+  const isSignificant = Math.abs(valueChange) > 20;
 
   return (
     <Dialog>
@@ -38,8 +40,10 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
             {/* Front of card */}
             <Card className={cn(
               "absolute w-full h-full backface-hidden border-2",
-              isPositive && "border-green-500 bg-green-50/50",
-              isNegative && "border-red-500 bg-red-50/50",
+              isPositive && isSignificant && "border-green-500 bg-green-100",
+              isPositive && !isSignificant && "border-green-400 bg-green-50",
+              isNegative && isSignificant && "border-red-500 bg-red-100",
+              isNegative && !isSignificant && "border-red-400 bg-red-50",
               !previousDayValue && "border-gray-200"
             )}>
               <CardContent className="p-4 h-full flex flex-col justify-between">
@@ -50,26 +54,25 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
                   </div>
                   {previousDayValue && (
                     <div className={cn(
-                      "text-sm mt-1",
-                      isPositive && "text-green-600",
-                      isNegative && "text-red-600"
+                      "text-sm mt-1 font-semibold",
+                      isPositive && "text-green-700",
+                      isNegative && "text-red-700"
                     )}>
                       {valueChange > 0 ? "+" : ""}{valueChange.toFixed(2)}%
                     </div>
                   )}
                 </div>
-                {notes && (
-                  <div className="text-sm text-muted-foreground mt-2">
-                    {notes}
-                  </div>
-                )}
               </CardContent>
             </Card>
 
             {/* Back of card */}
             <Card className="absolute w-full h-full backface-hidden [transform:rotateY(180deg)]">
-              <CardContent className="p-4 h-full">
-                <div className="text-sm font-medium mb-2">Portfolio</div>
+              <CardContent className="p-4 h-full overflow-auto">
+                {commentary && (
+                  <div className="text-sm font-medium mb-4 italic text-muted-foreground">
+                    "{commentary}"
+                  </div>
+                )}
                 <div className="space-y-2">
                   {coins.map((coin) => (
                     <div key={coin.id} className="flex justify-between text-sm">
@@ -96,10 +99,13 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
             {transactions.map((tx) => (
               <div key={tx.id} className="flex justify-between items-center p-2 bg-muted rounded-lg">
                 <div>
-                  <span className="font-medium">{tx.type}</span>
+                  <span className={cn(
+                    "font-medium",
+                    tx.type === "BUY" ? "text-green-600" : "text-red-600"
+                  )}>{tx.type}</span>
                   <span className="mx-2">{tx.symbol}</span>
                   <span className="text-sm text-muted-foreground">
-                    ({parseFloat(tx.amount.toString())} coins)
+                    ({parseFloat(tx.amount.toString()).toLocaleString()} coins)
                   </span>
                 </div>
                 <span>${parseFloat(tx.valueUsd.toString()).toLocaleString()}</span>
@@ -107,10 +113,10 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
             ))}
           </div>
 
-          {notes && (
+          {commentary && (
             <div className="space-y-2">
-              <h4 className="font-medium">Notes</h4>
-              <p className="text-sm text-muted-foreground">{notes}</p>
+              <h4 className="font-medium">Daily Commentary</h4>
+              <p className="text-sm text-muted-foreground italic">"{commentary}"</p>
             </div>
           )}
         </div>

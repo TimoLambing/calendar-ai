@@ -36,6 +36,7 @@ export default function Calendar() {
               coins={day.coins}
               transactions={day.transactions}
               notes={day.notes}
+              commentary={day.commentary}
             />
           ))}
         </div>

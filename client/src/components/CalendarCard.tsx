@@ -26,9 +26,16 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
   const { toast } = useToast();
 
   const valueChange = previousDayValue ? ((value - previousDayValue) / previousDayValue) * 100 : 0;
-  const isPositive = valueChange > 0;
-  const isNegative = valueChange < 0;
-  const isHighVolatility = Math.abs(valueChange) >= 30;
+
+  // Define percentage ranges
+  const isExtremeGain = valueChange > 50;
+  const isHighGain = valueChange > 30 && valueChange <= 50;
+  const isGoodGain = valueChange > 15 && valueChange <= 30;
+  const isGain = valueChange > 0 && valueChange <= 15;
+  const isSmallLoss = valueChange < 0 && valueChange >= -15;
+  const isLoss = valueChange < -15 && valueChange >= -30;
+  const isHighLoss = valueChange < -30 && valueChange >= -50;
+  const isExtremeLoss = valueChange < -50;
 
   const handleAddDiaryEntry = async (transactionId: number) => {
     try {
@@ -67,10 +74,16 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
             {/* Front of card */}
             <Card className={cn(
               "absolute w-full h-full backface-hidden border-2",
-              isPositive && isHighVolatility && "border-green-600 bg-green-200",
-              isPositive && !isHighVolatility && "border-green-500 bg-green-100",
-              isNegative && isHighVolatility && "border-red-600 bg-red-200",
-              isNegative && !isHighVolatility && "border-red-500 bg-red-100",
+              // Gains
+              isExtremeGain && "border-green-800 bg-green-300",
+              isHighGain && "border-green-600 bg-green-200",
+              isGoodGain && "border-green-500 bg-green-100",
+              isGain && "border-yellow-500 bg-yellow-100",
+              // Losses
+              isSmallLoss && "border-pink-400 bg-pink-100",
+              isLoss && "border-red-400 bg-red-100",
+              isHighLoss && "border-red-600 bg-red-200",
+              isExtremeLoss && "border-red-800 bg-red-300",
             )}>
               <CardContent className="p-4 h-full flex flex-col justify-between">
                 <div>
@@ -81,17 +94,16 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
                   {previousDayValue && (
                     <div className={cn(
                       "text-sm mt-1 font-semibold flex items-center gap-1",
-                      isPositive && "text-green-800",
-                      isNegative && "text-red-800"
+                      valueChange > 0 ? "text-green-800" : "text-red-800"
                     )}>
-                      {isPositive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                      {valueChange > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                       {valueChange > 0 ? "+" : ""}{valueChange.toFixed(2)}%
                     </div>
                   )}
                 </div>
                 {commentary && (
                   <div className="text-sm mt-4 font-medium flex items-start gap-2 bg-white/90 backdrop-blur-sm border p-3 rounded-lg shadow-sm">
-                    {isPositive ? 
+                    {valueChange > 0 ? 
                       <Rocket className="h-5 w-5 shrink-0 text-green-600" /> : 
                       <Skull className="h-5 w-5 shrink-0 text-red-600" />
                     }

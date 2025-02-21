@@ -41,10 +41,10 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
             {/* Front of card */}
             <Card className={cn(
               "absolute w-full h-full backface-hidden border-2",
-              isPositive && isHighVolatility && "border-green-500 bg-green-100",
-              isPositive && !isHighVolatility && "border-green-400 bg-green-50",
-              isNegative && isHighVolatility && "border-red-500 bg-red-100",
-              isNegative && !isHighVolatility && "border-red-400 bg-red-50",
+              isPositive && isHighVolatility && "border-green-500 bg-green-100/80",
+              isPositive && !isHighVolatility && "border-green-400 bg-green-50/80",
+              isNegative && isHighVolatility && "border-red-500 bg-red-100/80",
+              isNegative && !isHighVolatility && "border-red-400 bg-red-50/80",
               !previousDayValue && "border-gray-200"
             )}>
               <CardContent className="p-4 h-full flex flex-col justify-between">

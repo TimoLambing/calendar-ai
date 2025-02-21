@@ -114,17 +114,19 @@ export function generateMockData(days: number): DayData[] {
     const date = new Date(startDate);
     date.setDate(date.getDate() + i);
 
-    // Calculate value based on position in the timeline
+    // Calculate value with guaranteed volatility
     if (i < peakDay) {
       // Rising phase - more aggressive growth
       const progress = i / peakDay;
-      baseValue = baseValue * (1 + (0.4 * progress + Math.random() * 0.2));
+      const volatilityFactor = 0.1 + Math.random() * 0.3; // Minimum 10% change
+      baseValue = baseValue * (1 + volatilityFactor);
       if (baseValue > maxValue) baseValue = maxValue;
     } else {
       // Falling phase - dramatic crash
       const remainingDays = days - peakDay;
       const progress = (i - peakDay) / remainingDays;
-      baseValue = maxValue - (maxValue - endValue) * (progress * (1 + Math.random() * 0.3));
+      const volatilityFactor = 0.1 + Math.random() * 0.3; // Minimum 10% change
+      baseValue = baseValue * (1 - volatilityFactor);
       if (baseValue < endValue) baseValue = endValue;
     }
 

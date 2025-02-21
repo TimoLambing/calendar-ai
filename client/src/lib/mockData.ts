@@ -35,24 +35,27 @@ const mockTransactions: Transaction[] = [
   }
 ];
 
-export function generateMockData(startDate: Date, days: number): DayData[] {
+export function generateMockData(days: number): DayData[] {
+  const startDate = new Date(2024, 1, 1); // February 1st, 2024
+  let baseValue = 30000; // Starting value
+
   return Array.from({ length: days }, (_, i) => {
     const date = new Date(startDate);
     date.setDate(date.getDate() + i);
 
-    // Simulate some value fluctuation
-    const multiplier = 1 + (Math.random() * 0.1 - 0.05); // ±5% daily change
-    const totalValue = Math.round(46100 * multiplier);
+    // Simulate more realistic value fluctuation
+    const multiplier = 1 + (Math.random() * 0.06 - 0.03); // ±3% daily change
+    baseValue = Math.round(baseValue * multiplier);
 
     return {
       date,
-      totalValue,
+      totalValue: baseValue,
       coins: mockCoins.map(coin => ({
         ...coin,
         valueUsd: Math.round(parseFloat(coin.valueUsd) * multiplier).toString()
       })),
       transactions: mockTransactions,
-      notes: i % 3 === 0 ? "Market showing bullish signals today" : undefined
+      notes: i % 3 === 0 ? "Market showing interesting movements today" : undefined
     };
   });
 }

@@ -1,20 +1,25 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Transaction, CoinBalance } from "@shared/schema";
-import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
 interface Props {
   date: Date;
   value: number;
+  previousDayValue?: number;
   coins: CoinBalance[];
   transactions: Transaction[];
   notes?: string;
 }
 
-export function CalendarCard({ date, value, coins, transactions, notes }: Props) {
+export function CalendarCard({ date, value, previousDayValue, coins, transactions, notes }: Props) {
   const [isFlipped, setIsFlipped] = useState(false);
+
+  const valueChange = previousDayValue ? ((value - previousDayValue) / previousDayValue) * 100 : 0;
+  const isPositive = valueChange > 0;
+  const isNegative = valueChange < 0;
 
   return (
     <Dialog>
@@ -31,13 +36,27 @@ export function CalendarCard({ date, value, coins, transactions, notes }: Props)
             style={{ transformStyle: "preserve-3d" }}
           >
             {/* Front of card */}
-            <Card className="absolute w-full h-full backface-hidden">
+            <Card className={cn(
+              "absolute w-full h-full backface-hidden border-2",
+              isPositive && "border-green-500 bg-green-50/50",
+              isNegative && "border-red-500 bg-red-50/50",
+              !previousDayValue && "border-gray-200"
+            )}>
               <CardContent className="p-4 h-full flex flex-col justify-between">
                 <div>
                   <div className="text-sm font-medium">{date.toLocaleDateString()}</div>
                   <div className="text-2xl font-bold mt-2">
                     ${value.toLocaleString()}
                   </div>
+                  {previousDayValue && (
+                    <div className={cn(
+                      "text-sm mt-1",
+                      isPositive && "text-green-600",
+                      isNegative && "text-red-600"
+                    )}>
+                      {valueChange > 0 ? "+" : ""}{valueChange.toFixed(2)}%
+                    </div>
+                  )}
                 </div>
                 {notes && (
                   <div className="text-sm text-muted-foreground mt-2">

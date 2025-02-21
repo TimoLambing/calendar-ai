@@ -41,11 +41,10 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
             {/* Front of card */}
             <Card className={cn(
               "absolute w-full h-full backface-hidden border-2",
-              isPositive && isHighVolatility && "border-green-500 bg-green-100/80",
-              isPositive && !isHighVolatility && "border-green-400 bg-green-50/80",
-              isNegative && isHighVolatility && "border-red-500 bg-red-100/80",
-              isNegative && !isHighVolatility && "border-red-400 bg-red-50/80",
-              !previousDayValue && "border-gray-200"
+              isPositive && isHighVolatility && "border-green-600 bg-green-200",
+              isPositive && !isHighVolatility && "border-green-500 bg-green-100",
+              isNegative && isHighVolatility && "border-red-600 bg-red-200",
+              isNegative && !isHighVolatility && "border-red-500 bg-red-100",
             )}>
               <CardContent className="p-4 h-full flex flex-col justify-between">
                 <div>
@@ -56,8 +55,8 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
                   {previousDayValue && (
                     <div className={cn(
                       "text-sm mt-1 font-semibold flex items-center gap-1",
-                      isPositive && "text-green-700",
-                      isNegative && "text-red-700"
+                      isPositive && "text-green-800",
+                      isNegative && "text-red-800"
                     )}>
                       {isPositive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                       {valueChange > 0 ? "+" : ""}{valueChange.toFixed(2)}%
@@ -65,7 +64,7 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
                   )}
                 </div>
                 {commentary && (
-                  <div className="text-sm mt-4 font-medium flex items-start gap-2 bg-background/80 backdrop-blur-sm border p-3 rounded-lg shadow-sm">
+                  <div className="text-sm mt-4 font-medium flex items-start gap-2 bg-white/90 backdrop-blur-sm border p-3 rounded-lg shadow-sm">
                     {isPositive ? 
                       <Rocket className="h-5 w-5 shrink-0 text-green-600" /> : 
                       <Skull className="h-5 w-5 shrink-0 text-red-600" />

@@ -110,23 +110,26 @@ export function generateMockData(days: number): DayData[] {
   const peakDay = Math.floor(days * 0.6); // Peak around 60% through the month
   const mockData: DayData[] = [];
 
+  const getRandomVolatility = (min: number, max: number) => {
+    // Ensure we never get close to 0% change
+    const minChange = Math.max(min, 5); // Minimum 5% change
+    const maxChange = Math.max(max, 15); // Maximum change increased
+    return (Math.random() * (maxChange - minChange) + minChange) / 100;
+  };
+
   return Array.from({ length: days }, (_, i) => {
     const date = new Date(startDate);
     date.setDate(date.getDate() + i);
 
-    // Calculate value with guaranteed volatility
     if (i < peakDay) {
-      // Rising phase - more aggressive growth
-      const progress = i / peakDay;
-      const volatilityFactor = 0.1 + Math.random() * 0.3; // Minimum 10% change
-      baseValue = baseValue * (1 + volatilityFactor);
+      // Rising phase - aggressive growth with minimum 5% daily change
+      const upVolatility = getRandomVolatility(5, 35);
+      baseValue *= (1 + upVolatility);
       if (baseValue > maxValue) baseValue = maxValue;
     } else {
-      // Falling phase - dramatic crash
-      const remainingDays = days - peakDay;
-      const progress = (i - peakDay) / remainingDays;
-      const volatilityFactor = 0.1 + Math.random() * 0.3; // Minimum 10% change
-      baseValue = baseValue * (1 - volatilityFactor);
+      // Falling phase - aggressive decline with minimum 5% daily change
+      const downVolatility = getRandomVolatility(5, 35);
+      baseValue *= (1 - downVolatility);
       if (baseValue < endValue) baseValue = endValue;
     }
 

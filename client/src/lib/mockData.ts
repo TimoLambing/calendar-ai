@@ -1,14 +1,5 @@
 import { CoinBalance, Transaction } from "@shared/schema";
 
-export interface DayData {
-  date: Date;
-  totalValue: number;
-  coins: CoinBalance[];
-  transactions: Transaction[];
-  notes?: string;
-  commentary?: string;
-}
-
 // You can customize the comments for each volatility range by editing the comments arrays below
 // Volatility ranges are defined by their thresholds:
 // - extreme_gain: > 50% gains
@@ -70,6 +61,15 @@ function getVolatilityComment(percentChange: number): string | undefined {
   }
 
   return category?.comments[Math.floor(Math.random() * category.comments.length)];
+}
+
+export interface DayData {
+  date: Date;
+  totalValue: number;
+  coins: CoinBalance[];
+  transactions: Transaction[];
+  notes?: string;
+  commentary?: string;
 }
 
 const mockCoins: CoinBalance[] = [

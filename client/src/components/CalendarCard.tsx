@@ -65,10 +65,10 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
                   )}
                 </div>
                 {isSignificant && commentary && (
-                  <div className="text-sm font-medium mt-2 flex items-start gap-2">
+                  <div className="text-sm font-medium mt-2 flex items-start gap-2 bg-accent/30 p-3 rounded-lg">
                     {isPositive ? 
-                      <Rocket className="h-4 w-4 shrink-0 text-green-600" /> : 
-                      <Skull className="h-4 w-4 shrink-0 text-red-600" />
+                      <Rocket className="h-5 w-5 shrink-0 text-green-600" /> : 
+                      <Skull className="h-5 w-5 shrink-0 text-red-600" />
                     }
                     <span className="italic">{commentary}</span>
                   </div>

@@ -4,7 +4,11 @@ import { Transaction, CoinBalance } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { TrendingUp, TrendingDown, Rocket, Skull } from "lucide-react";
+import { TrendingUp, TrendingDown, Rocket, Skull, BookOpen, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Props {
   date: Date;
@@ -18,11 +22,33 @@ interface Props {
 
 export function CalendarCard({ date, value, previousDayValue, coins, transactions, notes, commentary }: Props) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [diaryComment, setDiaryComment] = useState("");
+  const { toast } = useToast();
 
   const valueChange = previousDayValue ? ((value - previousDayValue) / previousDayValue) * 100 : 0;
   const isPositive = valueChange > 0;
   const isNegative = valueChange < 0;
   const isHighVolatility = Math.abs(valueChange) >= 30;
+
+  const handleAddDiaryEntry = async (transactionId: number) => {
+    try {
+      await apiRequest('POST', '/api/diary-entries', {
+        transactionId,
+        comment: diaryComment
+      });
+      toast({
+        title: "Diary Entry Added",
+        description: "Your trading note has been saved successfully."
+      });
+      setDiaryComment("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save diary entry",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <Dialog>
@@ -100,20 +126,52 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-4">
-            <h4 className="font-medium">Transactions</h4>
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium">Transactions</h4>
+              <Button variant="outline" size="sm">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Trading Diary
+              </Button>
+            </div>
             {transactions.map((tx) => (
-              <div key={tx.id} className="flex justify-between items-center p-2 bg-muted rounded-lg">
-                <div>
-                  <span className={cn(
-                    "font-medium",
-                    tx.type === "BUY" ? "text-green-600" : "text-red-600"
-                  )}>{tx.type}</span>
-                  <span className="mx-2">{tx.symbol}</span>
-                  <span className="text-sm text-muted-foreground">
-                    ({parseFloat(tx.amount.toString()).toLocaleString()} coins)
-                  </span>
+              <div key={tx.id} className="space-y-2">
+                <div className="flex justify-between items-center p-2 bg-muted rounded-lg">
+                  <div>
+                    <span className={cn(
+                      "font-medium",
+                      tx.type === "BUY" ? "text-green-600" : "text-red-600"
+                    )}>{tx.type}</span>
+                    <span className="mx-2">{tx.symbol}</span>
+                    <span className="text-sm text-muted-foreground">
+                      ({parseFloat(tx.amount.toString()).toLocaleString()} coins)
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <div>${parseFloat(tx.valueUsd.toString()).toLocaleString()}</div>
+                    {tx.currentValue && (
+                      <div className={cn(
+                        "text-sm",
+                        parseFloat(tx.currentValue.toString()) > parseFloat(tx.valueUsd.toString())
+                          ? "text-green-600"
+                          : "text-red-600"
+                      )}>
+                        Current: ${parseFloat(tx.currentValue.toString()).toLocaleString()}
+                        ({(((parseFloat(tx.currentValue.toString()) / parseFloat(tx.valueUsd.toString())) - 1) * 100).toFixed(2)}%)
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <span>${parseFloat(tx.valueUsd.toString()).toLocaleString()}</span>
+                <div className="flex gap-2">
+                  <Textarea
+                    placeholder="Add a note about this trade..."
+                    value={diaryComment}
+                    onChange={(e) => setDiaryComment(e.target.value)}
+                    className="text-sm"
+                  />
+                  <Button size="sm" onClick={() => handleAddDiaryEntry(tx.id)}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

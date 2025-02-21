@@ -32,6 +32,15 @@ export const transactions = pgTable("transactions", {
   symbol: text("symbol").notNull(),
   amount: decimal("amount").notNull(),
   valueUsd: decimal("value_usd").notNull(),
+  currentValue: decimal("current_value"), // Added for tracking performance
+});
+
+// New table for trading diary entries
+export const tradingDiaryEntries = pgTable("trading_diary_entries", {
+  id: serial("id").primaryKey(),
+  transactionId: integer("transaction_id").references(() => transactions.id),
+  comment: text("comment").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const insertWalletSchema = createInsertSchema(wallets).extend({
@@ -41,13 +50,16 @@ export const insertWalletSchema = createInsertSchema(wallets).extend({
 export const insertPortfolioSnapshotSchema = createInsertSchema(portfolioSnapshots);
 export const insertCoinBalanceSchema = createInsertSchema(coinBalances);
 export const insertTransactionSchema = createInsertSchema(transactions);
+export const insertTradingDiaryEntrySchema = createInsertSchema(tradingDiaryEntries);
 
 export type Wallet = typeof wallets.$inferSelect;
 export type PortfolioSnapshot = typeof portfolioSnapshots.$inferSelect;
 export type CoinBalance = typeof coinBalances.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
+export type TradingDiaryEntry = typeof tradingDiaryEntries.$inferSelect;
 
 export type InsertWallet = z.infer<typeof insertWalletSchema>;
 export type InsertPortfolioSnapshot = z.infer<typeof insertPortfolioSnapshotSchema>;
 export type InsertCoinBalance = z.infer<typeof insertCoinBalanceSchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+export type InsertTradingDiaryEntry = z.infer<typeof insertTradingDiaryEntrySchema>;

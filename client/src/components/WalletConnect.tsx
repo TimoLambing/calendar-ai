@@ -22,7 +22,7 @@ export function WalletConnect({ onConnect }: Props) {
         title: "Wallet Connected",
         description: `Connected to ${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Connection Failed",
         description: error.message,

@@ -1,6 +1,12 @@
 import Web3 from 'web3';
 import { apiRequest } from './queryClient';
 
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
 export interface WalletConnection {
   address: string;
   balance: string;
@@ -12,13 +18,13 @@ export async function connectWallet(): Promise<WalletConnection> {
   }
 
   const web3 = new Web3(window.ethereum);
-  
+
   try {
     // Request account access
     const accounts = await window.ethereum.request({ 
       method: 'eth_requestAccounts' 
     });
-    
+
     if (!accounts[0]) {
       throw new Error('No account found');
     }
@@ -26,16 +32,23 @@ export async function connectWallet(): Promise<WalletConnection> {
     const balance = await web3.eth.getBalance(accounts[0]);
 
     // Register wallet with our backend
-    await apiRequest('POST', '/api/wallets', {
-      address: accounts[0],
-      lastSync: new Date().toISOString()
-    });
+    try {
+      await apiRequest('POST', '/api/wallets', {
+        address: accounts[0],
+        lastSync: new Date().toISOString()
+      });
+    } catch (error: any) {
+      // If the wallet already exists, that's fine - continue
+      if (!error.message.includes('duplicate key')) {
+        throw error;
+      }
+    }
 
     return {
       address: accounts[0],
       balance: web3.utils.fromWei(balance, 'ether')
     };
-  } catch (error) {
+  } catch (error: any) {
     throw new Error('Failed to connect wallet: ' + error.message);
   }
 }

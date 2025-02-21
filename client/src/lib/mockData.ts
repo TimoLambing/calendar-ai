@@ -73,10 +73,11 @@ function getLossComment(value: number): string {
 export function generateMockData(days: number): DayData[] {
   const startDate = new Date(2024, 1, 1); // February 1st, 2024
   let baseValue = 30000; // Starting value
-  const maxValue = 1330344; // Peak value
+  const maxValue = 446780; // Peak value
   const endValue = 70434; // Final crash value
 
   const peakDay = Math.floor(days * 0.6); // Peak around 60% through the month
+  const mockData: DayData[] = [];
 
   return Array.from({ length: days }, (_, i) => {
     const date = new Date(startDate);
@@ -86,7 +87,7 @@ export function generateMockData(days: number): DayData[] {
     if (i < peakDay) {
       // Rising phase - more aggressive growth
       const progress = i / peakDay;
-      baseValue = baseValue * (1 + (0.4 * progress + Math.random() * 0.2)); // Much more aggressive growth
+      baseValue = baseValue * (1 + (0.4 * progress + Math.random() * 0.2));
       if (baseValue > maxValue) baseValue = maxValue;
     } else {
       // Falling phase - dramatic crash
@@ -100,13 +101,13 @@ export function generateMockData(days: number): DayData[] {
     const previousValue = i > 0 ? mockData[i - 1]?.totalValue : roundedValue;
     const percentChange = ((roundedValue - previousValue) / previousValue) * 100;
 
-    // Add commentary based on performance
+    // Add commentary based on performance - only for high volatility (≥30%)
     let commentary;
-    if (Math.abs(percentChange) > 5) { // Lowered threshold significantly from 20% to 5%
+    if (Math.abs(percentChange) >= 30) {
       commentary = percentChange > 0 ? getGainComment(roundedValue) : getLossComment(roundedValue);
     }
 
-    return {
+    const dayData = {
       date,
       totalValue: roundedValue,
       coins: mockCoins.map(coin => ({
@@ -116,8 +117,8 @@ export function generateMockData(days: number): DayData[] {
       transactions: mockTransactions,
       commentary,
     };
+
+    mockData.push(dayData);
+    return dayData;
   });
 }
-
-// Initialize mock data array
-const mockData: DayData[] = [];

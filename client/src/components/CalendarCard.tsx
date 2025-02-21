@@ -22,7 +22,7 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
   const valueChange = previousDayValue ? ((value - previousDayValue) / previousDayValue) * 100 : 0;
   const isPositive = valueChange > 0;
   const isNegative = valueChange < 0;
-  const isSignificant = Math.abs(valueChange) > 20;
+  const isHighVolatility = Math.abs(valueChange) >= 30;
 
   return (
     <Dialog>
@@ -41,10 +41,10 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
             {/* Front of card */}
             <Card className={cn(
               "absolute w-full h-full backface-hidden border-2",
-              isPositive && isSignificant && "border-green-500 bg-green-100",
-              isPositive && !isSignificant && "border-green-400 bg-green-50",
-              isNegative && isSignificant && "border-red-500 bg-red-100",
-              isNegative && !isSignificant && "border-red-400 bg-red-50",
+              isPositive && isHighVolatility && "border-green-500 bg-green-100",
+              isPositive && !isHighVolatility && "border-green-400 bg-green-50",
+              isNegative && isHighVolatility && "border-red-500 bg-red-100",
+              isNegative && !isHighVolatility && "border-red-400 bg-red-50",
               !previousDayValue && "border-gray-200"
             )}>
               <CardContent className="p-4 h-full flex flex-col justify-between">

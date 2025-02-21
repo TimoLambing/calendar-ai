@@ -1,22 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 interface Props {
-  walletId: number;
+  value: number;
 }
 
-export function PortfolioValue({ walletId }: Props) {
-  const { data: snapshots } = useQuery({
-    queryKey: [`/api/wallets/${walletId}/snapshots`],
+export function PortfolioValue({ value }: Props) {
+  // Create a simple mock chart data array showing the last 7 days
+  const chartData = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - i));
+    return {
+      date: date.toLocaleDateString(),
+      value: value * (0.95 + Math.random() * 0.1) // Random fluctuation around the current value
+    };
   });
-
-  if (!snapshots) return null;
-
-  const chartData = snapshots.map((snapshot: any) => ({
-    date: new Date(snapshot.timestamp).toLocaleDateString(),
-    value: parseFloat(snapshot.totalValue)
-  }));
 
   return (
     <Card className="w-full">

@@ -43,9 +43,13 @@ function getGainComment(value: number): string {
     "Move over Warren Buffett, there's a new sheriff in town! 🤠",
     "Congrats! You're now qualified to give financial advice on TikTok! 🎵",
     "Time to screenshot this and never shut up about it! 📸",
-    "You could've bought a $1,000,000 apartment in sunny Spain, or 4 Ferraris. Yet, you decided to be a retard. 🏎️",
+    "Your portfolio is performing better than your dating life! 💘",
     "Look at you, trading AI tokens like you actually understand what AI means! 🤖",
-    "Your portfolio is higher than Snoop Dogg right now! 🌿"
+    "Your portfolio is higher than Snoop Dogg right now! 🌿",
+    "Time to quit your job and become a full-time meme coin trader! 🎮",
+    "Mom said it's my turn to be a crypto millionaire! 🎰",
+    "Lamborghini dealer just added you on LinkedIn! 🏎️",
+    "You're basically the Wolf of Meme Street now! 🐺"
   ];
   return comments[Math.floor(Math.random() * comments.length)];
 }
@@ -53,11 +57,15 @@ function getGainComment(value: number): string {
 function getLossComment(value: number): string {
   const comments = [
     "You could've retired your parents, but you bought $FARTCOIN instead! 💨",
-    "This is equivalent to an average 10-year salary in the US. Hope the memes were worth it! 💸",
+    "This is why your ex left you... 💔",
     "Remember when you said 'Trust me bro, this is the future'? 🤡",
     "Your portfolio is performing worse than a banana taped to a wall! 🍌",
     "Time to update that LinkedIn profile... 💼",
-    "At least you'll have a great story for your grandkids! 👴"
+    "At least you'll have a great story for your grandkids! 👴",
+    "Congratulations! You've unlocked: Poverty Premium™ 🏆",
+    "Maybe it's time to start an OnlyFans? 📸",
+    "Ramen noodles are actually quite nutritious! 🍜",
+    "Your financial advisor just blocked you on all social media! 🚫"
   ];
   return comments[Math.floor(Math.random() * comments.length)];
 }
@@ -94,7 +102,7 @@ export function generateMockData(days: number): DayData[] {
 
     // Add commentary based on performance
     let commentary;
-    if (Math.abs(percentChange) > 20) { // Lower threshold from 30% to 20%
+    if (Math.abs(percentChange) > 5) { // Lowered threshold significantly from 20% to 5%
       commentary = percentChange > 0 ? getGainComment(roundedValue) : getLossComment(roundedValue);
     }
 
@@ -106,7 +114,7 @@ export function generateMockData(days: number): DayData[] {
         valueUsd: Math.round(parseFloat(coin.valueUsd) * (1 + (Math.random() * 0.4 - 0.2))).toString()
       })),
       transactions: mockTransactions,
-      commentary
+      commentary,
     };
   });
 }

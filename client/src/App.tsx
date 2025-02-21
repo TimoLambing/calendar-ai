@@ -3,14 +3,12 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
-import Dashboard from "@/pages/dashboard";
 import Calendar from "@/pages/calendar";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/calendar" component={Calendar} />
+      <Route path="/" component={Calendar} />
       <Route component={NotFound} />
     </Switch>
   );

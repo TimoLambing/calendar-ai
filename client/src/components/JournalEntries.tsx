@@ -28,7 +28,9 @@ export function JournalEntries() {
             <div className="flex items-start gap-3">
               <ScrollText className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
               <div>
-                <div className="font-medium">{new Date(entry.createdAt).toLocaleDateString()}</div>
+                <div className="font-medium">
+                  {new Date(entry.createdAt!).toLocaleDateString()}
+                </div>
                 <div className="mt-2 text-sm whitespace-pre-wrap">{entry.comment}</div>
               </div>
             </div>

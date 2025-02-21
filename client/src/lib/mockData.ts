@@ -89,7 +89,8 @@ const mockTransactions: Transaction[] = [
     type: "BUY",
     symbol: "$GRIFFAIN",
     amount: "42069",
-    valueUsd: "8500"
+    valueUsd: "8500",
+    currentValue: "8500"
   },
   {
     id: 2,
@@ -98,7 +99,8 @@ const mockTransactions: Transaction[] = [
     type: "SELL",
     symbol: "$FARTCOIN",
     amount: "500000",
-    valueUsd: "7500"
+    valueUsd: "7500",
+    currentValue: "7500"
   }
 ];
 

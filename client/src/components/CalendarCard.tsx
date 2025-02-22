@@ -26,6 +26,8 @@ interface TradingDiaryEntry {
   id: string;
   comment: string;
   createdAt: string | null;
+  portfolioValue?: number;
+  valueChange?: number;
 }
 
 export function CalendarCard({ date, value, previousDayValue, coins, transactions, notes, commentary }: Props) {
@@ -68,11 +70,13 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
     try {
       await apiRequest('POST', '/api/diary-entries', {
         comment,
-        timestamp: date.toISOString()
+        timestamp: date.toISOString(),
+        portfolioValue: value,
+        valueChange: valueChange
       });
 
-      //Invalidate the query after adding a comment
-      queryClient.invalidateQueries(['diary-entries', date.toISOString()]);
+      queryClient.invalidateQueries({ queryKey: ['diary-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['diary-entries', date.toISOString()] });
 
       toast({
         title: "Comment Added",

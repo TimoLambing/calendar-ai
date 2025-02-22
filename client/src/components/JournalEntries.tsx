@@ -44,6 +44,9 @@ export function JournalEntries() {
                       }
                       {parseFloat(entry.valueChange.toString()) > 0 ? "+" : ""}
                       {parseFloat(entry.valueChange.toString()).toFixed(2)}%
+                      <span className="text-muted-foreground ml-2">
+                        ${parseFloat(entry.portfolioValue?.toString() || "0").toLocaleString()}
+                      </span>
                     </div>
                   )}
                 </div>

@@ -4,18 +4,20 @@ import { CoinBalance, Transaction } from "@shared/schema";
 // Volatility ranges are defined by their thresholds:
 // - extreme_gain: > 50% gains
 // - high_gain: 30-50% gains
+// - moderate_gain: 10-30% gains
 // - extreme_loss: < -50% losses
 // - high_loss: -30% to -50% losses
+// - moderate_loss: -10% to -30% losses
 
 export const volatilityComments = {
   extreme_gain: { // Gains > 50%
     threshold: 50,
     comments: [
-      "New wife application opened! 💍 Wen Lambo? 🏎️",
       "Chad trader detected! Save some gains for the rest of us 💪",
       "Moon mission confirmed! Next stop: Your ex's Instagram story 🚀",
-      "Time to flex on CT with those sweet gainz bro! 📈",
-      "Finally, time to pay back mom's credit card! 💳"
+      "Finally, time to start that crypto influencer YouTube channel! 📈",
+      "Wen Binance Blockchain Week VIP ticket? 🎫",
+      "Time to update the Lambo pre-order! 🏎️"
     ]
   },
   high_gain: { // Gains between 30-50%
@@ -23,9 +25,19 @@ export const volatilityComments = {
     comments: [
       "Wife-changing gains incoming! 💎",
       "Finally, Ramen is off the menu boys! 🍜",
-      "From McDonald's to Michelin stars real quick! 🌟",
       "Time to update that Tinder bio with 'crypto entrepreneur' 📱",
-      "Look who's ready for Miami Crypto Week! 🌴"
+      "Look who's ready for Miami Crypto Week! 🌴",
+      "From McDonald's to Michelin stars real quick! 🌟"
+    ]
+  },
+  moderate_gain: { // Gains between 10-30%
+    threshold: 10,
+    comments: [
+      "Starting to feel like a proper degen now! 🎰",
+      "Maybe that Discord alpha wasn't a scam after all! 🤔",
+      "Time to flex on Crypto Twitter! 🐦",
+      "Almost enough gains to quit the day job... almost! 💼",
+      "Portfolio looking thicc today! 👀"
     ]
   },
   extreme_loss: { // Losses > 50%
@@ -33,9 +45,9 @@ export const volatilityComments = {
     comments: [
       "Looks like someone's back to cup noodles for dinner 🍜",
       "Did you try turning your monitor upside down? 🙃",
-      "Achievement Unlocked: Maximum Pain 💀",
+      "Your wife's boyfriend won't be happy about this one 😬",
       "Maybe it's time to start an OnlyFans? 📸",
-      "Your wife's boyfriend won't be happy about this one 😬"
+      "Achievement Unlocked: Maximum Pain 💀"
     ]
   },
   high_loss: { // Losses between 30-50%
@@ -47,6 +59,16 @@ export const volatilityComments = {
       "McDonald's is hiring! Just saying... 🍔",
       "Can't lose money if you can't log in *taps head* 🤔"
     ]
+  },
+  moderate_loss: { // Losses between 10-30%
+    threshold: -10,
+    comments: [
+      "Buy high, sell low strategy working perfectly! 📉",
+      "At least you still have your health! ...right? 🏥",
+      "Time to start that 'technical analysis' course! 📚",
+      "HODL they said, it'll be fun they said... 😅",
+      "Is this what they call 'buying the dip'? 🎢"
+    ]
   }
 };
 
@@ -57,10 +79,14 @@ function getVolatilityComment(percentChange: number): string | undefined {
     category = volatilityComments.extreme_gain;
   } else if (percentChange > volatilityComments.high_gain.threshold) {
     category = volatilityComments.high_gain;
+  } else if (percentChange > volatilityComments.moderate_gain.threshold) {
+    category = volatilityComments.moderate_gain;
   } else if (percentChange < volatilityComments.extreme_loss.threshold) {
     category = volatilityComments.extreme_loss;
   } else if (percentChange < volatilityComments.high_loss.threshold) {
     category = volatilityComments.high_loss;
+  } else if (percentChange < volatilityComments.moderate_loss.threshold) {
+    category = volatilityComments.moderate_loss;
   }
 
   return category?.comments[Math.floor(Math.random() * category.comments.length)];

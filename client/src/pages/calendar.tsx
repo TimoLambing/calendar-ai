@@ -6,23 +6,34 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ScrollText } from "lucide-react";
 import { generateMockData, type DayData } from "@/lib/mockData";
 import { useState } from "react";
+import { getWalletHistory } from "@/lib/web3";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Calendar() {
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [walletConnected, setWalletConnected] = useState(false);
-  // Generate mock data up to today, already in reverse chronological order
-  const rawData: DayData[] = generateMockData(28);
-  const mockData: DayData[] = rawData.filter((day: DayData, index: number): boolean => {
-    if (!day.totalValue) return false;
-    const prevDay = rawData[index + 1];
-    if (!prevDay) return true;
 
-    const percentChange: number = ((day.totalValue - prevDay.totalValue) / prevDay.totalValue) * 100;
-    return Math.abs(percentChange) >= 1;
+  // Query for wallet history when connected
+  const { data: walletData, isLoading } = useQuery<DayData[]>({
+    queryKey: ['wallet-history', walletAddress],
+    queryFn: async () => {
+      if (!walletAddress) return [];
+      return getWalletHistory(walletAddress);
+    },
+    enabled: !!walletAddress,
+    staleTime: 30000, // Refresh every 30 seconds
   });
 
+  // Fallback to mock data when wallet is not connected
+  const mockData: DayData[] = generateMockData(28);
+
   const handleWalletConnect = (address: string) => {
+    setWalletAddress(address);
     setWalletConnected(true);
   };
+
+  // Use wallet data if available, otherwise use mock data
+  const displayData = walletConnected ? (walletData || []) : mockData;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
@@ -57,22 +68,32 @@ export default function Calendar() {
           </div>
         ) : (
           <>
-            <PortfolioStats data={mockData} />
+            <PortfolioStats data={displayData} />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {mockData.map((day: DayData, index: number) => (
-                <CalendarCard
-                  key={day.date.toISOString()}
-                  date={day.date}
-                  value={day.totalValue}
-                  previousDayValue={mockData[index + 1]?.totalValue}
-                  coins={day.coins}
-                  transactions={day.transactions}
-                  notes={day.notes}
-                  commentary={day.commentary}
-                />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="text-center text-gray-400 mt-8">
+                Loading wallet history...
+              </div>
+            ) : displayData.length === 0 ? (
+              <div className="text-center text-gray-400 mt-8">
+                No transaction history found for this wallet
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {displayData.map((day: DayData, index: number) => (
+                  <CalendarCard
+                    key={day.date.toISOString()}
+                    date={day.date}
+                    value={day.totalValue}
+                    previousDayValue={displayData[index + 1]?.totalValue}
+                    coins={day.coins}
+                    transactions={day.transactions}
+                    notes={day.notes}
+                    commentary={day.commentary}
+                  />
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>

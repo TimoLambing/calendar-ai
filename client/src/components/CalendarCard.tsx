@@ -81,17 +81,19 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
         return;
       }
 
-      // Get or create wallet
+      // Get or create wallet with proper response handling
       const walletResponse = await apiRequest('POST', '/api/wallets', {
         address: walletAddress
       });
+
+      const walletData = await walletResponse.json();
 
       await apiRequest('POST', '/api/diary-entries', {
         comment,
         timestamp: date.toISOString(),
         portfolioValue: value,
         valueChange: valueChange,
-        walletId: walletResponse.id,
+        walletId: walletData.id,
         authorAddress: walletAddress
       });
 
@@ -279,8 +281,8 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
               </Button>
 
               {/* Display entries for this specific day */}
-              <JournalEntries 
-                date={new Date(date.getFullYear(), date.getMonth(), date.getDate())} 
+              <JournalEntries
+                date={new Date(date.getFullYear(), date.getMonth(), date.getDate())}
               />
             </div>
           </TabsContent>

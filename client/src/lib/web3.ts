@@ -1,5 +1,6 @@
 import Web3 from 'web3';
 import { apiRequest } from './queryClient';
+import { DayData } from './mockData';
 
 declare global {
   interface Window {
@@ -12,6 +13,16 @@ export interface WalletConnection {
   balance: string;
 }
 
+export interface WalletTransaction {
+  hash: string;
+  timestamp: number;
+  from: string;
+  to: string;
+  value: string;
+  tokenSymbol?: string;
+  tokenAmount?: string;
+}
+
 export async function connectWallet(): Promise<WalletConnection> {
   if (!window.ethereum) {
     throw new Error('No Web3 wallet found. Please install MetaMask.');
@@ -20,7 +31,6 @@ export async function connectWallet(): Promise<WalletConnection> {
   const web3 = new Web3(window.ethereum);
 
   try {
-    // Request account access
     const accounts = await window.ethereum.request({ 
       method: 'eth_requestAccounts' 
     });
@@ -31,14 +41,12 @@ export async function connectWallet(): Promise<WalletConnection> {
 
     const balance = await web3.eth.getBalance(accounts[0]);
 
-    // Register wallet with our backend
     try {
       await apiRequest('POST', '/api/wallets', {
         address: accounts[0],
         lastSync: new Date().toISOString()
       });
     } catch (error: any) {
-      // If the wallet already exists, that's fine - continue
       if (!error.message.includes('duplicate key')) {
         throw error;
       }
@@ -53,8 +61,68 @@ export async function connectWallet(): Promise<WalletConnection> {
   }
 }
 
+export async function getWalletHistory(address: string, fromBlock?: number): Promise<DayData[]> {
+  if (!window.ethereum) {
+    throw new Error('No Web3 wallet found');
+  }
+
+  const web3 = new Web3(window.ethereum);
+
+  try {
+    const latestBlock = await web3.eth.getBlockNumber();
+    const startBlock = fromBlock || latestBlock - 10000; 
+
+    const transactions = await web3.eth.getPastLogs({
+      fromBlock: startBlock,
+      toBlock: 'latest',
+      address: address
+    });
+
+    const dayMap = new Map<string, DayData>();
+
+    await Promise.all(transactions.map(async (tx) => {
+      const block = await web3.eth.getBlock(tx.blockNumber);
+      const date = new Date(Number(block.timestamp) * 1000);
+      const dateKey = date.toISOString().split('T')[0];
+
+      const transaction = await web3.eth.getTransaction(tx.transactionHash);
+      const value = web3.utils.fromWei(transaction.value, 'ether');
+
+      if (!dayMap.has(dateKey)) {
+        dayMap.set(dateKey, {
+          date: new Date(dateKey),
+          totalValue: 0,
+          coins: [],
+          transactions: [],
+          notes: ''
+        });
+      }
+
+      const dayData = dayMap.get(dateKey)!;
+      dayData.transactions.push({
+        id: tx.transactionHash,
+        walletId: 1, 
+        timestamp: date,
+        type: transaction.from.toLowerCase() === address.toLowerCase() ? 'SELL' : 'BUY',
+        symbol: 'ETH', 
+        amount: value,
+        valueUsd: value, 
+        currentValue: value
+      });
+    }));
+
+    return Array.from(dayMap.values()).sort((a, b) => 
+      b.date.getTime() - a.date.getTime()
+    );
+  } catch (error: any) {
+    console.error('Error fetching wallet history:', error);
+    throw new Error('Failed to fetch wallet history: ' + error.message);
+  }
+}
+
+// Get ERC20 token balances (to be enhanced)
 export async function getWalletTokens(address: string) {
-  // This would typically call a service like Etherscan or Alchemy
-  // to get token balances. Simplified for demo.
+  // This would call a service like Etherscan or Alchemy
+  // to get token balances. Will be implemented later.
   return [];
 }

@@ -111,7 +111,7 @@ export async function getWalletHistory(address: string, fromBlock?: number): Pro
       dayData.totalValue += txValue;
 
       dayData.transactions.push({
-        id: tx.transactionHash,
+        id: Number(tx.transactionHash.slice(0, 10)), // Convert hex string to a number for ID
         walletId: 1, 
         timestamp: date,
         type: transaction.from.toLowerCase() === address.toLowerCase() ? 'SELL' : 'BUY',

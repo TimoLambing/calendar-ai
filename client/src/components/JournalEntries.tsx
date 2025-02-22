@@ -132,7 +132,7 @@ export function JournalEntries({ date }: Props) {
                         </span>
                       )}
                     </div>
-                    {entry.valueChange && (
+                    {entry.valueChange && entry.portfolioValue && (
                       <div className={cn(
                         "text-sm font-medium flex items-center gap-1",
                         parseFloat(entry.valueChange.toString()) > 0 ? "text-green-600" : "text-red-600"
@@ -144,7 +144,7 @@ export function JournalEntries({ date }: Props) {
                         {parseFloat(entry.valueChange.toString()) > 0 ? "+" : ""}
                         {parseFloat(entry.valueChange.toString()).toFixed(2)}%
                         <span className="text-muted-foreground ml-2">
-                          ${parseFloat(entry.portfolioValue?.toString() || "0").toLocaleString()}
+                          ${parseFloat(entry.portfolioValue.toString()).toLocaleString()}
                         </span>
                       </div>
                     )}

@@ -39,7 +39,7 @@ export const transactions = pgTable("transactions", {
 // New table for trading diary entries
 export const tradingDiaryEntries = pgTable("trading_diary_entries", {
   id: serial("id").primaryKey(),
-  transactionId: integer("transaction_id").references(() => transactions.id),
+  timestamp: timestamp("timestamp").notNull(),
   comment: text("comment").notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });

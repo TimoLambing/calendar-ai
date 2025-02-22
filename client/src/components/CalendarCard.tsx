@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
 
 interface Props {
   date: Date;
@@ -21,10 +22,26 @@ interface Props {
   commentary?: string;
 }
 
+interface TradingDiaryEntry {
+  id: string;
+  comment: string;
+  createdAt: string | null;
+}
+
 export function CalendarCard({ date, value, previousDayValue, coins, transactions, notes, commentary }: Props) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [comment, setComment] = useState("");
   const { toast } = useToast();
+
+  // Fetch diary entries for this date
+  const { data: diaryEntries } = useQuery<TradingDiaryEntry[]>({
+    queryKey: ['diary-entries', date.toISOString()],
+    queryFn: async () => {
+      const res = await fetch(`/api/diary-entries/date/${date.toISOString()}`);
+      if (!res.ok) throw new Error('Failed to fetch diary entries');
+      return res.json();
+    }
+  });
 
   const valueChange = previousDayValue ? ((value - previousDayValue) / previousDayValue) * 100 : 0;
 
@@ -51,8 +68,11 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
     try {
       await apiRequest('POST', '/api/diary-entries', {
         comment,
-        createdAt: date.toISOString()
+        timestamp: date.toISOString()
       });
+
+      //Invalidate the query after adding a comment
+      queryClient.invalidateQueries(['diary-entries', date.toISOString()]);
 
       toast({
         title: "Comment Added",
@@ -122,8 +142,8 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
                 </div>
                 {commentary && (
                   <div className="text-sm mt-4 font-medium flex items-start gap-2 bg-white/90 backdrop-blur-sm border p-3 rounded-lg shadow-sm">
-                    {valueChange > 0 ? 
-                      <Rocket className="h-5 w-5 shrink-0 text-green-600" /> : 
+                    {valueChange > 0 ?
+                      <Rocket className="h-5 w-5 shrink-0 text-green-600" /> :
                       <Skull className="h-5 w-5 shrink-0 text-red-600" />
                     }
                     <span className="italic leading-snug">{commentary}</span>
@@ -138,8 +158,8 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
                 <div className="space-y-4">
                   {coins.map((coin) => {
                     const prevDayCoin = transactions.find(t => t.symbol === coin.symbol);
-                    const performance = prevDayCoin 
-                      ? ((parseFloat(coin.valueUsd) - parseFloat(prevDayCoin.valueUsd)) / parseFloat(prevDayCoin.valueUsd)) * 100 
+                    const performance = prevDayCoin
+                      ? ((parseFloat(coin.valueUsd) - parseFloat(prevDayCoin.valueUsd)) / parseFloat(prevDayCoin.valueUsd)) * 100
                       : 0;
 
                     return (
@@ -181,7 +201,7 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
             {transactions.length > 0 ? (
               <div className="space-y-4">
                 {transactions.map((tx) => {
-                  const performance = tx.currentValue 
+                  const performance = tx.currentValue
                     ? ((parseFloat(tx.currentValue) - parseFloat(tx.valueUsd)) / parseFloat(tx.valueUsd)) * 100
                     : 0;
 
@@ -220,16 +240,36 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
           </TabsContent>
 
           <TabsContent value="journal" className="space-y-4">
-            <Textarea
-              placeholder="Add your trading notes for this day..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="min-h-[100px]"
-            />
-            <Button onClick={handleAddComment} className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Note
-            </Button>
+            <div className="space-y-4">
+              {/* Add new comment section */}
+              <Textarea
+                placeholder="Add your trading notes for this day..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="min-h-[100px]"
+              />
+              <Button onClick={handleAddComment} className="w-full">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Note
+              </Button>
+
+              {/* Display existing comments */}
+              {diaryEntries?.map((entry) => (
+                <Card key={entry.id}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-3">
+                      <ScrollText className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(entry.createdAt!).toLocaleTimeString()}
+                        </div>
+                        <div className="mt-1 whitespace-pre-wrap">{entry.comment}</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>

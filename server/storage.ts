@@ -7,7 +7,8 @@ import {
   wallets, portfolioSnapshots, coinBalances, transactions, tradingDiaryEntries
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { sql } from 'drizzle-orm';
 
 export interface IStorage {
   // Wallet operations
@@ -28,7 +29,7 @@ export interface IStorage {
 
   // Trading diary operations
   addDiaryEntry(entry: InsertTradingDiaryEntry): Promise<TradingDiaryEntry>;
-  getDiaryEntries(transactionId: number): Promise<TradingDiaryEntry[]>;
+  getDiaryEntriesByDate(date: Date): Promise<TradingDiaryEntry[]>;
   getAllDiaryEntries(): Promise<TradingDiaryEntry[]>;
 }
 
@@ -75,10 +76,21 @@ export class DatabaseStorage implements IStorage {
     return newEntry;
   }
 
-  async getDiaryEntries(transactionId: number): Promise<TradingDiaryEntry[]> {
+  async getDiaryEntriesByDate(date: Date): Promise<TradingDiaryEntry[]> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
     return db.select()
       .from(tradingDiaryEntries)
-      .where(eq(tradingDiaryEntries.transactionId, transactionId));
+      .where(
+        and(
+          sql`${tradingDiaryEntries.timestamp} >= ${startOfDay.toISOString()}`,
+          sql`${tradingDiaryEntries.timestamp} <= ${endOfDay.toISOString()}`
+        )
+      );
   }
 
   async getAllDiaryEntries(): Promise<TradingDiaryEntry[]> {

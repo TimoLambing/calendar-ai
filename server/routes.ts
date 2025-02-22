@@ -97,10 +97,15 @@ export async function registerRoutes(app: Express) {
   // New Trading Diary routes
   app.post("/api/diary-entries", async (req, res) => {
     try {
-      const result = insertTradingDiaryEntrySchema.safeParse(req.body);
+      const result = insertTradingDiaryEntrySchema.safeParse({
+        ...req.body,
+        timestamp: new Date(req.body.timestamp)
+      });
+
       if (!result.success) {
         return res.status(400).json({ error: result.error.issues });
       }
+
       const entry = await storage.addDiaryEntry(result.data);
       res.json(entry);
     } catch (error) {
@@ -125,6 +130,17 @@ export async function registerRoutes(app: Express) {
       res.json(entries);
     } catch (error) {
       console.error("Error fetching all diary entries:", error);
+      res.status(500).json({ error: "Failed to fetch diary entries" });
+    }
+  });
+
+  app.get("/api/diary-entries/date/:date", async (req, res) => {
+    try {
+      const date = new Date(req.params.date);
+      const entries = await storage.getDiaryEntriesByDate(date);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching diary entries:", error);
       res.status(500).json({ error: "Failed to fetch diary entries" });
     }
   });

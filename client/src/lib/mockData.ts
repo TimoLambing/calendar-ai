@@ -15,7 +15,7 @@ export const volatilityComments = {
       "Chad trader detected! Save some gains for the rest of us 💪",
       "Moon mission confirmed! Next stop: Your ex's Instagram story 🚀",
       "Time to flex on CT with those sweet gainz bro! 📈",
-      "Officially qualified for Miami Crypto Week! 🌴"
+      "Finally, time to pay back mom's credit card! 💳"
     ]
   },
   high_gain: { // Gains between 30-50%
@@ -25,27 +25,27 @@ export const volatilityComments = {
       "Finally, Ramen is off the menu boys! 🍜",
       "From McDonald's to Michelin stars real quick! 🌟",
       "Time to update that Tinder bio with 'crypto entrepreneur' 📱",
-      "Looks like someone's getting a new PFP tonight! 🐵"
+      "Look who's ready for Miami Crypto Week! 🌴"
     ]
   },
   extreme_loss: { // Losses > 50%
     threshold: -50,
     comments: [
-      "Have you considered opening a hot dog stand? 🌭",
-      "Achievement Unlocked: Portfolio Speedrun Any% 🏃",
-      "This is fine. Everything is fine. 🔥",
-      "Press F to pay respects 💀",
-      "Congratulations on the tax write-off! 📊"
+      "Looks like someone's back to cup noodles for dinner 🍜",
+      "Did you try turning your monitor upside down? 🙃",
+      "Achievement Unlocked: Maximum Pain 💀",
+      "Maybe it's time to start an OnlyFans? 📸",
+      "Your wife's boyfriend won't be happy about this one 😬"
     ]
   },
   high_loss: { // Losses between 30-50%
     threshold: -30,
     comments: [
-      "Did you buy high and sell low again? 📉",
-      "Maybe stick to paper trading for a bit? 📝",
-      "This is what FOMO looks like in chart form 📊",
-      "Sir, this is a casino 🎰",
-      "Have you tried turning it off and on again? 🔄"
+      "Have you tried not being poor? 💸",
+      "Time to delete the app and pretend this never happened 🙈",
+      "Sir, this is a casino. And you're losing. 🎰",
+      "McDonald's is hiring! Just saying... 🍔",
+      "Can't lose money if you can't log in *taps head* 🤔"
     ]
   }
 };

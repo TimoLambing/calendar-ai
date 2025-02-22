@@ -259,9 +259,18 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
                   <CardContent className="pt-6">
                     <div className="flex items-start gap-3">
                       <ScrollText className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                      <div>
-                        <div className="text-sm text-muted-foreground">
-                          {new Date(entry.createdAt!).toLocaleTimeString()}
+                      <div className="flex-grow">
+                        <div className="flex justify-between items-center">
+                          <div className="text-sm text-muted-foreground">
+                            {new Date(entry.createdAt!).toLocaleTimeString()}
+                          </div>
+                          <div className={cn(
+                            "text-sm font-medium flex items-center gap-1",
+                            valueChange > 0 ? "text-green-600" : "text-red-600"
+                          )}>
+                            {valueChange > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                            {valueChange > 0 ? "+" : ""}{valueChange.toFixed(2)}%
+                          </div>
                         </div>
                         <div className="mt-1 whitespace-pre-wrap">{entry.comment}</div>
                       </div>

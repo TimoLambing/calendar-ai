@@ -22,7 +22,6 @@ export default function Calendar() {
 
   const handleWalletConnect = (address: string) => {
     setWalletConnected(true);
-    // Additional wallet connection logic can go here
   };
 
   return (
@@ -34,7 +33,8 @@ export default function Calendar() {
               <h1 className="text-3xl font-bold text-white">Portfolio Calendar</h1>
               <p className="text-gray-400 mt-1">Track your daily portfolio performance</p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex items-center gap-4">
+              <WalletConnect onConnect={handleWalletConnect} minimal />
               <Link href="/journal">
                 <Button variant="outline" className="flex items-center gap-2 hover:bg-gray-700">
                   <ScrollText className="h-4 w-4" />
@@ -52,7 +52,7 @@ export default function Calendar() {
         </header>
 
         {!walletConnected ? (
-          <div className="mb-8">
+          <div className="max-w-md mx-auto mt-20">
             <WalletConnect onConnect={handleWalletConnect} />
           </div>
         ) : (

@@ -1,6 +1,7 @@
 import Web3 from 'web3';
 import { apiRequest } from './queryClient';
 import { DayData } from './mockData';
+import { Log } from 'web3-core';
 
 declare global {
   interface Window {
@@ -70,22 +71,29 @@ export async function getWalletHistory(address: string, fromBlock?: number): Pro
 
   try {
     const latestBlock = await web3.eth.getBlockNumber();
-    const startBlock = fromBlock || latestBlock - 10000; 
+    // Convert to number for arithmetic operation
+    const startBlock = fromBlock || Math.max(0, Number(latestBlock) - 10000);
 
     const transactions = await web3.eth.getPastLogs({
-      fromBlock: startBlock,
+      fromBlock: BigInt(startBlock),
       toBlock: 'latest',
       address: address
     });
 
     const dayMap = new Map<string, DayData>();
 
-    await Promise.all(transactions.map(async (tx) => {
-      const block = await web3.eth.getBlock(tx.blockNumber);
+    await Promise.all(transactions.map(async (tx: Log) => {
+      if (!tx.blockNumber || !tx.transactionHash) return;
+
+      const block = await web3.eth.getBlock(Number(tx.blockNumber));
+      if (!block || !block.timestamp) return;
+
       const date = new Date(Number(block.timestamp) * 1000);
       const dateKey = date.toISOString().split('T')[0];
 
       const transaction = await web3.eth.getTransaction(tx.transactionHash);
+      if (!transaction || !transaction.value) return;
+
       const value = web3.utils.fromWei(transaction.value, 'ether');
 
       if (!dayMap.has(dateKey)) {
@@ -99,14 +107,17 @@ export async function getWalletHistory(address: string, fromBlock?: number): Pro
       }
 
       const dayData = dayMap.get(dateKey)!;
+      const txValue = parseFloat(value);
+      dayData.totalValue += txValue;
+
       dayData.transactions.push({
         id: tx.transactionHash,
-        walletId: 1, 
+        walletId: 1,
         timestamp: date,
         type: transaction.from.toLowerCase() === address.toLowerCase() ? 'SELL' : 'BUY',
-        symbol: 'ETH', 
+        symbol: 'ETH',
         amount: value,
-        valueUsd: value, 
+        valueUsd: value,
         currentValue: value
       });
     }));

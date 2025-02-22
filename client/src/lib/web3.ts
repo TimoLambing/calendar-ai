@@ -1,7 +1,7 @@
 import Web3 from 'web3';
 import { apiRequest } from './queryClient';
 import { DayData } from './mockData';
-import { Log } from 'web3-core';
+import type { Log } from 'web3-types';
 
 declare global {
   interface Window {
@@ -112,12 +112,12 @@ export async function getWalletHistory(address: string, fromBlock?: number): Pro
 
       dayData.transactions.push({
         id: tx.transactionHash,
-        walletId: 1,
+        walletId: 1, 
         timestamp: date,
         type: transaction.from.toLowerCase() === address.toLowerCase() ? 'SELL' : 'BUY',
-        symbol: 'ETH',
+        symbol: 'ETH', 
         amount: value,
-        valueUsd: value,
+        valueUsd: value, 
         currentValue: value
       });
     }));

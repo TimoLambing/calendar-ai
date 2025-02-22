@@ -33,15 +33,17 @@ export const transactions = pgTable("transactions", {
   symbol: text("symbol").notNull(),
   amount: decimal("amount").notNull(),
   valueUsd: decimal("value_usd").notNull(),
-  currentValue: decimal("current_value"), // Added for tracking performance
+  currentValue: decimal("current_value"), 
 });
 
-// New table for trading diary entries
+// New table for trading diary entries with added performance data
 export const tradingDiaryEntries = pgTable("trading_diary_entries", {
   id: serial("id").primaryKey(),
   timestamp: timestamp("timestamp").notNull(),
   comment: text("comment").notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  portfolioValue: decimal("portfolio_value"),
+  valueChange: decimal("value_change"),
 });
 
 export const insertWalletSchema = createInsertSchema(wallets).extend({

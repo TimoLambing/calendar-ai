@@ -97,9 +97,13 @@ export async function registerRoutes(app: Express) {
   // New Trading Diary routes
   app.post("/api/diary-entries", async (req, res) => {
     try {
+      const { comment, timestamp, portfolioValue, valueChange } = req.body;
+
       const result = insertTradingDiaryEntrySchema.safeParse({
-        ...req.body,
-        timestamp: new Date(req.body.timestamp)
+        comment,
+        timestamp: new Date(timestamp),
+        portfolioValue,
+        valueChange
       });
 
       if (!result.success) {

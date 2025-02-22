@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { ScrollText } from "lucide-react";
+import { ScrollText, TrendingUp, TrendingDown } from "lucide-react";
 import { TradingDiaryEntry } from "@shared/schema";
+import { cn } from "@/lib/utils";
 
 export function JournalEntries() {
   const { data: entries } = useQuery<TradingDiaryEntry[]>({
@@ -27,9 +28,24 @@ export function JournalEntries() {
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
               <ScrollText className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-              <div>
-                <div className="font-medium">
-                  {new Date(entry.createdAt!).toLocaleDateString()}
+              <div className="flex-grow">
+                <div className="flex justify-between items-center">
+                  <div className="font-medium">
+                    {new Date(entry.timestamp).toLocaleDateString()}
+                  </div>
+                  {entry.valueChange && (
+                    <div className={cn(
+                      "text-sm font-medium flex items-center gap-1",
+                      parseFloat(entry.valueChange.toString()) > 0 ? "text-green-600" : "text-red-600"
+                    )}>
+                      {parseFloat(entry.valueChange.toString()) > 0 ? 
+                        <TrendingUp className="h-4 w-4" /> : 
+                        <TrendingDown className="h-4 w-4" />
+                      }
+                      {parseFloat(entry.valueChange.toString()) > 0 ? "+" : ""}
+                      {parseFloat(entry.valueChange.toString()).toFixed(2)}%
+                    </div>
+                  )}
                 </div>
                 <div className="mt-2 text-sm whitespace-pre-wrap">{entry.comment}</div>
               </div>

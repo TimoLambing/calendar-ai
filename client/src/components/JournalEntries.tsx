@@ -79,7 +79,7 @@ export function JournalEntries({ date }: Props) {
     try {
       await apiRequest('POST', `/api/diary-entries/${entryId}/comments`, {
         comment,
-        authorAddress: window.ethereum?.selectedAddress // Current wallet address
+        authorAddress: window.ethereum?.selectedAddress || "Anonymous" // Fallback for unconnected users
       });
 
       queryClient.invalidateQueries({ queryKey: ['diary-comments'] });
@@ -126,9 +126,11 @@ export function JournalEntries({ date }: Props) {
                   <div>
                     <div className="font-medium flex items-center gap-2">
                       {new Date(entry.timestamp).toLocaleDateString()}
-                      <span className="text-sm text-muted-foreground">
-                        by {entry.authorAddress.slice(0, 6)}...{entry.authorAddress.slice(-4)}
-                      </span>
+                      {entry.authorAddress && (
+                        <span className="text-sm text-muted-foreground">
+                          by {entry.authorAddress.slice(0, 6)}...{entry.authorAddress.slice(-4)}
+                        </span>
+                      )}
                     </div>
                     {entry.valueChange && (
                       <div className={cn(
@@ -165,7 +167,11 @@ export function JournalEntries({ date }: Props) {
                     {commentsMap?.[entry.id]?.map((comment) => (
                       <div key={comment.id} className="text-sm">
                         <div className="flex items-center gap-2 text-muted-foreground">
-                          <span>{comment.authorAddress.slice(0, 6)}...{comment.authorAddress.slice(-4)}</span>
+                          {comment.authorAddress && (
+                            <span>
+                              {comment.authorAddress.slice(0, 6)}...{comment.authorAddress.slice(-4)}
+                            </span>
+                          )}
                           <span>•</span>
                           <span>{new Date(comment.createdAt!).toLocaleString()}</span>
                         </div>

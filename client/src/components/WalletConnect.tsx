@@ -1,35 +1,38 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { connectWallet, type WalletConnection } from "@/lib/web3";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { Wallet } from "lucide-react";
+import { usePrivy } from '@privy-io/react-auth';
+import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 interface Props {
-  onConnect: (wallet: WalletConnection) => void;
+  onConnect: (walletAddress: string) => void;
 }
 
 export function WalletConnect({ onConnect }: Props) {
-  const [isConnecting, setIsConnecting] = useState(false);
+  const { login, ready, authenticated, user } = usePrivy();
   const { toast } = useToast();
 
-  const handleConnect = async () => {
-    setIsConnecting(true);
-    try {
-      const wallet = await connectWallet();
-      onConnect(wallet);
+  useEffect(() => {
+    // If user is already authenticated, call onConnect with their wallet address
+    if (authenticated && user?.wallet?.address) {
+      onConnect(user.wallet.address);
       toast({
         title: "Wallet Connected",
-        description: `Connected to ${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`
+        description: `Connected to ${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}`
       });
+    }
+  }, [authenticated, user?.wallet?.address, onConnect]);
+
+  const handleConnect = async () => {
+    try {
+      await login();
     } catch (error: any) {
       toast({
         title: "Connection Failed",
-        description: error.message,
+        description: error.message || "Failed to connect wallet",
         variant: "destructive"
       });
-    } finally {
-      setIsConnecting(false);
     }
   };
 
@@ -44,10 +47,10 @@ export function WalletConnect({ onConnect }: Props) {
       <CardContent>
         <Button 
           onClick={handleConnect} 
-          disabled={isConnecting}
+          disabled={!ready}
           className="w-full"
         >
-          {isConnecting ? "Connecting..." : "Connect Wallet"}
+          {!ready ? "Loading..." : "Connect Wallet"}
         </Button>
       </CardContent>
     </Card>

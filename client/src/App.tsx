@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Calendar from "@/pages/calendar";
 import Journal from "@/pages/journal";
+import { PrivyProvider } from '@privy-io/react-auth';
+import { privyConfig } from './lib/privy';
 
 function Router() {
   return (
@@ -18,10 +20,12 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
-    </QueryClientProvider>
+    <PrivyProvider {...privyConfig}>
+      <QueryClientProvider client={queryClient}>
+        <Router />
+        <Toaster />
+      </QueryClientProvider>
+    </PrivyProvider>
   );
 }
 

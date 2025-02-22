@@ -1,11 +1,14 @@
 import { CalendarCard } from "@/components/CalendarCard";
 import { PortfolioStats } from "@/components/PortfolioStats";
+import { WalletConnect } from "@/components/WalletConnect";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ScrollText } from "lucide-react";
 import { generateMockData, type DayData } from "@/lib/mockData";
+import { useState } from "react";
 
 export default function Calendar() {
+  const [walletConnected, setWalletConnected] = useState(false);
   // Generate mock data up to today, already in reverse chronological order
   const rawData: DayData[] = generateMockData(28);
   const mockData: DayData[] = rawData.filter((day: DayData, index: number): boolean => {
@@ -16,6 +19,11 @@ export default function Calendar() {
     const percentChange: number = ((day.totalValue - prevDay.totalValue) / prevDay.totalValue) * 100;
     return Math.abs(percentChange) >= 1;
   });
+
+  const handleWalletConnect = (address: string) => {
+    setWalletConnected(true);
+    // Additional wallet connection logic can go here
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
@@ -43,22 +51,30 @@ export default function Calendar() {
           </div>
         </header>
 
-        <PortfolioStats data={mockData} />
+        {!walletConnected ? (
+          <div className="mb-8">
+            <WalletConnect onConnect={handleWalletConnect} />
+          </div>
+        ) : (
+          <>
+            <PortfolioStats data={mockData} />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {mockData.map((day: DayData, index: number) => (
-            <CalendarCard
-              key={day.date.toISOString()}
-              date={day.date}
-              value={day.totalValue}
-              previousDayValue={mockData[index + 1]?.totalValue}
-              coins={day.coins}
-              transactions={day.transactions}
-              notes={day.notes}
-              commentary={day.commentary}
-            />
-          ))}
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {mockData.map((day: DayData, index: number) => (
+                <CalendarCard
+                  key={day.date.toISOString()}
+                  date={day.date}
+                  value={day.totalValue}
+                  previousDayValue={mockData[index + 1]?.totalValue}
+                  coins={day.coins}
+                  transactions={day.transactions}
+                  notes={day.notes}
+                  commentary={day.commentary}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

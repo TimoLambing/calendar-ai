@@ -11,21 +11,21 @@ export const volatilityComments = {
   extreme_gain: { // Gains > 50%
     threshold: 50,
     comments: [
-      "You bought how much leverage? Hope you took screenshots 📸",
-      "Cool insider trading bro 😎 *SEC has entered the chat*",
-      "Breaking: Local trader actually makes money 🚀",
-      "Time to quit your job and become a full-time trader! (just kidding) 💼",
-      "Achievement Unlocked: Portfolio Actually Green 🎮"
+      "New wife application opened! 💍 Wen Lambo? 🏎️",
+      "Chad trader detected! Save some gains for the rest of us 💪",
+      "Moon mission confirmed! Next stop: Your ex's Instagram story 🚀",
+      "Time to flex on CT with those sweet gainz bro! 📈",
+      "Officially qualified for Miami Crypto Week! 🌴"
     ]
   },
   high_gain: { // Gains between 30-50%
     threshold: 30,
     comments: [
-      "Finally a trade that didn't go south! 🎯",
-      "Not bad for a degen trader 🎲",
-      "Who are you and what did you do with my portfolio? 🕵️",
-      "Teach me your ways, sensei! 🥋",
-      "Maybe you're not as bad at this as everyone thinks 😅"
+      "Wife-changing gains incoming! 💎",
+      "Finally, Ramen is off the menu boys! 🍜",
+      "From McDonald's to Michelin stars real quick! 🌟",
+      "Time to update that Tinder bio with 'crypto entrepreneur' 📱",
+      "Looks like someone's getting a new PFP tonight! 🐵"
     ]
   },
   extreme_loss: { // Losses > 50%

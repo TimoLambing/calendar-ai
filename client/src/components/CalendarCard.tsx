@@ -279,7 +279,9 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
               </Button>
 
               {/* Display entries for this specific day */}
-              <JournalEntries date={date} />
+              <JournalEntries 
+                date={new Date(date.getFullYear(), date.getMonth(), date.getDate())} 
+              />
             </div>
           </TabsContent>
         </Tabs>

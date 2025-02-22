@@ -83,17 +83,16 @@ export class DatabaseStorage implements IStorage {
 
   async getDiaryEntriesByDate(date: Date): Promise<TradingDiaryEntry[]> {
     const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
+    startOfDay.setUTCHours(0, 0, 0, 0);
 
     const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
+    endOfDay.setUTCHours(23, 59, 59, 999);
 
     return db.select()
       .from(tradingDiaryEntries)
       .where(
         and(
-          sql`${tradingDiaryEntries.timestamp} >= ${startOfDay.toISOString()}`,
-          sql`${tradingDiaryEntries.timestamp} <= ${endOfDay.toISOString()}`
+          sql`DATE(${tradingDiaryEntries.timestamp}) = DATE(${date.toISOString()})`
         )
       )
       .orderBy(desc(tradingDiaryEntries.createdAt));

@@ -4,10 +4,11 @@ import {
   CoinBalance, InsertCoinBalance,
   Transaction, InsertTransaction,
   TradingDiaryEntry, InsertTradingDiaryEntry,
-  wallets, portfolioSnapshots, coinBalances, transactions, tradingDiaryEntries
+  TradingDiaryComment, InsertTradingDiaryComment,
+  wallets, portfolioSnapshots, coinBalances, transactions, tradingDiaryEntries, tradingDiaryComments
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { sql } from 'drizzle-orm';
 
 export interface IStorage {
@@ -31,6 +32,10 @@ export interface IStorage {
   addDiaryEntry(entry: InsertTradingDiaryEntry): Promise<TradingDiaryEntry>;
   getDiaryEntriesByDate(date: Date): Promise<TradingDiaryEntry[]>;
   getAllDiaryEntries(): Promise<TradingDiaryEntry[]>;
+
+  // New comment operations
+  addDiaryComment(comment: InsertTradingDiaryComment): Promise<TradingDiaryComment>;
+  getDiaryComments(entryId: number): Promise<TradingDiaryComment[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -90,11 +95,26 @@ export class DatabaseStorage implements IStorage {
           sql`${tradingDiaryEntries.timestamp} >= ${startOfDay.toISOString()}`,
           sql`${tradingDiaryEntries.timestamp} <= ${endOfDay.toISOString()}`
         )
-      );
+      )
+      .orderBy(desc(tradingDiaryEntries.createdAt));
   }
 
   async getAllDiaryEntries(): Promise<TradingDiaryEntry[]> {
-    return db.select().from(tradingDiaryEntries);
+    return db.select()
+      .from(tradingDiaryEntries)
+      .orderBy(desc(tradingDiaryEntries.timestamp));
+  }
+
+  async addDiaryComment(comment: InsertTradingDiaryComment): Promise<TradingDiaryComment> {
+    const [newComment] = await db.insert(tradingDiaryComments).values(comment).returning();
+    return newComment;
+  }
+
+  async getDiaryComments(entryId: number): Promise<TradingDiaryComment[]> {
+    return db.select()
+      .from(tradingDiaryComments)
+      .where(eq(tradingDiaryComments.entryId, entryId))
+      .orderBy(tradingDiaryComments.createdAt);
   }
 }
 

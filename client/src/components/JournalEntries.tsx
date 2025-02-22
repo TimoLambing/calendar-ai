@@ -1,13 +1,87 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { ScrollText, TrendingUp, TrendingDown } from "lucide-react";
-import { TradingDiaryEntry } from "@shared/schema";
+import { ScrollText, TrendingUp, TrendingDown, MessageSquare } from "lucide-react";
+import { TradingDiaryEntry, TradingDiaryComment } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+
+interface EntryWithComments extends TradingDiaryEntry {
+  comments?: TradingDiaryComment[];
+  isExpanded?: boolean;
+}
 
 export function JournalEntries() {
   const { data: entries } = useQuery<TradingDiaryEntry[]>({
     queryKey: ['/api/diary-entries']
   });
+
+  const [expandedEntries, setExpandedEntries] = useState<Set<number>>(new Set());
+  const [newComments, setNewComments] = useState<Record<number, string>>({});
+  const { toast } = useToast();
+
+  // Fetch comments for an entry when it's expanded
+  const { data: commentsMap } = useQuery<Record<number, TradingDiaryComment[]>>({
+    queryKey: ['diary-comments', Array.from(expandedEntries)],
+    queryFn: async () => {
+      const commentPromises = Array.from(expandedEntries).map(async (entryId) => {
+        const response = await fetch(`/api/diary-entries/${entryId}/comments`);
+        if (!response.ok) throw new Error('Failed to fetch comments');
+        const comments = await response.json();
+        return [entryId, comments];
+      });
+      const results = await Promise.all(commentPromises);
+      return Object.fromEntries(results);
+    },
+    enabled: expandedEntries.size > 0
+  });
+
+  const toggleComments = (entryId: number) => {
+    const newExpanded = new Set(expandedEntries);
+    if (newExpanded.has(entryId)) {
+      newExpanded.delete(entryId);
+    } else {
+      newExpanded.add(entryId);
+    }
+    setExpandedEntries(newExpanded);
+  };
+
+  const handleAddComment = async (entryId: number) => {
+    const comment = newComments[entryId];
+    if (!comment?.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a comment",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await apiRequest('POST', `/api/diary-entries/${entryId}/comments`, {
+        comment,
+        authorAddress: window.ethereum?.selectedAddress // Current wallet address
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['diary-comments'] });
+
+      toast({
+        title: "Comment Added",
+        description: "Your comment has been added successfully."
+      });
+
+      setNewComments(prev => ({...prev, [entryId]: ''}));
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add comment",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (!entries?.length) {
     return (
@@ -29,28 +103,75 @@ export function JournalEntries() {
             <div className="flex items-start gap-3">
               <ScrollText className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
               <div className="flex-grow">
-                <div className="flex justify-between items-center">
-                  <div className="font-medium">
-                    {new Date(entry.timestamp).toLocaleDateString()}
-                  </div>
-                  {entry.valueChange && (
-                    <div className={cn(
-                      "text-sm font-medium flex items-center gap-1",
-                      parseFloat(entry.valueChange.toString()) > 0 ? "text-green-600" : "text-red-600"
-                    )}>
-                      {parseFloat(entry.valueChange.toString()) > 0 ? 
-                        <TrendingUp className="h-4 w-4" /> : 
-                        <TrendingDown className="h-4 w-4" />
-                      }
-                      {parseFloat(entry.valueChange.toString()) > 0 ? "+" : ""}
-                      {parseFloat(entry.valueChange.toString()).toFixed(2)}%
-                      <span className="text-muted-foreground ml-2">
-                        ${parseFloat(entry.portfolioValue?.toString() || "0").toLocaleString()}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-medium flex items-center gap-2">
+                      {new Date(entry.timestamp).toLocaleDateString()}
+                      <span className="text-sm text-muted-foreground">
+                        by {entry.authorAddress.slice(0, 6)}...{entry.authorAddress.slice(-4)}
                       </span>
                     </div>
-                  )}
+                    {entry.valueChange && (
+                      <div className={cn(
+                        "text-sm font-medium flex items-center gap-1",
+                        parseFloat(entry.valueChange.toString()) > 0 ? "text-green-600" : "text-red-600"
+                      )}>
+                        {parseFloat(entry.valueChange.toString()) > 0 ? 
+                          <TrendingUp className="h-4 w-4" /> : 
+                          <TrendingDown className="h-4 w-4" />
+                        }
+                        {parseFloat(entry.valueChange.toString()) > 0 ? "+" : ""}
+                        {parseFloat(entry.valueChange.toString()).toFixed(2)}%
+                        <span className="text-muted-foreground ml-2">
+                          ${parseFloat(entry.portfolioValue?.toString() || "0").toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleComments(entry.id)}
+                    className="flex items-center gap-2"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    {commentsMap?.[entry.id]?.length || 0} Comments
+                  </Button>
                 </div>
+
                 <div className="mt-2 text-sm whitespace-pre-wrap">{entry.comment}</div>
+
+                {expandedEntries.has(entry.id) && (
+                  <div className="mt-4 pl-4 border-l-2 space-y-4">
+                    {commentsMap?.[entry.id]?.map((comment) => (
+                      <div key={comment.id} className="text-sm">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <span>{comment.authorAddress.slice(0, 6)}...{comment.authorAddress.slice(-4)}</span>
+                          <span>•</span>
+                          <span>{new Date(comment.createdAt!).toLocaleString()}</span>
+                        </div>
+                        <div className="mt-1">{comment.comment}</div>
+                      </div>
+                    ))}
+
+                    <div className="space-y-2">
+                      <Textarea
+                        placeholder="Add a comment..."
+                        value={newComments[entry.id] || ''}
+                        onChange={(e) => setNewComments(prev => ({
+                          ...prev,
+                          [entry.id]: e.target.value
+                        }))}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleAddComment(entry.id)}
+                      >
+                        Add Comment
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

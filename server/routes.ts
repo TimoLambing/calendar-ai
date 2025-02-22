@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
-import { insertWalletSchema, insertPortfolioSnapshotSchema, insertTransactionSchema, insertTradingDiaryEntrySchema } from "@shared/schema";
+import { insertWalletSchema, insertPortfolioSnapshotSchema, insertTransactionSchema, insertTradingDiaryEntrySchema, insertTradingDiaryCommentSchema } from "@shared/schema";
 import { ZodError } from "zod";
 
 export async function registerRoutes(app: Express) {
@@ -17,12 +17,11 @@ export async function registerRoutes(app: Express) {
       }
       const wallet = await storage.createWallet(result.data);
       res.json(wallet);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating wallet:", error);
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.issues });
       }
-      // Handle duplicate wallet address gracefully
       if (error.message.includes('duplicate key')) {
         const existingWallet = await storage.getWallet(req.body.address);
         return res.json(existingWallet);
@@ -94,16 +93,18 @@ export async function registerRoutes(app: Express) {
     }
   });
 
-  // New Trading Diary routes
+  // Trading Diary routes
   app.post("/api/diary-entries", async (req, res) => {
     try {
-      const { comment, timestamp, portfolioValue, valueChange } = req.body;
+      const { comment, timestamp, portfolioValue, valueChange, walletId, authorAddress } = req.body;
 
       const result = insertTradingDiaryEntrySchema.safeParse({
         comment,
         timestamp: new Date(timestamp),
         portfolioValue,
-        valueChange
+        valueChange,
+        walletId,
+        authorAddress
       });
 
       if (!result.success) {
@@ -146,6 +147,42 @@ export async function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Error fetching diary entries:", error);
       res.status(500).json({ error: "Failed to fetch diary entries" });
+    }
+  });
+
+  // New route for adding comments to diary entries
+  app.post("/api/diary-entries/:entryId/comments", async (req, res) => {
+    try {
+      const { comment, authorAddress } = req.body;
+      const entryId = parseInt(req.params.entryId);
+
+      const result = insertTradingDiaryCommentSchema.safeParse({
+        entryId,
+        comment,
+        authorAddress
+      });
+
+      if (!result.success) {
+        return res.status(400).json({ error: result.error.issues });
+      }
+
+      const newComment = await storage.addDiaryComment(result.data);
+      res.json(newComment);
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      res.status(500).json({ error: "Failed to add comment" });
+    }
+  });
+
+  // New route for getting comments for a diary entry
+  app.get("/api/diary-entries/:entryId/comments", async (req, res) => {
+    try {
+      const entryId = parseInt(req.params.entryId);
+      const comments = await storage.getDiaryComments(entryId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ error: "Failed to fetch comments" });
     }
   });
 

@@ -73,7 +73,6 @@ export function WalletConnect({ onConnect, minimal = false }: Props) {
     );
   }
 
-  // Full card view for initial connection
   return (
     <div className="text-center">
       <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>

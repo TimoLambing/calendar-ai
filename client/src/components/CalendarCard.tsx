@@ -28,6 +28,8 @@ interface TradingDiaryEntry {
   createdAt: string | null;
   portfolioValue?: number;
   valueChange?: number;
+  walletId: string;
+  authorAddress: string;
 }
 
 export function CalendarCard({ date, value, previousDayValue, coins, transactions, notes, commentary }: Props) {
@@ -57,7 +59,7 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
   const isHighLoss = valueChange < -30 && valueChange >= -50;
   const isExtremeLoss = valueChange < -50;
 
-  const handleAddComment = async () => {
+  async function handleAddComment() {
     if (!comment.trim()) {
       toast({
         title: "Error",
@@ -68,11 +70,28 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
     }
 
     try {
+      const walletAddress = window.ethereum?.selectedAddress;
+      if (!walletAddress) {
+        toast({
+          title: "Error",
+          description: "Please connect your wallet first",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Get or create wallet
+      const walletResponse = await apiRequest('POST', '/api/wallets', {
+        address: walletAddress
+      });
+
       await apiRequest('POST', '/api/diary-entries', {
         comment,
         timestamp: date.toISOString(),
         portfolioValue: value,
-        valueChange: valueChange
+        valueChange: valueChange,
+        walletId: walletResponse.id,
+        authorAddress: walletAddress
       });
 
       queryClient.invalidateQueries({ queryKey: ['diary-entries'] });
@@ -84,13 +103,14 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
       });
       setComment("");
     } catch (error) {
+      console.error('Error adding comment:', error);
       toast({
         title: "Error",
         description: "Failed to save comment",
         variant: "destructive"
       });
     }
-  };
+  }
 
   return (
     <Dialog>

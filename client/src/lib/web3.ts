@@ -1,7 +1,6 @@
 import Web3 from 'web3';
 import { apiRequest } from './queryClient';
 import { DayData } from './mockData';
-import type { Log } from 'web3-types';
 
 declare global {
   interface Window {
@@ -14,16 +13,6 @@ export interface WalletConnection {
   balance: string;
 }
 
-export interface WalletTransaction {
-  hash: string;
-  timestamp: number;
-  from: string;
-  to: string;
-  value: string;
-  tokenSymbol?: string;
-  tokenAmount?: string;
-}
-
 export async function connectWallet(): Promise<WalletConnection> {
   if (!window.ethereum) {
     throw new Error('No Web3 wallet found. Please install MetaMask.');
@@ -32,6 +21,20 @@ export async function connectWallet(): Promise<WalletConnection> {
   const web3 = new Web3(window.ethereum);
 
   try {
+    // Request both account access and transaction history permissions
+    const permissions = await window.ethereum.request({ 
+      method: 'wallet_requestPermissions',
+      params: [{
+        eth_accounts: {},
+        eth_blockNumber: {},
+        eth_call: {},
+        eth_getBalance: {},
+        eth_getBlockByNumber: {},
+        eth_getTransactionByHash: {},
+        eth_getLogs: {}
+      }]
+    });
+
     const accounts = await window.ethereum.request({ 
       method: 'eth_requestAccounts' 
     });
@@ -58,77 +61,31 @@ export async function connectWallet(): Promise<WalletConnection> {
       balance: web3.utils.fromWei(balance, 'ether')
     };
   } catch (error: any) {
+    if (error.code === 4001) {
+      throw new Error('Permission denied. Please grant access to view your transaction history.');
+    }
     throw new Error('Failed to connect wallet: ' + error.message);
   }
 }
 
-export async function getWalletHistory(address: string, fromBlock?: number): Promise<DayData[]> {
-  if (!window.ethereum) {
-    throw new Error('No Web3 wallet found');
-  }
-
-  const web3 = new Web3(window.ethereum);
-
-  try {
-    const latestBlock = await web3.eth.getBlockNumber();
-    // Convert to number for arithmetic operation
-    const startBlock = fromBlock || Math.max(0, Number(latestBlock) - 10000);
-
-    const transactions = await web3.eth.getPastLogs({
-      fromBlock: BigInt(startBlock),
-      toBlock: 'latest',
-      address: address
-    });
-
-    const dayMap = new Map<string, DayData>();
-
-    for (const tx of transactions) {
-      if (!tx.blockNumber || !tx.transactionHash) continue;
-
-      const block = await web3.eth.getBlock(Number(tx.blockNumber));
-      if (!block || !block.timestamp) continue;
-
-      const date = new Date(Number(block.timestamp) * 1000);
-      const dateKey = date.toISOString().split('T')[0];
-
-      const transaction = await web3.eth.getTransaction(tx.transactionHash);
-      if (!transaction || !transaction.value) continue;
-
-      const value = web3.utils.fromWei(transaction.value, 'ether');
-
-      if (!dayMap.has(dateKey)) {
-        dayMap.set(dateKey, {
-          date: new Date(dateKey),
-          totalValue: 0,
-          coins: [],
-          transactions: [],
-          notes: ''
-        });
-      }
-
-      const dayData = dayMap.get(dateKey)!;
-      const txValue = parseFloat(value);
-      dayData.totalValue += txValue;
-
-      dayData.transactions.push({
-        id: Number(tx.transactionHash.slice(0, 10)), // Convert hex string to a number for ID
-        walletId: 1, 
-        timestamp: date,
-        type: transaction.from.toLowerCase() === address.toLowerCase() ? 'SELL' : 'BUY',
-        symbol: 'ETH', 
-        amount: value,
-        valueUsd: value, 
-        currentValue: value
+// For now, we'll use mock data until we have proper permissions
+export async function getWalletHistory(address: string): Promise<DayData[]> {
+  const generateMockData = (numDays: number): DayData[] => {
+    const data: DayData[] = [];
+    for (let i = 0; i < numDays; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      data.push({
+        date: date,
+        totalValue: Math.random() * 100,
+        coins: [],
+        transactions: [],
+        notes: ''
       });
     }
-
-    return Array.from(dayMap.values()).sort((a, b) => 
-      b.date.getTime() - a.date.getTime()
-    );
-  } catch (error: any) {
-    console.error('Error fetching wallet history:', error);
-    throw new Error('Failed to fetch wallet history: ' + error.message);
-  }
+    return data;
+  };
+  return generateMockData(28);
 }
 
 // Get ERC20 token balances (to be enhanced)

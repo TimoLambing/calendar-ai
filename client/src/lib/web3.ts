@@ -82,17 +82,17 @@ export async function getWalletHistory(address: string, fromBlock?: number): Pro
 
     const dayMap = new Map<string, DayData>();
 
-    await Promise.all(transactions.map(async (tx: Log) => {
-      if (!tx.blockNumber || !tx.transactionHash) return;
+    for (const tx of transactions) {
+      if (!tx.blockNumber || !tx.transactionHash) continue;
 
       const block = await web3.eth.getBlock(Number(tx.blockNumber));
-      if (!block || !block.timestamp) return;
+      if (!block || !block.timestamp) continue;
 
       const date = new Date(Number(block.timestamp) * 1000);
       const dateKey = date.toISOString().split('T')[0];
 
       const transaction = await web3.eth.getTransaction(tx.transactionHash);
-      if (!transaction || !transaction.value) return;
+      if (!transaction || !transaction.value) continue;
 
       const value = web3.utils.fromWei(transaction.value, 'ether');
 
@@ -120,7 +120,7 @@ export async function getWalletHistory(address: string, fromBlock?: number): Pro
         valueUsd: value, 
         currentValue: value
       });
-    }));
+    }
 
     return Array.from(dayMap.values()).sort((a, b) => 
       b.date.getTime() - a.date.getTime()

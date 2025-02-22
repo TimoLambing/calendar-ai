@@ -9,21 +9,37 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
+interface Props {
+  date?: Date; // Optional date filter
+}
+
 interface EntryWithComments extends TradingDiaryEntry {
   comments?: TradingDiaryComment[];
   isExpanded?: boolean;
 }
 
-export function JournalEntries() {
+export function JournalEntries({ date }: Props) {
+  // Use different query key and endpoint based on whether a date is provided
+  const queryKey = date ? 
+    ['diary-entries', 'date', date.toISOString()] : 
+    ['diary-entries'];
+
   const { data: entries } = useQuery<TradingDiaryEntry[]>({
-    queryKey: ['/api/diary-entries']
+    queryKey,
+    queryFn: async () => {
+      const endpoint = date ? 
+        `/api/diary-entries/date/${date.toISOString()}` :
+        '/api/diary-entries';
+      const response = await fetch(endpoint);
+      if (!response.ok) throw new Error('Failed to fetch diary entries');
+      return response.json();
+    }
   });
 
   const [expandedEntries, setExpandedEntries] = useState<Set<number>>(new Set());
   const [newComments, setNewComments] = useState<Record<number, string>>({});
   const { toast } = useToast();
 
-  // Fetch comments for an entry when it's expanded
   const { data: commentsMap } = useQuery<Record<number, TradingDiaryComment[]>>({
     queryKey: ['diary-comments', Array.from(expandedEntries)],
     queryFn: async () => {
@@ -88,7 +104,10 @@ export function JournalEntries() {
       <Card>
         <CardContent className="pt-6">
           <div className="text-center text-muted-foreground">
-            No journal entries yet
+            {date ? 
+              `No journal entries for ${date.toLocaleDateString()}` :
+              'No journal entries yet'
+            }
           </div>
         </CardContent>
       </Card>

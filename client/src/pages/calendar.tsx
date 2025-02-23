@@ -43,6 +43,11 @@ export default function Calendar() {
             <div>
               <h1 className="text-3xl font-bold text-white">Portfolio Calendar</h1>
               <p className="text-gray-400 mt-1">Track your daily portfolio performance</p>
+              {!walletConnected && (
+                <p className="text-yellow-400 mt-2 text-sm">
+                  Currently showing mock data. Connect wallet to see your actual portfolio.
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-4">
               <WalletConnect onConnect={handleWalletConnect} minimal />
@@ -62,40 +67,34 @@ export default function Calendar() {
           </div>
         </header>
 
-        {!walletConnected ? (
-          <div className="max-w-md mx-auto mt-20">
-            <WalletConnect onConnect={handleWalletConnect} />
-          </div>
-        ) : (
-          <>
-            <PortfolioStats data={displayData} />
+        <div className="space-y-8">
+          <PortfolioStats data={displayData} />
 
-            {isLoading ? (
-              <div className="text-center text-gray-400 mt-8">
-                Loading wallet history...
-              </div>
-            ) : displayData.length === 0 ? (
-              <div className="text-center text-gray-400 mt-8">
-                No transaction history found for this wallet
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {displayData.map((day: DayData, index: number) => (
-                  <CalendarCard
-                    key={day.date.toISOString()}
-                    date={day.date}
-                    value={day.totalValue}
-                    previousDayValue={displayData[index + 1]?.totalValue}
-                    coins={day.coins}
-                    transactions={day.transactions}
-                    notes={day.notes}
-                    commentary={day.commentary}
-                  />
-                ))}
-              </div>
-            )}
-          </>
-        )}
+          {isLoading ? (
+            <div className="text-center text-gray-400 mt-8">
+              Loading wallet history...
+            </div>
+          ) : displayData.length === 0 ? (
+            <div className="text-center text-gray-400 mt-8">
+              No transaction history found for this wallet
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {displayData.map((day: DayData, index: number) => (
+                <CalendarCard
+                  key={day.date.toISOString()}
+                  date={day.date}
+                  value={day.totalValue}
+                  previousDayValue={displayData[index + 1]?.totalValue}
+                  coins={day.coins}
+                  transactions={day.transactions}
+                  notes={day.notes}
+                  commentary={day.commentary}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

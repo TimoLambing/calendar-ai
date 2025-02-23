@@ -5,29 +5,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Trophy, TrendingDown, Users, ExternalLink } from "lucide-react";
+import { getMockLeaderboardData, type WalletPerformance } from "@/lib/web3";
 
 type TimePeriod = "24h" | "7d" | "30d" | "60d" | "180d" | "360d";
-
-interface WalletPerformance {
-  address: string;
-  performancePercent: number;
-  totalValue: number;
-  rank: number;
-  isFollowed?: boolean;
-}
 
 export default function Leaderboard() {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("24h");
   const [showBest, setShowBest] = useState(true);
 
-  // Fetch leaderboard data
+  // Use mock data directly for now
   const { data: leaderboardData, isLoading } = useQuery<WalletPerformance[]>({
     queryKey: ['leaderboard', timePeriod, showBest],
-    queryFn: async () => {
-      const response = await fetch(`/api/leaderboard?period=${timePeriod}&sort=${showBest ? 'best' : 'worst'}`);
-      if (!response.ok) throw new Error('Failed to fetch leaderboard data');
-      return response.json();
-    }
+    queryFn: () => Promise.resolve(getMockLeaderboardData(timePeriod, showBest))
   });
 
   const timePeriods: { value: TimePeriod; label: string }[] = [

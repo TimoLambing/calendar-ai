@@ -16,27 +16,39 @@ export function PortfolioStats({ data }: Props) {
     return day.totalValue > chronologicalData[index - 1].totalValue;
   }).length;
 
-  const lossDays = data.length - profitDays -1; // Subtract 1 for the first day
+  const lossDays = data.length - profitDays - 1; // Subtract 1 for the first day
 
-  // Calculate coin performance
+  // Calculate coin performance with safety checks
   const coinPerformance = new Map<string, number>();
 
-  chronologicalData[0]?.coins.forEach(coin => {
-    const firstPrice = parseFloat(coin.valueUsd);
-    const lastPrice = parseFloat(chronologicalData[chronologicalData.length - 1]?.coins.find(c => c.symbol === coin.symbol)?.valueUsd || "0");
-    const performance = ((lastPrice - firstPrice) / firstPrice) * 100;
-    coinPerformance.set(coin.symbol, performance);
-  });
+  // Only process if we have data
+  if (chronologicalData.length > 0) {
+    chronologicalData[0]?.coins.forEach(coin => {
+      const firstPrice = parseFloat(coin.valueUsd);
+      const lastPrice = parseFloat(chronologicalData[chronologicalData.length - 1]?.coins.find(c => c.symbol === coin.symbol)?.valueUsd || "0");
+      const performance = ((lastPrice - firstPrice) / firstPrice) * 100;
+      coinPerformance.set(coin.symbol, performance);
+    });
+  }
 
-  // Find best and worst performing coins
+  // Find best and worst performing coins with safety checks
   const performances = Array.from(coinPerformance.entries());
-  const bestCoin = performances.reduce((a, b) => a[1] > b[1] ? a : b);
-  const worstCoin = performances.reduce((a, b) => a[1] < b[1] ? a : b);
+  const defaultCoin: [string, number] = ["N/A", 0];
 
-  // Calculate total portfolio performance
+  const bestCoin = performances.length > 0
+    ? performances.reduce((a, b) => a[1] > b[1] ? a : b)
+    : defaultCoin;
+
+  const worstCoin = performances.length > 0
+    ? performances.reduce((a, b) => a[1] < b[1] ? a : b)
+    : defaultCoin;
+
+  // Calculate total portfolio performance with safety checks
   const startValue = chronologicalData[0]?.totalValue || 0;
   const endValue = chronologicalData[chronologicalData.length - 1]?.totalValue || 0;
-  const totalPerformance = ((endValue - startValue) / startValue) * 100;
+  const totalPerformance = startValue > 0
+    ? ((endValue - startValue) / startValue) * 100
+    : 0;
 
   return (
     <div className="grid gap-4 mb-8 md:grid-cols-2 lg:grid-cols-4">
@@ -45,8 +57,8 @@ export function PortfolioStats({ data }: Props) {
           <div className="flex justify-between items-center text-white">
             <div>
               <p className="text-xs font-medium opacity-90">Profitable Days</p>
-              <h3 className="text-xl font-bold">{profitDays}</h3>
-              <p className="text-xs opacity-75">vs {lossDays} loss days</p>
+              <h3 className="text-xl font-bold">{profitDays || 0}</h3>
+              <p className="text-xs opacity-75">vs {lossDays || 0} loss days</p>
             </div>
             <Trophy className="h-6 w-6 opacity-75" />
           </div>
@@ -58,7 +70,9 @@ export function PortfolioStats({ data }: Props) {
           <div className="text-white">
             <p className="text-xs font-medium opacity-90">Best Performer</p>
             <h3 className="text-xl font-bold">{bestCoin[0]}</h3>
-            <p className="text-xs opacity-75">+{bestCoin[1].toFixed(2)}%</p>
+            <p className="text-xs opacity-75">
+              {bestCoin[1] > 0 ? '+' : ''}{bestCoin[1].toFixed(2)}%
+            </p>
           </div>
         </CardContent>
       </Card>

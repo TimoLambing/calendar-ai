@@ -14,6 +14,16 @@ export function WalletConnect({ onConnect, minimal = false }: Props) {
   const { toast } = useToast();
 
   useEffect(() => {
+    if (!import.meta.env.VITE_PRIVY_APP_ID) {
+      console.error('Privy App ID is not configured');
+      toast({
+        title: "Configuration Error",
+        description: "Wallet connection is not properly configured. Please try again later.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (authenticated && user?.wallet?.address) {
       try {
         onConnect(user.wallet.address);
@@ -34,6 +44,15 @@ export function WalletConnect({ onConnect, minimal = false }: Props) {
   }, [authenticated, user?.wallet?.address, onConnect, toast, logout]);
 
   const handleConnect = async () => {
+    if (!import.meta.env.VITE_PRIVY_APP_ID) {
+      toast({
+        title: "Configuration Error",
+        description: "Wallet connection is not properly configured. Please try again later.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       await login();
     } catch (error: any) {

@@ -7,6 +7,8 @@ import Calendar from "@/pages/calendar";
 import Journal from "@/pages/journal";
 import { PrivyProvider } from '@privy-io/react-auth';
 import { privyConfig } from './lib/privy';
+import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 function Router() {
   return (
@@ -18,12 +20,33 @@ function Router() {
   );
 }
 
+function PrivyErrorBoundary({ children }: { children: React.ReactNode }) {
+  const { toast } = useToast();
+
+  useEffect(() => {
+    window.addEventListener('unhandledrejection', (event) => {
+      if (event.reason?.message?.includes('Failed to fetch')) {
+        console.error('Privy connection error:', event.reason);
+        toast({
+          title: "Connection Error",
+          description: "Failed to connect to authentication service. Please try again later.",
+          variant: "destructive"
+        });
+      }
+    });
+  }, [toast]);
+
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <PrivyProvider {...privyConfig}>
       <QueryClientProvider client={queryClient}>
-        <Router />
-        <Toaster />
+        <PrivyErrorBoundary>
+          <Router />
+          <Toaster />
+        </PrivyErrorBoundary>
       </QueryClientProvider>
     </PrivyProvider>
   );

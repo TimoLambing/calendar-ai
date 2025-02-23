@@ -29,12 +29,12 @@ export function getMockLeaderboardData(period: string, showBest: boolean = true)
   const wallets: WalletPerformance[] = [];
   const performanceRanges = {
     best: {
-      min: 5,
-      max: showBest ? 200 : -5
+      min: 20,  // Minimum 20% gain for best performers
+      max: showBest ? 500 : -20  // Up to 500% gains
     },
     worst: {
-      min: showBest ? -200 : -5,
-      max: 5
+      min: showBest ? -80 : -20,  // Down to -80% losses
+      max: 20
     }
   };
 
@@ -42,17 +42,17 @@ export function getMockLeaderboardData(period: string, showBest: boolean = true)
   for (let i = 0; i < 50; i++) {
     const range = showBest ? performanceRanges.best : performanceRanges.worst;
     const performancePercent = (Math.random() * (range.max - range.min) + range.min) * 
-      (period === '24h' ? 0.2 : // Smaller changes for shorter periods
-       period === '7d' ? 0.5 :
-       period === '30d' ? 1 :
-       period === '60d' ? 1.5 :
-       period === '180d' ? 2 :
-       2.5); // 360d
+      (period === '24h' ? 0.3 : // More volatile short-term movements
+       period === '7d' ? 0.7 :
+       period === '30d' ? 1.2 :
+       period === '60d' ? 1.8 :
+       period === '180d' ? 2.5 :
+       3.0); // 360d - Most volatile
 
     wallets.push({
       address: generateWalletAddress(),
       performancePercent: Number(performancePercent.toFixed(2)),
-      totalValue: Math.floor(Math.random() * 1000000) + 10000, // Random value between 10k and 1M
+      totalValue: Math.floor(Math.random() * 5000000) + 50000, // Random value between 50k and 5M
       rank: i + 1,
       isFollowed: Math.random() > 0.9 // 10% chance of being followed
     });
@@ -82,10 +82,10 @@ export function getMockWalletDetails(address: string) {
     address,
     isFollowed: Math.random() > 0.5,
     performanceStats: {
-      "24h": Number((Math.random() * 40 - 20).toFixed(2)), // -20% to +20%
-      "7d": Number((Math.random() * 60 - 30).toFixed(2)),  // -30% to +30%
-      "30d": Number((Math.random() * 100 - 50).toFixed(2)), // -50% to +50%
-      totalValue: Math.floor(Math.random() * 1000000) + 10000,
+      "24h": Number((Math.random() * 100 - 50).toFixed(2)), // -50% to +50%
+      "7d": Number((Math.random() * 150 - 75).toFixed(2)),  // -75% to +75%
+      "30d": Number((Math.random() * 300 - 150).toFixed(2)), // -150% to +150%
+      totalValue: Math.floor(Math.random() * 5000000) + 50000,
     }
   };
 }

@@ -1,16 +1,8 @@
 // Configure Privy authentication
 export const privyConfig = {
-  appId: (() => {
-    const appId = import.meta.env.VITE_PRIVY_APP_ID;
-    if (!appId) {
-      console.error('VITE_PRIVY_APP_ID is not set in environment variables');
-      throw new Error('Privy App ID is not configured');
-    }
-    console.log('Initializing Privy with App ID:', appId);
-    return appId;
-  })(),
+  appId: import.meta.env.VITE_PRIVY_APP_ID,
   // Configure login methods
-  loginMethods: ['wallet', 'email'],
+  loginMethods: ['wallet', 'email'] as const,
   // Configure appearance
   appearance: {
     theme: 'light',
@@ -18,10 +10,12 @@ export const privyConfig = {
     showWalletLoginFirst: true, // Prioritize wallet connections
   },
   // Configure domain for Replit environment
-  domain: window.location.host,
+  domain: window.location.hostname.includes('.repl.co')
+    ? window.location.hostname
+    : window.location.host,
   // Additional configuration for Replit environment
   config: {
-    loginMethods: ['wallet', 'email'],
+    loginMethods: ['wallet', 'email'] as const,
     defaultChain: 1, // Ethereum mainnet
     supportedChains: [1], // Only Ethereum mainnet for now
   }

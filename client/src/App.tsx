@@ -5,7 +5,11 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Calendar from "@/pages/calendar";
 import Journal from "@/pages/journal";
+import Leaderboard from "@/pages/leaderboard";
 import { WalletConnect } from "@/components/WalletConnect";
+import { Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
 function Layout({ children }: { children: React.ReactNode }) {
   const handleWalletConnect = (address: string) => {
@@ -16,7 +20,23 @@ function Layout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold">Crypto Portfolio</h1>
+          <div className="flex items-center gap-6">
+            <h1 className="text-xl font-bold">Crypto Portfolio</h1>
+            <nav className="hidden md:flex items-center gap-4">
+              <Link href="/">
+                <Button variant="ghost">Dashboard</Button>
+              </Link>
+              <Link href="/calendar">
+                <Button variant="ghost">Calendar</Button>
+              </Link>
+              <Link href="/leaderboard">
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4" />
+                  Leaderboard
+                </Button>
+              </Link>
+            </nav>
+          </div>
           <WalletConnect onConnect={handleWalletConnect} minimal />
         </div>
       </header>
@@ -33,6 +53,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Calendar} />
         <Route path="/journal" component={Journal} />
+        <Route path="/leaderboard" component={Leaderboard} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

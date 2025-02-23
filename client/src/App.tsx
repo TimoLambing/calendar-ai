@@ -6,8 +6,10 @@ import NotFound from "@/pages/not-found";
 import Calendar from "@/pages/calendar";
 import Journal from "@/pages/journal";
 import Leaderboard from "@/pages/leaderboard";
+import Following from "@/pages/following";
+import WalletDetail from "@/pages/wallet";
 import { WalletConnect } from "@/components/WalletConnect";
-import { Trophy } from "lucide-react";
+import { Trophy, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 
@@ -35,12 +37,18 @@ function Layout({ children }: { children: React.ReactNode }) {
                   Leaderboard
                 </Button>
               </Link>
+              <Link href="/following">
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Following
+                </Button>
+              </Link>
             </nav>
           </div>
           <WalletConnect onConnect={handleWalletConnect} minimal />
         </div>
       </header>
-      <main className="container mx-auto px-4 py-8">
+      <main>
         {children}
       </main>
     </div>
@@ -54,6 +62,8 @@ function Router() {
         <Route path="/" component={Calendar} />
         <Route path="/journal" component={Journal} />
         <Route path="/leaderboard" component={Leaderboard} />
+        <Route path="/following" component={Following} />
+        <Route path="/wallet/:address" component={WalletDetail} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

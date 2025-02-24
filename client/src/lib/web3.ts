@@ -14,6 +14,16 @@ export interface WalletPerformance {
   isFollowed?: boolean;
 }
 
+export interface JournalEntry {
+  id: number;
+  comment: string;
+  timestamp: string;
+  portfolioValue: number;
+  valueChange: number;
+  walletId: string;
+  authorAddress: string;
+}
+
 // Generate a random wallet address
 function generateWalletAddress(): string {
   const chars = '0123456789abcdef';
@@ -69,6 +79,38 @@ export function getMockLeaderboardData(period: string, showBest: boolean = true)
 // For now, return mock data while we implement proper wallet integration
 export async function getWalletHistory(address: string): Promise<DayData[]> {
   return generateMockData(28);
+}
+
+// Generate mock journal entries for the last few days
+export function getMockJournalEntries(address: string): JournalEntry[] {
+  const entries: JournalEntry[] = [];
+  const today = new Date();
+  const mockComments = [
+    "Successfully executed swing trade on BTC dip. Market showing strong support levels.",
+    "Increased ETH position due to upcoming network upgrade. Technical indicators looking bullish.",
+    "Taking profits on altcoin rally. RSI indicating overbought conditions.",
+    "Maintaining current positions. Market volatility suggests cautious approach.",
+    "Added to positions during market correction. Long-term fundamentals remain strong."
+  ];
+
+  for (let i = 0; i < 5; i++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const valueChange = (Math.random() * 40) - 20; // -20% to +20%
+    const portfolioValue = Math.floor(Math.random() * 5000000) + 50000;
+
+    entries.push({
+      id: i + 1,
+      comment: mockComments[i],
+      timestamp: date.toISOString(),
+      portfolioValue,
+      valueChange,
+      walletId: "mock-wallet-id",
+      authorAddress: address
+    });
+  }
+
+  return entries;
 }
 
 // Get ERC20 token balances (to be implemented with proper wallet integration)

@@ -27,8 +27,8 @@ interface TradingDiaryEntry {
   id: string;
   comment: string;
   createdAt: string | null;
-  portfolioValue?: number;
-  valueChange?: number;
+  portfolioValue: number;
+  valueChange: number;
   walletId: string;
   authorAddress: string;
 }
@@ -268,6 +268,26 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
 
           <TabsContent value="journal" className="space-y-4">
             <div className="space-y-4">
+              {/* Add performance summary for the day */}
+              <div className="flex justify-between items-center p-4 bg-card rounded-lg border">
+                <div>
+                  <div className="text-sm text-muted-foreground">Portfolio Value</div>
+                  <div className="text-lg font-semibold">${value.toLocaleString()}</div>
+                </div>
+                {previousDayValue && (
+                  <div>
+                    <div className="text-sm text-muted-foreground">Daily Change</div>
+                    <div className={cn(
+                      "text-lg font-semibold flex items-center gap-1",
+                      valueChange > 0 ? "text-green-600" : "text-red-600"
+                    )}>
+                      {valueChange > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                      {valueChange > 0 ? "+" : ""}{valueChange.toFixed(2)}%
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Add new comment section */}
               <Textarea
                 placeholder="Add your trading notes for this day..."
@@ -283,6 +303,8 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
               {/* Display entries for this specific day */}
               <JournalEntries
                 date={new Date(date.getFullYear(), date.getMonth(), date.getDate())}
+                value={value}
+                valueChange={valueChange}
               />
             </div>
           </TabsContent>

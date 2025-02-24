@@ -11,6 +11,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface Props {
   date?: Date; // Optional date filter
+  value?: number; // Portfolio value
+  valueChange?: number; // Daily performance change
 }
 
 interface EntryWithComments extends TradingDiaryEntry {
@@ -18,7 +20,7 @@ interface EntryWithComments extends TradingDiaryEntry {
   isExpanded?: boolean;
 }
 
-export function JournalEntries({ date }: Props) {
+export function JournalEntries({ date, value, valueChange }: Props) {
   // Use different query key and endpoint based on whether a date is provided
   const queryKey = date ? 
     ['diary-entries', 'date', date.toISOString()] : 
@@ -132,19 +134,19 @@ export function JournalEntries({ date }: Props) {
                         </span>
                       )}
                     </div>
-                    {entry.valueChange && entry.portfolioValue && (
+                    {(entry.valueChange || valueChange) && (entry.portfolioValue || value) && (
                       <div className={cn(
                         "text-sm font-medium flex items-center gap-1",
-                        parseFloat(entry.valueChange.toString()) > 0 ? "text-green-600" : "text-red-600"
+                        parseFloat((entry.valueChange || valueChange).toString()) > 0 ? "text-green-600" : "text-red-600"
                       )}>
-                        {parseFloat(entry.valueChange.toString()) > 0 ? 
+                        {parseFloat((entry.valueChange || valueChange).toString()) > 0 ? 
                           <TrendingUp className="h-4 w-4" /> : 
                           <TrendingDown className="h-4 w-4" />
                         }
-                        {parseFloat(entry.valueChange.toString()) > 0 ? "+" : ""}
-                        {parseFloat(entry.valueChange.toString()).toFixed(2)}%
+                        {parseFloat((entry.valueChange || valueChange).toString()) > 0 ? "+" : ""}
+                        {parseFloat((entry.valueChange || valueChange).toString()).toFixed(2)}%
                         <span className="text-muted-foreground ml-2">
-                          ${parseFloat(entry.portfolioValue.toString()).toLocaleString()}
+                          ${parseFloat((entry.portfolioValue || value).toString()).toLocaleString()}
                         </span>
                       </div>
                     )}

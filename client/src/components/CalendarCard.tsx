@@ -21,19 +21,10 @@ interface Props {
   transactions: Transaction[];
   notes?: string;
   commentary?: string;
+  isOtherUser?: boolean; // New prop to differentiate between own and other users' wallets
 }
 
-interface TradingDiaryEntry {
-  id: string;
-  comment: string;
-  createdAt: string | null;
-  portfolioValue: number;
-  valueChange: number;
-  walletId: string;
-  authorAddress: string;
-}
-
-export function CalendarCard({ date, value, previousDayValue, coins, transactions, notes, commentary }: Props) {
+export function CalendarCard({ date, value, previousDayValue, coins, transactions, notes, commentary, isOtherUser = false }: Props) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [comment, setComment] = useState("");
   const { toast } = useToast();
@@ -59,6 +50,34 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
   const isLoss = valueChange < -15 && valueChange >= -30;
   const isHighLoss = valueChange < -30 && valueChange >= -50;
   const isExtremeLoss = valueChange < -50;
+
+  // Define color classes based on user type
+  const getColorClasses = () => {
+    if (isOtherUser) {
+      return {
+        extremeGain: "border-purple-800 bg-purple-300",
+        highGain: "border-purple-600 bg-purple-200",
+        goodGain: "border-purple-500 bg-purple-100",
+        gain: "border-blue-500 bg-blue-100",
+        smallLoss: "border-orange-400 bg-orange-100",
+        loss: "border-orange-600 bg-orange-200",
+        highLoss: "border-orange-700 bg-orange-300",
+        extremeLoss: "border-orange-800 bg-orange-400"
+      };
+    }
+    return {
+      extremeGain: "border-green-800 bg-green-300",
+      highGain: "border-green-600 bg-green-200",
+      goodGain: "border-green-500 bg-green-100",
+      gain: "border-yellow-500 bg-yellow-100",
+      smallLoss: "border-pink-400 bg-pink-100",
+      loss: "border-red-400 bg-red-100",
+      highLoss: "border-red-600 bg-red-200",
+      extremeLoss: "border-red-800 bg-red-300"
+    };
+  };
+
+  const colorClasses = getColorClasses();
 
   async function handleAddComment() {
     if (!comment.trim()) {
@@ -132,14 +151,14 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
             {/* Front of card */}
             <Card className={cn(
               "absolute w-full h-full backface-hidden border-2",
-              isExtremeGain && "border-green-800 bg-green-300",
-              isHighGain && "border-green-600 bg-green-200",
-              isGoodGain && "border-green-500 bg-green-100",
-              isGain && "border-yellow-500 bg-yellow-100",
-              isSmallLoss && "border-pink-400 bg-pink-100",
-              isLoss && "border-red-400 bg-red-100",
-              isHighLoss && "border-red-600 bg-red-200",
-              isExtremeLoss && "border-red-800 bg-red-300",
+              isExtremeGain && colorClasses.extremeGain,
+              isHighGain && colorClasses.highGain,
+              isGoodGain && colorClasses.goodGain,
+              isGain && colorClasses.gain,
+              isSmallLoss && colorClasses.smallLoss,
+              isLoss && colorClasses.loss,
+              isHighLoss && colorClasses.highLoss,
+              isExtremeLoss && colorClasses.extremeLoss,
             )}>
               <CardContent className="p-4 h-full flex flex-col justify-between">
                 <div>
@@ -312,4 +331,14 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
       </DialogContent>
     </Dialog>
   );
+}
+
+interface TradingDiaryEntry {
+  id: string;
+  comment: string;
+  createdAt: string | null;
+  portfolioValue: number;
+  valueChange: number;
+  walletId: string;
+  authorAddress: string;
 }

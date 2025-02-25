@@ -22,19 +22,35 @@ interface WalletDetails {
   };
 }
 
+// Mock data function (needs to be implemented)
+const getMockWalletDetails = async (address: string): Promise<WalletDetails> => {
+  // Replace this with your actual mock data fetching logic
+  // This is a placeholder, replace with your actual mock data
+  return {
+    address: address,
+    isFollowed: false,
+    performanceStats: {
+      "24h": 0,
+      "7d": 0,
+      "30d": 0,
+      totalValue: 0,
+    },
+  };
+};
+
 export default function WalletDetail({ params }: { params: { address: string } }) {
   const { toast } = useToast();
   const { address } = params;
   const [currentView, setCurrentView] = useState<'stats' | 'calendar'>('stats');
 
+  // Get current user's wallet address
+  const currentUserAddress = window.ethereum?.selectedAddress;
+  const isOtherUser = currentUserAddress && currentUserAddress !== address;
+
   // Fetch wallet details
   const { data: walletDetails, isLoading: isLoadingDetails } = useQuery<WalletDetails>({
     queryKey: ['wallet-details', address],
-    queryFn: async () => {
-      const response = await fetch(`/api/wallets/${address}`);
-      if (!response.ok) throw new Error('Failed to fetch wallet details');
-      return response.json();
-    }
+    queryFn: async () => getMockWalletDetails(address) 
   });
 
   // Fetch wallet history for calendar
@@ -202,6 +218,7 @@ export default function WalletDetail({ params }: { params: { address: string } }
                     transactions={day.transactions}
                     notes={day.notes}
                     commentary={day.commentary}
+                    isOtherUser={isOtherUser}
                   />
                 ))}
               </div>

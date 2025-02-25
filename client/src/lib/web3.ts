@@ -76,9 +76,25 @@ export function getMockLeaderboardData(period: string, showBest: boolean = true)
   );
 }
 
+// Mock wallet details
+export function getMockWalletDetails(address: string) {
+  return {
+    address,
+    isFollowed: Math.random() > 0.5,
+    performanceStats: {
+      "24h": Number((Math.random() * 100 - 50).toFixed(2)), // -50% to +50%
+      "7d": Number((Math.random() * 150 - 75).toFixed(2)),  // -75% to +75%
+      "30d": Number((Math.random() * 300 - 150).toFixed(2)), // -150% to +150%
+      totalValue: Math.floor(Math.random() * 5000000) + 50000,
+    }
+  };
+}
+
 // For now, return mock data while we implement proper wallet integration
 export async function getWalletHistory(address: string): Promise<DayData[]> {
-  return generateMockData(28);
+  // Generate more volatile data for other wallets
+  const volatilityFactor = address === window.ethereum?.selectedAddress ? 1 : 2;
+  return generateMockData(28, volatilityFactor);
 }
 
 // Generate mock journal entries for the last few days
@@ -116,18 +132,4 @@ export function getMockJournalEntries(address: string): JournalEntry[] {
 // Get ERC20 token balances (to be implemented with proper wallet integration)
 export async function getWalletTokens(address: string) {
   return [];
-}
-
-// Mock wallet details
-export function getMockWalletDetails(address: string) {
-  return {
-    address,
-    isFollowed: Math.random() > 0.5,
-    performanceStats: {
-      "24h": Number((Math.random() * 100 - 50).toFixed(2)), // -50% to +50%
-      "7d": Number((Math.random() * 150 - 75).toFixed(2)),  // -75% to +75%
-      "30d": Number((Math.random() * 300 - 150).toFixed(2)), // -150% to +150%
-      totalValue: Math.floor(Math.random() * 5000000) + 50000,
-    }
-  };
 }

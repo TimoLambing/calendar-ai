@@ -29,6 +29,57 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
   const [comment, setComment] = useState("");
   const { toast } = useToast();
 
+  // Use mock address for demo
+  const currentUserAddress = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
+
+  async function handleAddComment() {
+    if (!comment.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a comment",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Use mock address for demo
+      const walletAddress = currentUserAddress;
+
+      // Get or create wallet with proper response handling
+      const walletResponse = await apiRequest('POST', '/api/wallets', {
+        address: walletAddress
+      });
+
+      const walletData = await walletResponse.json();
+
+      await apiRequest('POST', '/api/diary-entries', {
+        comment,
+        timestamp: date.toISOString(),
+        portfolioValue: value,
+        valueChange: valueChange,
+        walletId: walletData.id,
+        authorAddress: walletAddress
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['diary-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['diary-entries', date.toISOString()] });
+
+      toast({
+        title: "Comment Added",
+        description: "Your trading note has been saved successfully."
+      });
+      setComment("");
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save comment",
+        variant: "destructive"
+      });
+    }
+  }
+
   // Fetch diary entries for this date
   const { data: diaryEntries } = useQuery<TradingDiaryEntry[]>({
     queryKey: ['diary-entries', date.toISOString()],
@@ -78,61 +129,6 @@ export function CalendarCard({ date, value, previousDayValue, coins, transaction
   };
 
   const colorClasses = getColorClasses();
-
-  async function handleAddComment() {
-    if (!comment.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a comment",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const walletAddress = window.ethereum?.selectedAddress;
-      if (!walletAddress) {
-        toast({
-          title: "Error",
-          description: "Please connect your wallet first",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Get or create wallet with proper response handling
-      const walletResponse = await apiRequest('POST', '/api/wallets', {
-        address: walletAddress
-      });
-
-      const walletData = await walletResponse.json();
-
-      await apiRequest('POST', '/api/diary-entries', {
-        comment,
-        timestamp: date.toISOString(),
-        portfolioValue: value,
-        valueChange: valueChange,
-        walletId: walletData.id,
-        authorAddress: walletAddress
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['diary-entries'] });
-      queryClient.invalidateQueries({ queryKey: ['diary-entries', date.toISOString()] });
-
-      toast({
-        title: "Comment Added",
-        description: "Your trading note has been saved successfully."
-      });
-      setComment("");
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save comment",
-        variant: "destructive"
-      });
-    }
-  }
 
   return (
     <Dialog>

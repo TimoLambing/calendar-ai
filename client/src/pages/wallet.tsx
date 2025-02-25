@@ -8,7 +8,7 @@ import { UserPlus, UserMinus, Calendar } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { JournalEntries } from "@/components/JournalEntries";
 import { CalendarCard } from "@/components/CalendarCard";
-import { getWalletHistory } from "@/lib/web3";
+import { getWalletHistory, getMockWalletDetails } from "@/lib/web3";
 import type { DayData } from "@/lib/mockData";
 
 interface WalletDetails {
@@ -22,35 +22,19 @@ interface WalletDetails {
   };
 }
 
-// Mock data function (needs to be implemented)
-const getMockWalletDetails = async (address: string): Promise<WalletDetails> => {
-  // Replace this with your actual mock data fetching logic
-  // This is a placeholder, replace with your actual mock data
-  return {
-    address: address,
-    isFollowed: false,
-    performanceStats: {
-      "24h": 0,
-      "7d": 0,
-      "30d": 0,
-      totalValue: 0,
-    },
-  };
-};
-
 export default function WalletDetail({ params }: { params: { address: string } }) {
   const { toast } = useToast();
   const { address } = params;
   const [currentView, setCurrentView] = useState<'stats' | 'calendar'>('stats');
 
-  // Get current user's wallet address
-  const currentUserAddress = window.ethereum?.selectedAddress;
-  const isOtherUser = currentUserAddress && currentUserAddress !== address;
+  // Use mock address for demo
+  const currentUserAddress = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
+  const isOtherUser = currentUserAddress !== address;
 
   // Fetch wallet details
   const { data: walletDetails, isLoading: isLoadingDetails } = useQuery<WalletDetails>({
     queryKey: ['wallet-details', address],
-    queryFn: async () => getMockWalletDetails(address) 
+    queryFn: () => getMockWalletDetails(address)
   });
 
   // Fetch wallet history for calendar
@@ -188,15 +172,21 @@ export default function WalletDetail({ params }: { params: { address: string } }
             <Tabs defaultValue="journal">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="journal">Trading Journal</TabsTrigger>
-                <TabsTrigger value="portfolio">Portfolio Stats</TabsTrigger>
+                <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
               </TabsList>
 
               <TabsContent value="journal">
-                <JournalEntries walletAddress={address} />
+                <JournalEntries 
+                  date={new Date()} 
+                  value={walletDetails.performanceStats.totalValue}
+                  valueChange={walletDetails.performanceStats["24h"]}
+                />
               </TabsContent>
 
               <TabsContent value="portfolio">
-                <PortfolioStats walletAddress={address} />
+                <div className="text-center text-gray-400 py-12">
+                  Portfolio details coming soon
+                </div>
               </TabsContent>
             </Tabs>
           </div>

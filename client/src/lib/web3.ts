@@ -92,8 +92,11 @@ export function getMockWalletDetails(address: string) {
 
 // For now, return mock data while we implement proper wallet integration
 export async function getWalletHistory(address: string): Promise<DayData[]> {
+  // Get current user's wallet address (or use a mock one for demo)
+  const currentUserAddress = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
+
   // Generate more volatile data for other wallets
-  const volatilityFactor = address === window.ethereum?.selectedAddress ? 1 : 2;
+  const volatilityFactor = address === currentUserAddress ? 1 : 2;
   return generateMockData(28, volatilityFactor);
 }
 

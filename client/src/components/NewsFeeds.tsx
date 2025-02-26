@@ -1,3 +1,5 @@
+// client/src/components/NewsFeeds.tsx
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchCryptoNews, NewsItem } from "@/lib/news";
 import { useQuery } from "@tanstack/react-query";
@@ -10,8 +12,8 @@ interface Props {
 
 export function NewsFeeds({ symbol, date }: Props) {
   const { data: news } = useQuery({
-    queryKey: ['news', symbol, date.toISOString()],
-    queryFn: () => fetchCryptoNews(symbol, date)
+    queryKey: ["news", symbol, date.toISOString()],
+    queryFn: () => fetchCryptoNews(symbol, date),
   });
 
   if (!news) return null;
@@ -27,7 +29,7 @@ export function NewsFeeds({ symbol, date }: Props) {
       <CardContent>
         <div className="space-y-4">
           {news.map((item: NewsItem) => (
-            <a 
+            <a
               key={item.id}
               href={item.url}
               target="_blank"
@@ -36,7 +38,8 @@ export function NewsFeeds({ symbol, date }: Props) {
             >
               <div className="font-medium">{item.title}</div>
               <div className="text-sm text-muted-foreground">
-                {item.source} • {new Date(item.publishedAt).toLocaleDateString()}
+                {item.source} •{" "}
+                {new Date(item.publishedAt).toLocaleDateString()}
               </div>
             </a>
           ))}

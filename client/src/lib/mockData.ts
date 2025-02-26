@@ -1,3 +1,5 @@
+// client/src/lib/mockData.ts
+
 import { CoinBalance, Transaction } from "@shared/schema";
 
 // You can customize the comments for each volatility range by editing the comments arrays below
@@ -10,66 +12,72 @@ import { CoinBalance, Transaction } from "@shared/schema";
 // - moderate_loss: -10% to -30% losses
 
 export const volatilityComments = {
-  extreme_gain: { // Gains > 50%
+  extreme_gain: {
+    // Gains > 50%
     threshold: 50,
     comments: [
       "Chad trader detected! Save some gains for the rest of us 💪",
       "Moon mission confirmed! Next stop: Your ex's Instagram story 🚀",
       "Finally, time to start that crypto influencer YouTube channel! 📈",
       "Wen Binance Blockchain Week VIP ticket? 🎫",
-      "Time to update the Lambo pre-order! 🏎️"
-    ]
+      "Time to update the Lambo pre-order! 🏎️",
+    ],
   },
-  high_gain: { // Gains between 30-50%
+  high_gain: {
+    // Gains between 30-50%
     threshold: 30,
     comments: [
       "Wife-changing gains incoming! 💎",
       "Finally, Ramen is off the menu boys! 🍜",
       "Time to update that Tinder bio with 'crypto entrepreneur' 📱",
       "Look who's ready for Miami Crypto Week! 🌴",
-      "From McDonald's to Michelin stars real quick! 🌟"
-    ]
+      "From McDonald's to Michelin stars real quick! 🌟",
+    ],
   },
-  moderate_gain: { // Gains between 10-30%
+  moderate_gain: {
+    // Gains between 10-30%
     threshold: 10,
     comments: [
       "Starting to feel like a proper degen now! 🎰",
       "Maybe that Discord alpha wasn't a scam after all! 🤔",
       "Time to flex on Crypto Twitter! 🐦",
       "Almost enough gains to quit the day job... almost! 💼",
-      "Portfolio looking thicc today! 👀"
-    ]
+      "Portfolio looking thicc today! 👀",
+    ],
   },
-  extreme_loss: { // Losses > 50%
+  extreme_loss: {
+    // Losses > 50%
     threshold: -50,
     comments: [
       "Looks like someone's back to cup noodles for dinner 🍜",
       "Did you try turning your monitor upside down? 🙃",
       "Your wife's boyfriend won't be happy about this one 😬",
       "Maybe it's time to start an OnlyFans? 📸",
-      "Achievement Unlocked: Maximum Pain 💀"
-    ]
+      "Achievement Unlocked: Maximum Pain 💀",
+    ],
   },
-  high_loss: { // Losses between 30-50%
+  high_loss: {
+    // Losses between 30-50%
     threshold: -30,
     comments: [
       "Have you tried not being poor? 💸",
       "Time to delete the app and pretend this never happened 🙈",
       "Sir, this is a casino. And you're losing. 🎰",
       "McDonald's is hiring! Just saying... 🍔",
-      "Can't lose money if you can't log in *taps head* 🤔"
-    ]
+      "Can't lose money if you can't log in *taps head* 🤔",
+    ],
   },
-  moderate_loss: { // Losses between 10-30%
+  moderate_loss: {
+    // Losses between 10-30%
     threshold: -10,
     comments: [
       "Buy high, sell low strategy working perfectly! 📉",
       "At least you still have your health! ...right? 🏥",
       "Time to start that 'technical analysis' course! 📚",
       "HODL they said, it'll be fun they said... 😅",
-      "Is this what they call 'buying the dip'? 🎢"
-    ]
-  }
+      "Is this what they call 'buying the dip'? 🎢",
+    ],
+  },
 };
 
 // Helper function to get comment based on volatility
@@ -89,7 +97,9 @@ function getVolatilityComment(percentChange: number): string | undefined {
     category = volatilityComments.moderate_loss;
   }
 
-  return category?.comments[Math.floor(Math.random() * category.comments.length)];
+  return category?.comments[
+    Math.floor(Math.random() * category.comments.length)
+  ];
 }
 
 export interface DayData {
@@ -104,9 +114,27 @@ export interface DayData {
 const mockCoins: CoinBalance[] = [
   { id: 1, snapshotId: 1, symbol: "BTC", amount: "0.5", valueUsd: "25000" },
   { id: 2, snapshotId: 1, symbol: "ETH", amount: "4.2", valueUsd: "12600" },
-  { id: 3, snapshotId: 1, symbol: "$GRIFFAIN", amount: "42069", valueUsd: "8500" },
-  { id: 4, snapshotId: 1, symbol: "$TIBBIR", amount: "666666", valueUsd: "12000" },
-  { id: 5, snapshotId: 1, symbol: "$FARTCOIN", amount: "1000000", valueUsd: "15000" }
+  {
+    id: 3,
+    snapshotId: 1,
+    symbol: "$GRIFFAIN",
+    amount: "42069",
+    valueUsd: "8500",
+  },
+  {
+    id: 4,
+    snapshotId: 1,
+    symbol: "$TIBBIR",
+    amount: "666666",
+    valueUsd: "12000",
+  },
+  {
+    id: 5,
+    snapshotId: 1,
+    symbol: "$FARTCOIN",
+    amount: "1000000",
+    valueUsd: "15000",
+  },
 ];
 
 const mockTransactions: Transaction[] = [
@@ -118,7 +146,7 @@ const mockTransactions: Transaction[] = [
     symbol: "$GRIFFAIN",
     amount: "42069",
     valueUsd: "8500",
-    currentValue: "8500"
+    currentValue: "8500",
   },
   {
     id: 2,
@@ -128,8 +156,8 @@ const mockTransactions: Transaction[] = [
     symbol: "$FARTCOIN",
     amount: "500000",
     valueUsd: "7500",
-    currentValue: "7500"
-  }
+    currentValue: "7500",
+  },
 ];
 
 // Update the generateMockData function to only show days up to today
@@ -159,16 +187,18 @@ export function generateMockData(days: number): DayData[] {
     const volatility = getRandomVolatility(1, 45);
 
     if (isUpDay) {
-      currentValue *= (1 + volatility);
+      currentValue *= 1 + volatility;
       if (currentValue > maxValue) currentValue = maxValue;
     } else {
-      currentValue *= (1 - volatility);
+      currentValue *= 1 - volatility;
       if (currentValue < minValue) currentValue = minValue;
     }
 
     const roundedValue = Math.round(currentValue);
     const previousValue = mockData[mockData.length - 1]?.totalValue;
-    const percentChange = previousValue ? ((roundedValue - previousValue) / previousValue) * 100 : 0;
+    const percentChange = previousValue
+      ? ((roundedValue - previousValue) / previousValue) * 100
+      : 0;
 
     // Get commentary based on volatility thresholds
     const commentary = getVolatilityComment(percentChange);
@@ -176,13 +206,17 @@ export function generateMockData(days: number): DayData[] {
     const dayData = {
       date,
       totalValue: roundedValue,
-      coins: mockCoins.map(coin => ({
+      coins: mockCoins.map((coin) => ({
         ...coin,
-        valueUsd: Math.round(parseFloat(coin.valueUsd) * (1 + (Math.random() * 0.4 - 0.2))).toString()
+        valueUsd: Math.round(
+          parseFloat(coin.valueUsd) * (1 + (Math.random() * 0.4 - 0.2))
+        ).toString(),
       })),
-      transactions: mockTransactions.map(tx => ({
+      transactions: mockTransactions.map((tx) => ({
         ...tx,
-        currentValue: Math.round(parseFloat(tx.valueUsd) * (1 + (Math.random() * 0.4 - 0.2))).toString()
+        currentValue: Math.round(
+          parseFloat(tx.valueUsd) * (1 + (Math.random() * 0.4 - 0.2))
+        ).toString(),
       })),
       commentary,
     };

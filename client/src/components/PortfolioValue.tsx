@@ -1,6 +1,15 @@
+// client/src/components/PortfolioValue.tsx
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 interface Props {
   walletId: number;
@@ -15,7 +24,7 @@ export function PortfolioValue({ walletId }: Props) {
 
   const chartData = snapshots.map((snapshot: any) => ({
     date: new Date(snapshot.timestamp).toLocaleDateString(),
-    value: parseFloat(snapshot.totalValue)
+    value: parseFloat(snapshot.totalValue),
   }));
 
   return (
@@ -30,11 +39,11 @@ export function PortfolioValue({ walletId }: Props) {
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="hsl(var(--primary))" 
-                strokeWidth={2} 
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2}
               />
             </LineChart>
           </ResponsiveContainer>

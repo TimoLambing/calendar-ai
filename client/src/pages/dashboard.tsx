@@ -1,3 +1,5 @@
+// client/src/pages/dashboard.tsx
+
 import { WalletConnect } from "@/components/WalletConnect";
 import { PortfolioValue } from "@/components/PortfolioValue";
 import { CoinPerformance } from "@/components/CoinPerformance";
@@ -16,14 +18,14 @@ export default function Dashboard() {
 
   const { data: walletData } = useQuery({
     queryKey: [`/api/wallets/${wallet?.address}`],
-    enabled: !!wallet
+    enabled: !!wallet,
   });
 
   // Fetch journal entries
   const { data: journalEntries } = useQuery({
-    queryKey: ['journal-entries', wallet?.address],
-    queryFn: () => getMockJournalEntries(wallet?.address || ''),
-    enabled: !!wallet?.address
+    queryKey: ["journal-entries", wallet?.address],
+    queryFn: () => getMockJournalEntries(wallet?.address || ""),
+    enabled: !!wallet?.address,
   });
 
   return (
@@ -34,9 +36,7 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-8">
             <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold">
-                Portfolio Dashboard
-              </h1>
+              <h1 className="text-3xl font-bold">Portfolio Dashboard</h1>
               <div className="flex gap-4">
                 <Link href="/journal">
                   <Button variant="outline" className="flex items-center gap-2">
@@ -55,8 +55,8 @@ export default function Dashboard() {
 
             <div className="grid gap-8 md:grid-cols-2">
               <PortfolioValue walletId={walletData?.id} />
-              <CoinPerformance 
-                balances={walletData?.latestSnapshot?.balances || []} 
+              <CoinPerformance
+                balances={walletData?.latestSnapshot?.balances || []}
               />
             </div>
 
@@ -65,10 +65,7 @@ export default function Dashboard() {
               <JournalEntries />
             </div>
 
-            <NewsFeeds 
-              symbol="BTC" 
-              date={new Date()} 
-            />
+            <NewsFeeds symbol="BTC" date={new Date()} />
           </div>
         )}
       </div>

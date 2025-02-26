@@ -1,7 +1,15 @@
+// server/routes.ts
+
 import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
-import { insertWalletSchema, insertPortfolioSnapshotSchema, insertTransactionSchema, insertTradingDiaryEntrySchema, insertTradingDiaryCommentSchema } from "@shared/schema";
+import {
+  insertWalletSchema,
+  insertPortfolioSnapshotSchema,
+  insertTransactionSchema,
+  insertTradingDiaryEntrySchema,
+  insertTradingDiaryCommentSchema,
+} from "@shared/schema";
 import { ZodError } from "zod";
 
 export async function registerRoutes(app: Express) {
@@ -22,7 +30,7 @@ export async function registerRoutes(app: Express) {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.issues });
       }
-      if (error.message.includes('duplicate key')) {
+      if (error.message.includes("duplicate key")) {
         const existingWallet = await storage.getWallet(req.body.address);
         return res.json(existingWallet);
       }
@@ -60,7 +68,9 @@ export async function registerRoutes(app: Express) {
 
   app.get("/api/wallets/:walletId/snapshots", async (req, res) => {
     try {
-      const snapshots = await storage.getSnapshots(parseInt(req.params.walletId));
+      const snapshots = await storage.getSnapshots(
+        parseInt(req.params.walletId)
+      );
       res.json(snapshots);
     } catch (error) {
       console.error("Error fetching snapshots:", error);
@@ -85,7 +95,9 @@ export async function registerRoutes(app: Express) {
 
   app.get("/api/wallets/:walletId/transactions", async (req, res) => {
     try {
-      const transactions = await storage.getTransactions(parseInt(req.params.walletId));
+      const transactions = await storage.getTransactions(
+        parseInt(req.params.walletId)
+      );
       res.json(transactions);
     } catch (error) {
       console.error("Error fetching transactions:", error);
@@ -96,7 +108,14 @@ export async function registerRoutes(app: Express) {
   // Trading Diary routes
   app.post("/api/diary-entries", async (req, res) => {
     try {
-      const { comment, timestamp, portfolioValue, valueChange, walletId, authorAddress } = req.body;
+      const {
+        comment,
+        timestamp,
+        portfolioValue,
+        valueChange,
+        walletId,
+        authorAddress,
+      } = req.body;
 
       const result = insertTradingDiaryEntrySchema.safeParse({
         comment,
@@ -104,7 +123,7 @@ export async function registerRoutes(app: Express) {
         portfolioValue,
         valueChange,
         walletId,
-        authorAddress
+        authorAddress,
       });
 
       if (!result.success) {
@@ -119,15 +138,20 @@ export async function registerRoutes(app: Express) {
     }
   });
 
-  app.get("/api/transactions/:transactionId/diary-entries", async (req, res) => {
-    try {
-      const entries = await storage.getDiaryEntries(parseInt(req.params.transactionId));
-      res.json(entries);
-    } catch (error) {
-      console.error("Error fetching diary entries:", error);
-      res.status(500).json({ error: "Failed to fetch diary entries" });
+  app.get(
+    "/api/transactions/:transactionId/diary-entries",
+    async (req, res) => {
+      try {
+        const entries = await storage.getDiaryEntries(
+          parseInt(req.params.transactionId)
+        );
+        res.json(entries);
+      } catch (error) {
+        console.error("Error fetching diary entries:", error);
+        res.status(500).json({ error: "Failed to fetch diary entries" });
+      }
     }
-  });
+  );
 
   app.get("/api/diary-entries", async (req, res) => {
     try {
@@ -159,7 +183,7 @@ export async function registerRoutes(app: Express) {
       const result = insertTradingDiaryCommentSchema.safeParse({
         entryId,
         comment,
-        authorAddress
+        authorAddress,
       });
 
       if (!result.success) {

@@ -1,3 +1,5 @@
+// client/src/pages/calendar.tsx
+
 import { CalendarCard } from "@/components/CalendarCard";
 import { PortfolioStats } from "@/components/PortfolioStats";
 import { WalletConnect } from "@/components/WalletConnect";
@@ -15,7 +17,7 @@ export default function Calendar() {
 
   // Query for wallet history when connected
   const { data: walletData, isLoading } = useQuery<DayData[]>({
-    queryKey: ['wallet-history', walletAddress],
+    queryKey: ["wallet-history", walletAddress],
     queryFn: async () => {
       if (!walletAddress) return [];
       return getWalletHistory(walletAddress);
@@ -33,7 +35,7 @@ export default function Calendar() {
   };
 
   // Use wallet data if available, otherwise use mock data
-  const displayData = walletConnected ? (walletData || []) : mockData;
+  const displayData = walletConnected ? walletData || [] : mockData;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
@@ -41,24 +43,35 @@ export default function Calendar() {
         <header className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-white">Portfolio Calendar</h1>
-              <p className="text-gray-400 mt-1">Track your daily portfolio performance</p>
+              <h1 className="text-3xl font-bold text-white">
+                Portfolio Calendar
+              </h1>
+              <p className="text-gray-400 mt-1">
+                Track your daily portfolio performance
+              </p>
               {!walletConnected && (
                 <p className="text-yellow-400 mt-2 text-sm">
-                  Currently showing mock data. Connect wallet to see your actual portfolio.
+                  Currently showing mock data. Connect wallet to see your actual
+                  portfolio.
                 </p>
               )}
             </div>
             <div className="flex items-center gap-4">
               <WalletConnect onConnect={handleWalletConnect} minimal />
               <Link href="/journal">
-                <Button variant="outline" className="flex items-center gap-2 hover:bg-gray-700">
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 hover:bg-gray-700"
+                >
                   <ScrollText className="h-4 w-4" />
                   Trading Journal
                 </Button>
               </Link>
               <Link href="/">
-                <Button variant="outline" className="flex items-center gap-2 hover:bg-gray-700">
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 hover:bg-gray-700"
+                >
                   <ArrowLeft className="h-4 w-4" />
                   Back to Dashboard
                 </Button>

@@ -1,3 +1,5 @@
+// vite.config.ts
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import themePlugin from "@replit/vite-plugin-shadcn-theme-json";
@@ -17,7 +19,7 @@ export default defineConfig({
     process.env.REPL_ID !== undefined
       ? [
           await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer(),
+            m.cartographer()
           ),
         ]
       : []),

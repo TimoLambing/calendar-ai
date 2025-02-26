@@ -1,6 +1,8 @@
-import { Router } from 'express';
-import { prisma } from '../prisma';
-import { z } from 'zod';
+// server/routes/diary.ts
+
+import { Router } from "express";
+import { prisma } from "../prisma";
+import { z } from "zod";
 
 const router = Router();
 
@@ -11,29 +13,29 @@ const createDiaryEntrySchema = z.object({
   portfolioValue: z.number(),
   valueChange: z.number(),
   walletId: z.string(),
-  authorAddress: z.string()
+  authorAddress: z.string(),
 });
 
 // Get all diary entries
-router.get('/diary-entries', async (req, res) => {
+router.get("/diary-entries", async (req, res) => {
   try {
     const entries = await prisma.tradingDiaryEntry.findMany({
       include: {
-        comments: true
+        comments: true,
       },
       orderBy: {
-        timestamp: 'desc'
-      }
+        timestamp: "desc",
+      },
     });
     res.json(entries);
   } catch (error) {
-    console.error('Error fetching diary entries:', error);
-    res.status(500).json({ error: 'Failed to fetch diary entries' });
+    console.error("Error fetching diary entries:", error);
+    res.status(500).json({ error: "Failed to fetch diary entries" });
   }
 });
 
 // Get diary entries by date
-router.get('/diary-entries/date/:date', async (req, res) => {
+router.get("/diary-entries/date/:date", async (req, res) => {
   try {
     const date = new Date(req.params.date);
     const startOfDay = new Date(date.setHours(0, 0, 0, 0));
@@ -43,28 +45,28 @@ router.get('/diary-entries/date/:date', async (req, res) => {
       where: {
         timestamp: {
           gte: startOfDay,
-          lte: endOfDay
-        }
+          lte: endOfDay,
+        },
       },
       include: {
-        comments: true
+        comments: true,
       },
       orderBy: {
-        timestamp: 'desc'
-      }
+        timestamp: "desc",
+      },
     });
     res.json(entries);
   } catch (error) {
-    console.error('Error fetching diary entries by date:', error);
-    res.status(500).json({ error: 'Failed to fetch diary entries' });
+    console.error("Error fetching diary entries by date:", error);
+    res.status(500).json({ error: "Failed to fetch diary entries" });
   }
 });
 
 // Create a new diary entry
-router.post('/diary-entries', async (req, res) => {
+router.post("/diary-entries", async (req, res) => {
   try {
     const data = createDiaryEntrySchema.parse(req.body);
-    
+
     // Create the entry
     const entry = await prisma.tradingDiaryEntry.create({
       data: {
@@ -75,25 +77,25 @@ router.post('/diary-entries', async (req, res) => {
         wallet: {
           connectOrCreate: {
             where: { address: data.authorAddress },
-            create: { address: data.authorAddress }
-          }
+            create: { address: data.authorAddress },
+          },
         },
-        authorAddress: data.authorAddress
+        authorAddress: data.authorAddress,
       },
       include: {
-        comments: true
-      }
+        comments: true,
+      },
     });
 
     res.json(entry);
   } catch (error) {
-    console.error('Error creating diary entry:', error);
-    res.status(500).json({ error: 'Failed to create diary entry' });
+    console.error("Error creating diary entry:", error);
+    res.status(500).json({ error: "Failed to create diary entry" });
   }
 });
 
 // Add comment to a diary entry
-router.post('/diary-entries/:entryId/comments', async (req, res) => {
+router.post("/diary-entries/:entryId/comments", async (req, res) => {
   try {
     const { comment, authorAddress } = req.body;
     const entryId = req.params.entryId;
@@ -103,15 +105,15 @@ router.post('/diary-entries/:entryId/comments', async (req, res) => {
         comment,
         authorAddress,
         entry: {
-          connect: { id: entryId }
-        }
-      }
+          connect: { id: entryId },
+        },
+      },
     });
 
     res.json(newComment);
   } catch (error) {
-    console.error('Error adding comment:', error);
-    res.status(500).json({ error: 'Failed to add comment' });
+    console.error("Error adding comment:", error);
+    res.status(500).json({ error: "Failed to add comment" });
   }
 });
 

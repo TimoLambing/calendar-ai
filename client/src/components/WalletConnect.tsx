@@ -1,3 +1,5 @@
+// client/src/components/WalletConnect.tsx
+
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -20,7 +22,10 @@ export function WalletConnect({ onConnect, minimal = false }: Props) {
     onConnect(mockAddress);
     toast({
       title: "Test Mode",
-      description: `Connected with test wallet: ${mockAddress.slice(0, 6)}...${mockAddress.slice(-4)}`
+      description: `Connected with test wallet: ${mockAddress.slice(
+        0,
+        6
+      )}...${mockAddress.slice(-4)}`,
     });
   };
 
@@ -29,14 +34,14 @@ export function WalletConnect({ onConnect, minimal = false }: Props) {
     setAddress("");
     toast({
       title: "Wallet Disconnected",
-      description: "Test wallet has been disconnected"
+      description: "Test wallet has been disconnected",
     });
   };
 
   if (minimal) {
     return isConnected ? (
-      <Button 
-        variant="outline" 
+      <Button
+        variant="outline"
         onClick={handleDisconnect}
         className="flex items-center gap-2"
       >
@@ -44,7 +49,7 @@ export function WalletConnect({ onConnect, minimal = false }: Props) {
         {address.slice(0, 6)}...{address.slice(-4)}
       </Button>
     ) : (
-      <Button 
+      <Button
         variant="outline"
         onClick={handleConnect}
         className="flex items-center gap-2"
@@ -62,17 +67,11 @@ export function WalletConnect({ onConnect, minimal = false }: Props) {
         Connect your wallet to start tracking your portfolio
       </p>
       {isConnected ? (
-        <Button 
-          onClick={handleDisconnect}
-          className="w-full"
-        >
+        <Button onClick={handleDisconnect} className="w-full">
           Disconnect Wallet
         </Button>
       ) : (
-        <Button 
-          onClick={handleConnect}
-          className="w-full"
-        >
+        <Button onClick={handleConnect} className="w-full">
           Connect Test Wallet
         </Button>
       )}

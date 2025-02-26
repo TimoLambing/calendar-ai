@@ -1,3 +1,5 @@
+// client/src/pages/following.tsx
+
 import { useState } from "react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,30 +17,30 @@ interface FollowedWallet {
 
 export default function Following() {
   const { toast } = useToast();
-  
+
   // Fetch followed wallets
   const { data: followedWallets, isLoading } = useQuery<FollowedWallet[]>({
-    queryKey: ['followed-wallets'],
+    queryKey: ["followed-wallets"],
     queryFn: async () => {
-      const response = await fetch('/api/followed-wallets');
-      if (!response.ok) throw new Error('Failed to fetch followed wallets');
+      const response = await fetch("/api/followed-wallets");
+      if (!response.ok) throw new Error("Failed to fetch followed wallets");
       return response.json();
-    }
+    },
   });
 
   const handleUnfollow = async (address: string) => {
     try {
-      await apiRequest('DELETE', `/api/followed-wallets/${address}`);
-      queryClient.invalidateQueries({ queryKey: ['followed-wallets'] });
+      await apiRequest("DELETE", `/api/followed-wallets/${address}`);
+      queryClient.invalidateQueries({ queryKey: ["followed-wallets"] });
       toast({
         title: "Unfollowed",
-        description: "Wallet removed from your following list"
+        description: "Wallet removed from your following list",
       });
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to unfollow wallet",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -67,20 +69,31 @@ export default function Following() {
         ) : (
           <div className="grid gap-4">
             {followedWallets.map((wallet) => (
-              <Card key={wallet.address} className="hover:bg-gray-100/5 transition-colors">
+              <Card
+                key={wallet.address}
+                className="hover:bg-gray-100/5 transition-colors"
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="font-medium">
-                        {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
+                        {wallet.address.slice(0, 6)}...
+                        {wallet.address.slice(-4)}
                       </div>
                       <div className="text-sm text-gray-400">
                         ${wallet.totalValue.toLocaleString()}
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className={`text-lg font-bold ${wallet.performancePercent >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        {wallet.performancePercent >= 0 ? '+' : ''}{wallet.performancePercent.toFixed(2)}%
+                      <div
+                        className={`text-lg font-bold ${
+                          wallet.performancePercent >= 0
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {wallet.performancePercent >= 0 ? "+" : ""}
+                        {wallet.performancePercent.toFixed(2)}%
                       </div>
                       <div className="flex gap-2">
                         <Link href={`/wallet/${wallet.address}`}>
@@ -88,8 +101,8 @@ export default function Following() {
                             <ExternalLink className="h-4 w-4" />
                           </Button>
                         </Link>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="icon"
                           onClick={() => handleUnfollow(wallet.address)}
                         >

@@ -1,5 +1,7 @@
-import { DayData } from './mockData';
-import { generateMockData } from './mockData';
+// client/src/lib/web3.ts
+
+import { DayData } from "./mockData";
+import { generateMockData } from "./mockData";
 
 export interface WalletConnection {
   address: string;
@@ -26,8 +28,8 @@ export interface JournalEntry {
 
 // Generate a random wallet address
 function generateWalletAddress(): string {
-  const chars = '0123456789abcdef';
-  let address = '0x';
+  const chars = "0123456789abcdef";
+  let address = "0x";
   for (let i = 0; i < 40; i++) {
     address += chars[Math.floor(Math.random() * chars.length)];
   }
@@ -35,44 +37,53 @@ function generateWalletAddress(): string {
 }
 
 // Generate mock performance data for different time periods
-export function getMockLeaderboardData(period: string, showBest: boolean = true): WalletPerformance[] {
+export function getMockLeaderboardData(
+  period: string,
+  showBest: boolean = true
+): WalletPerformance[] {
   const wallets: WalletPerformance[] = [];
   const performanceRanges = {
     best: {
-      min: 20,  // Minimum 20% gain for best performers
-      max: showBest ? 500 : -20  // Up to 500% gains
+      min: 20, // Minimum 20% gain for best performers
+      max: showBest ? 500 : -20, // Up to 500% gains
     },
     worst: {
-      min: showBest ? -80 : -20,  // Down to -80% losses
-      max: 20
-    }
+      min: showBest ? -80 : -20, // Down to -80% losses
+      max: 20,
+    },
   };
 
   // Generate 50 wallets
   for (let i = 0; i < 50; i++) {
     const range = showBest ? performanceRanges.best : performanceRanges.worst;
-    const performancePercent = (Math.random() * (range.max - range.min) + range.min) * 
-      (period === '24h' ? 0.3 : // More volatile short-term movements
-       period === '7d' ? 0.7 :
-       period === '30d' ? 1.2 :
-       period === '60d' ? 1.8 :
-       period === '180d' ? 2.5 :
-       3.0); // 360d - Most volatile
+    const performancePercent =
+      (Math.random() * (range.max - range.min) + range.min) *
+      (period === "24h"
+        ? 0.3 // More volatile short-term movements
+        : period === "7d"
+        ? 0.7
+        : period === "30d"
+        ? 1.2
+        : period === "60d"
+        ? 1.8
+        : period === "180d"
+        ? 2.5
+        : 3.0); // 360d - Most volatile
 
     wallets.push({
       address: generateWalletAddress(),
       performancePercent: Number(performancePercent.toFixed(2)),
       totalValue: Math.floor(Math.random() * 5000000) + 50000, // Random value between 50k and 5M
       rank: i + 1,
-      isFollowed: Math.random() > 0.9 // 10% chance of being followed
+      isFollowed: Math.random() > 0.9, // 10% chance of being followed
     });
   }
 
   // Sort by performance
-  return wallets.sort((a, b) => 
-    showBest ? 
-      b.performancePercent - a.performancePercent : 
-      a.performancePercent - b.performancePercent
+  return wallets.sort((a, b) =>
+    showBest
+      ? b.performancePercent - a.performancePercent
+      : a.performancePercent - b.performancePercent
   );
 }
 
@@ -83,10 +94,10 @@ export function getMockWalletDetails(address: string) {
     isFollowed: Math.random() > 0.5,
     performanceStats: {
       "24h": Number((Math.random() * 100 - 50).toFixed(2)), // -50% to +50%
-      "7d": Number((Math.random() * 150 - 75).toFixed(2)),  // -75% to +75%
+      "7d": Number((Math.random() * 150 - 75).toFixed(2)), // -75% to +75%
       "30d": Number((Math.random() * 300 - 150).toFixed(2)), // -150% to +150%
       totalValue: Math.floor(Math.random() * 5000000) + 50000,
-    }
+    },
   };
 }
 
@@ -109,13 +120,13 @@ export function getMockJournalEntries(address: string): JournalEntry[] {
     "Increased ETH position due to upcoming network upgrade. Technical indicators looking bullish.",
     "Taking profits on altcoin rally. RSI indicating overbought conditions.",
     "Maintaining current positions. Market volatility suggests cautious approach.",
-    "Added to positions during market correction. Long-term fundamentals remain strong."
+    "Added to positions during market correction. Long-term fundamentals remain strong.",
   ];
 
   for (let i = 0; i < 5; i++) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
-    const valueChange = (Math.random() * 40) - 20; // -20% to +20%
+    const valueChange = Math.random() * 40 - 20; // -20% to +20%
     const portfolioValue = Math.floor(Math.random() * 5000000) + 50000;
 
     entries.push({
@@ -125,7 +136,7 @@ export function getMockJournalEntries(address: string): JournalEntry[] {
       portfolioValue,
       valueChange,
       walletId: "mock-wallet-id",
-      authorAddress: address
+      authorAddress: address,
     });
   }
 

@@ -1,3 +1,5 @@
+// client/src/App.tsx
+
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -48,9 +50,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           <WalletConnect onConnect={handleWalletConnect} minimal />
         </div>
       </header>
-      <main>
-        {children}
-      </main>
+      <main>{children}</main>
     </div>
   );
 }

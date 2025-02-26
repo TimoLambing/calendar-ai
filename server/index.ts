@@ -1,3 +1,5 @@
+// server/index.ts
+
 import express, { type Request, Response, NextFunction } from "express";
 import diaryRoutes from "./routes/diary";
 import walletRoutes from "./routes/wallet";
@@ -43,29 +45,29 @@ app.use((req, res, next) => {
 async function testDatabaseConnection() {
   try {
     await prisma.$connect();
-    log('Successfully connected to database');
+    log("Successfully connected to database");
     return true;
   } catch (error) {
-    console.error('Failed to connect to database:', error);
+    console.error("Failed to connect to database:", error);
     return false;
   }
 }
 
 // API Routes
-app.use('/api', diaryRoutes);
-app.use('/api', walletRoutes);
+app.use("/api", diaryRoutes);
+app.use("/api", walletRoutes);
 
 (async () => {
   try {
     // Test database connection first
     const isDbConnected = await testDatabaseConnection();
     if (!isDbConnected) {
-      throw new Error('Could not establish database connection');
+      throw new Error("Could not establish database connection");
     }
 
     // Error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      console.error('Application error:', err);
+      console.error("Application error:", err);
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
       res.status(status).json({ message });
@@ -74,32 +76,38 @@ app.use('/api', walletRoutes);
     // Setup Vite in development
     if (app.get("env") === "development") {
       // Create HTTP server instance
-      const server = app.listen({
-        port: 5000,
-        host: "0.0.0.0",
-        reusePort: true,
-      }, () => {
-        log(`Server running on port 5000`);
-      });
+      const server = app.listen(
+        {
+          port: 5000,
+          // host: "0.0.0.0",
+          // reusePort: true,
+        },
+        () => {
+          log(`Server running on port 5000`);
+        }
+      );
 
       // Setup Vite with server instance
       await setupVite(app, server);
     } else {
       serveStatic(app);
-      app.listen({
-        port: 5000,
-        host: "0.0.0.0",
-        reusePort: true,
-      }, () => {
-        log(`Server running on port 5000`);
-      });
+      app.listen(
+        {
+          port: 5000,
+          // host: "0.0.0.0",
+          // reusePort: true,
+        },
+        () => {
+          log(`Server running on port 5000`);
+        }
+      );
     }
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error("Failed to start server:", error);
     process.exit(1);
   } finally {
     // Ensure we disconnect from the database when the app is shutting down
-    process.on('beforeExit', async () => {
+    process.on("beforeExit", async () => {
       await prisma.$disconnect();
     });
   }

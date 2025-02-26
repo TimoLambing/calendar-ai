@@ -1,3 +1,5 @@
+// client/src/pages/wallet.tsx
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -22,26 +24,33 @@ interface WalletDetails {
   };
 }
 
-export default function WalletDetail({ params }: { params: { address: string } }) {
+export default function WalletDetail({
+  params,
+}: {
+  params: { address: string };
+}) {
   const { toast } = useToast();
   const { address } = params;
-  const [currentView, setCurrentView] = useState<'stats' | 'calendar'>('stats');
+  const [currentView, setCurrentView] = useState<"stats" | "calendar">("stats");
 
   // Use mock address for demo
   const currentUserAddress = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
   const isOtherUser = currentUserAddress !== address;
 
   // Fetch wallet details
-  const { data: walletDetails, isLoading: isLoadingDetails } = useQuery<WalletDetails>({
-    queryKey: ['wallet-details', address],
-    queryFn: () => getMockWalletDetails(address)
-  });
+  const { data: walletDetails, isLoading: isLoadingDetails } =
+    useQuery<WalletDetails>({
+      queryKey: ["wallet-details", address],
+      queryFn: () => getMockWalletDetails(address),
+    });
 
   // Fetch wallet history for calendar
-  const { data: walletHistory, isLoading: isLoadingHistory } = useQuery<DayData[]>({
-    queryKey: ['wallet-history', address],
+  const { data: walletHistory, isLoading: isLoadingHistory } = useQuery<
+    DayData[]
+  >({
+    queryKey: ["wallet-history", address],
     queryFn: () => getWalletHistory(address),
-    enabled: currentView === 'calendar'
+    enabled: currentView === "calendar",
   });
 
   const handleFollowToggle = async () => {
@@ -49,25 +58,25 @@ export default function WalletDetail({ params }: { params: { address: string } }
 
     try {
       if (walletDetails.isFollowed) {
-        await apiRequest('DELETE', `/api/followed-wallets/${address}`);
+        await apiRequest("DELETE", `/api/followed-wallets/${address}`);
       } else {
-        await apiRequest('POST', '/api/followed-wallets', { address });
+        await apiRequest("POST", "/api/followed-wallets", { address });
       }
 
-      queryClient.invalidateQueries({ queryKey: ['wallet-details', address] });
-      queryClient.invalidateQueries({ queryKey: ['followed-wallets'] });
+      queryClient.invalidateQueries({ queryKey: ["wallet-details", address] });
+      queryClient.invalidateQueries({ queryKey: ["followed-wallets"] });
 
       toast({
         title: walletDetails.isFollowed ? "Unfollowed" : "Following",
         description: walletDetails.isFollowed
           ? "Wallet removed from your following list"
-          : "Wallet added to your following list"
+          : "Wallet added to your following list",
       });
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to update following status",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -102,21 +111,21 @@ export default function WalletDetail({ params }: { params: { address: string } }
         <header className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white">
-                Wallet Details
-              </h1>
+              <h1 className="text-3xl font-bold text-white">Wallet Details</h1>
               <p className="text-gray-400 mt-1">
                 {address.slice(0, 6)}...{address.slice(-4)}
               </p>
             </div>
             <div className="flex gap-4">
               <Button
-                onClick={() => setCurrentView(currentView === 'stats' ? 'calendar' : 'stats')}
+                onClick={() =>
+                  setCurrentView(currentView === "stats" ? "calendar" : "stats")
+                }
                 variant="outline"
                 className="flex items-center gap-2"
               >
                 <Calendar className="h-4 w-4" />
-                {currentView === 'stats' ? 'Show Calendar' : 'Show Stats'}
+                {currentView === "stats" ? "Show Calendar" : "Show Stats"}
               </Button>
               <Button
                 onClick={handleFollowToggle}
@@ -139,7 +148,7 @@ export default function WalletDetail({ params }: { params: { address: string } }
           </div>
         </header>
 
-        {currentView === 'stats' ? (
+        {currentView === "stats" ? (
           <div className="space-y-8">
             <Card>
               <CardHeader>
@@ -149,20 +158,41 @@ export default function WalletDetail({ params }: { params: { address: string } }
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <div className="text-sm text-gray-500">24h Change</div>
-                    <div className={`text-xl font-bold ${walletDetails.performanceStats["24h"] >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {walletDetails.performanceStats["24h"] >= 0 ? '+' : ''}{walletDetails.performanceStats["24h"].toFixed(2)}%
+                    <div
+                      className={`text-xl font-bold ${
+                        walletDetails.performanceStats["24h"] >= 0
+                          ? "text-green-500"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {walletDetails.performanceStats["24h"] >= 0 ? "+" : ""}
+                      {walletDetails.performanceStats["24h"].toFixed(2)}%
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-500">7d Change</div>
-                    <div className={`text-xl font-bold ${walletDetails.performanceStats["7d"] >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {walletDetails.performanceStats["7d"] >= 0 ? '+' : ''}{walletDetails.performanceStats["7d"].toFixed(2)}%
+                    <div
+                      className={`text-xl font-bold ${
+                        walletDetails.performanceStats["7d"] >= 0
+                          ? "text-green-500"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {walletDetails.performanceStats["7d"] >= 0 ? "+" : ""}
+                      {walletDetails.performanceStats["7d"].toFixed(2)}%
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-500">30d Change</div>
-                    <div className={`text-xl font-bold ${walletDetails.performanceStats["30d"] >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {walletDetails.performanceStats["30d"] >= 0 ? '+' : ''}{walletDetails.performanceStats["30d"].toFixed(2)}%
+                    <div
+                      className={`text-xl font-bold ${
+                        walletDetails.performanceStats["30d"] >= 0
+                          ? "text-green-500"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {walletDetails.performanceStats["30d"] >= 0 ? "+" : ""}
+                      {walletDetails.performanceStats["30d"].toFixed(2)}%
                     </div>
                   </div>
                 </div>
@@ -176,8 +206,8 @@ export default function WalletDetail({ params }: { params: { address: string } }
               </TabsList>
 
               <TabsContent value="journal">
-                <JournalEntries 
-                  date={new Date()} 
+                <JournalEntries
+                  date={new Date()}
                   value={walletDetails.performanceStats.totalValue}
                   valueChange={walletDetails.performanceStats["24h"]}
                 />

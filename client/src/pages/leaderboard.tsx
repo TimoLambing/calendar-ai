@@ -1,3 +1,5 @@
+// client/src/pages/leaderboard.tsx
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,8 +18,9 @@ export default function Leaderboard() {
 
   // Use mock data directly for now
   const { data: leaderboardData, isLoading } = useQuery<WalletPerformance[]>({
-    queryKey: ['leaderboard', timePeriod, showBest],
-    queryFn: () => Promise.resolve(getMockLeaderboardData(timePeriod, showBest))
+    queryKey: ["leaderboard", timePeriod, showBest],
+    queryFn: () =>
+      Promise.resolve(getMockLeaderboardData(timePeriod, showBest)),
   });
 
   const timePeriods: { value: TimePeriod; label: string }[] = [
@@ -65,7 +68,11 @@ export default function Leaderboard() {
           </div>
 
           {/* Performance type tabs */}
-          <Tabs defaultValue="best" className="w-full" onValueChange={(value) => setShowBest(value === 'best')}>
+          <Tabs
+            defaultValue="best"
+            className="w-full"
+            onValueChange={(value) => setShowBest(value === "best")}
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="best" className="flex items-center gap-2">
                 <Trophy className="h-4 w-4" />
@@ -78,10 +85,18 @@ export default function Leaderboard() {
             </TabsList>
 
             <TabsContent value="best" className="mt-6">
-              <WalletList data={leaderboardData} isLoading={isLoading} type="best" />
+              <WalletList
+                data={leaderboardData}
+                isLoading={isLoading}
+                type="best"
+              />
             </TabsContent>
             <TabsContent value="worst" className="mt-6">
-              <WalletList data={leaderboardData} isLoading={isLoading} type="worst" />
+              <WalletList
+                data={leaderboardData}
+                isLoading={isLoading}
+                type="worst"
+              />
             </TabsContent>
           </Tabs>
         </div>
@@ -93,7 +108,7 @@ export default function Leaderboard() {
 interface WalletListProps {
   data?: WalletPerformance[];
   isLoading: boolean;
-  type: 'best' | 'worst';
+  type: "best" | "worst";
 }
 
 function WalletList({ data, isLoading, type }: WalletListProps) {
@@ -118,8 +133,8 @@ function WalletList({ data, isLoading, type }: WalletListProps) {
   return (
     <div className="grid gap-4">
       {data.map((wallet) => (
-        <Card 
-          key={wallet.address} 
+        <Card
+          key={wallet.address}
           className="hover:bg-gray-100/5 transition-colors cursor-pointer"
           onClick={() => navigate(`/wallet/${wallet.address}`)}
         >
@@ -138,8 +153,13 @@ function WalletList({ data, isLoading, type }: WalletListProps) {
                   </div>
                 </div>
               </div>
-              <div className={`text-lg font-bold ${type === 'best' ? 'text-green-500' : 'text-red-500'}`}>
-                {type === 'best' ? '+' : ''}{wallet.performancePercent.toFixed(2)}%
+              <div
+                className={`text-lg font-bold ${
+                  type === "best" ? "text-green-500" : "text-red-500"
+                }`}
+              >
+                {type === "best" ? "+" : ""}
+                {wallet.performancePercent.toFixed(2)}%
               </div>
             </div>
           </CardContent>

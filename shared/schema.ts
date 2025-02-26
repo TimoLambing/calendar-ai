@@ -1,3 +1,5 @@
+// shared/schema.ts
+
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 
@@ -20,19 +22,19 @@ export const tradingDiaryEntrySchema = z.object({
   portfolioValue: z.number(),
   valueChange: z.number(),
   walletId: z.string(),
-  authorAddress: z.string()
+  authorAddress: z.string(),
 });
 
 export const tradingDiaryCommentSchema = z.object({
   comment: z.string(),
   authorAddress: z.string(),
-  entryId: z.string()
+  entryId: z.string(),
 });
 
 export const coinBalanceSchema = z.object({
   symbol: z.string(),
   amount: z.number(),
-  valueUsd: z.number()
+  valueUsd: z.number(),
 });
 
 export const transactionSchema = z.object({
@@ -40,12 +42,14 @@ export const transactionSchema = z.object({
   type: z.string(),
   amount: z.number(),
   valueUsd: z.number(),
-  currentValue: z.number().optional()
+  currentValue: z.number().optional(),
 });
 
 // Types for insert operations
 export type InsertWallet = z.infer<typeof walletSchema>;
 export type InsertTradingDiaryEntry = z.infer<typeof tradingDiaryEntrySchema>;
-export type InsertTradingDiaryComment = z.infer<typeof tradingDiaryCommentSchema>;
+export type InsertTradingDiaryComment = z.infer<
+  typeof tradingDiaryCommentSchema
+>;
 export type InsertCoinBalance = z.infer<typeof coinBalanceSchema>;
 export type InsertTransaction = z.infer<typeof transactionSchema>;

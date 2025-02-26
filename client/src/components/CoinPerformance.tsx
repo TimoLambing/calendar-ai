@@ -1,3 +1,5 @@
+// client/src/components/CoinPerformance.tsx
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CoinBalance } from "@shared/schema";
 

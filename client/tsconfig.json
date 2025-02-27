@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": [ "ES2020", "DOM", "DOM.Iterable" ],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    // "baseUrl": ".",
+    "paths": {
+      "@/*": [ "./src/*" ]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "tailwind.config.ts", // Include config file
+    "vite.config.ts", // Include config file
+    "src/**/*.tsx",
+    "src/**/*.d.ts", // Include all .d.ts files
+    "vite-env.d.ts" // Explicitly include vite-env.d.ts if needed
+  ]
+}

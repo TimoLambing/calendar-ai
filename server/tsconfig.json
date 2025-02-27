@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ES2022",
+    "moduleResolution": "node",
+    "lib": [ "es2015", "dom" ],
+    "sourceMap": true,
+    "outDir": "./build",
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "inlineSources": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true
+  },
+  "include": [ "./**/*" ],
+  "exclude": [ "./dist/**/*", "./src/public/**/*" ]
+}

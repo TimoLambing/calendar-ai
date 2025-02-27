@@ -1,5 +1,3 @@
-// client/src/App.tsx
-
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -14,12 +12,11 @@ import { WalletConnect } from "@/components/WalletConnect";
 import { Trophy, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import Dashboard from "./pages/dashboard";
+import PrivyProvider from "./providers/privy";
+import { AppStateProvider } from "./store/appState";
 
-function Layout({ children }: { children: React.ReactNode }) {
-  const handleWalletConnect = (address: string) => {
-    console.log("Wallet connected:", address);
-  };
-
+function Layout({ children }: { children: React.ReactNode; }) {
   return (
     <div className="min-h-screen">
       <header className="border-b">
@@ -47,7 +44,7 @@ function Layout({ children }: { children: React.ReactNode }) {
               </Link>
             </nav>
           </div>
-          <WalletConnect onConnect={handleWalletConnect} minimal />
+          <WalletConnect minimal />
         </div>
       </header>
       <main>{children}</main>
@@ -59,7 +56,8 @@ function Router() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={Calendar} />
+        <Route path="/" component={Dashboard} />
+        <Route path="/calendar" component={Calendar} />
         <Route path="/journal" component={Journal} />
         <Route path="/leaderboard" component={Leaderboard} />
         <Route path="/following" component={Following} />
@@ -73,8 +71,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <PrivyProvider>
+        <AppStateProvider>
+          <Router />
+          <Toaster />
+        </AppStateProvider>
+      </PrivyProvider>
     </QueryClientProvider>
   );
 }

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { prisma } from '../prisma';
+import { prisma } from '../prisma/prisma';
 
 const router = Router();
 
@@ -7,7 +7,7 @@ const router = Router();
 router.get('/wallets/:address', async (req, res) => {
   try {
     const { address } = req.params;
-    
+
     // Get or create wallet
     const wallet = await prisma.wallet.findUnique({
       where: { address },
@@ -32,7 +32,8 @@ router.get('/wallets/:address', async (req, res) => {
     const latestSnapshot = wallet.snapshots[0];
     const totalValue = latestSnapshot?.totalValue || 0;
 
-    res.json({
+    return res.json({
+      id: wallet.id,
       address: wallet.address,
       isFollowed: wallet.followedBy.length > 0,
       performanceStats: {
@@ -44,7 +45,7 @@ router.get('/wallets/:address', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching wallet:', error);
-    res.status(500).json({ error: 'Failed to fetch wallet details' });
+    return res.status(500).json({ error: 'Failed to fetch wallet details' });
   }
 });
 
@@ -118,17 +119,17 @@ router.get('/followed-wallets', async (req, res) => {
       return res.json([]);
     }
 
-    const followedWallets = wallet.following.map((followed, index) => ({
+    const followedWallets = wallet.following.map((followed: any, index: number) => ({
       address: followed.address,
       performancePercent: calculatePerformance(followed.snapshots, '24h'),
       totalValue: followed.snapshots[0]?.totalValue || 0,
       rank: index + 1
     }));
 
-    res.json(followedWallets);
+    return res.json(followedWallets);
   } catch (error) {
     console.error('Error fetching followed wallets:', error);
-    res.status(500).json({ error: 'Failed to fetch followed wallets' });
+    return res.status(500).json({ error: 'Failed to fetch followed wallets' });
   }
 });
 
@@ -152,5 +153,29 @@ function calculatePerformance(snapshots: any[], period: '24h' | '7d' | '30d'): n
 
   return ((latest.totalValue - previous.totalValue) / previous.totalValue) * 100;
 }
+
+// Create or update a wallet
+router.post('/wallets', async (req, res) => {
+  try {
+    // rest is all the fields except address.
+    // This will be useful when updating the wallet.
+    const { address, ...rest } = req.body;
+
+    if (!address) {
+      return res.status(400).json({ error: 'Address is required' });
+    }
+
+    const wallet = await prisma.wallet.upsert({
+      where: { address },
+      update: { ...rest },
+      create: { address },
+    });
+
+    return res.json(wallet);
+  } catch (error) {
+    console.error('Error creating/updating wallet:', error);
+    return res.status(500).json({ error: 'Failed to create or update wallet' });
+  }
+});
 
 export default router;

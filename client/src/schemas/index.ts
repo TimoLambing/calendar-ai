@@ -30,17 +30,22 @@ export const tradingDiaryCommentSchema = z.object({
 });
 
 export const coinBalanceSchema = z.object({
+  id: z.string(),
+  snapshotId: z.string(),
   symbol: z.string(),
-  amount: z.number(),
-  valueUsd: z.number(),
+  amount: z.string(),
+  valueUsd: z.string(),
 });
 
 export const transactionSchema = z.object({
+  id: z.string(),
+  walletId: z.string(),
+  timestamp: z.date(),
   symbol: z.string(),
   type: z.string(),
-  amount: z.number(),
-  valueUsd: z.number(),
-  currentValue: z.number().optional(),
+  amount: z.string(),
+  valueUsd: z.string(),
+  currentValue: z.string().optional(),
 });
 
 // Types for insert operations
@@ -51,3 +56,5 @@ export type InsertTradingDiaryComment = z.infer<
 >;
 export type InsertCoinBalance = z.infer<typeof coinBalanceSchema>;
 export type InsertTransaction = z.infer<typeof transactionSchema>;
+export type CoinBalance = z.infer<typeof coinBalanceSchema>;
+export type Transaction = z.infer<typeof transactionSchema>;

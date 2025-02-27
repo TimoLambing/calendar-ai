@@ -1,4 +1,4 @@
-import { CoinBalance, Transaction } from "@shared/schema";
+import { CoinBalance, Transaction } from "@/schemas";
 
 // You can customize the comments for each volatility range by editing the comments arrays below
 // Volatility ranges are defined by their thresholds:
@@ -110,25 +110,25 @@ export interface DayData {
 }
 
 const mockCoins: CoinBalance[] = [
-  { id: 1, snapshotId: 1, symbol: "BTC", amount: "0.5", valueUsd: "25000" },
-  { id: 2, snapshotId: 1, symbol: "ETH", amount: "4.2", valueUsd: "12600" },
+  { id: '1', snapshotId: '1', symbol: "BTC", amount: "0.5", valueUsd: "25000" },
+  { id: '2', snapshotId: '1', symbol: "ETH", amount: "4.2", valueUsd: "12600" },
   {
-    id: 3,
-    snapshotId: 1,
+    id: '3',
+    snapshotId: '1',
     symbol: "$GRIFFAIN",
     amount: "42069",
     valueUsd: "8500",
   },
   {
-    id: 4,
-    snapshotId: 1,
+    id: '4',
+    snapshotId: '1',
     symbol: "$TIBBIR",
     amount: "666666",
     valueUsd: "12000",
   },
   {
-    id: 5,
-    snapshotId: 1,
+    id: '5',
+    snapshotId: '1',
     symbol: "$FARTCOIN",
     amount: "1000000",
     valueUsd: "15000",
@@ -137,8 +137,8 @@ const mockCoins: CoinBalance[] = [
 
 const mockTransactions: Transaction[] = [
   {
-    id: 1,
-    walletId: 1,
+    id: '1',
+    walletId: '1',
     timestamp: new Date(),
     type: "BUY",
     symbol: "$GRIFFAIN",
@@ -147,8 +147,8 @@ const mockTransactions: Transaction[] = [
     currentValue: "8500",
   },
   {
-    id: 2,
-    walletId: 1,
+    id: '2',
+    walletId: '1',
     timestamp: new Date(),
     type: "SELL",
     symbol: "$FARTCOIN",

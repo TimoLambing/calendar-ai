@@ -8,7 +8,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Transaction, CoinBalance } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -28,6 +27,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { JournalEntries } from "@/components/JournalEntries";
+import { CoinBalance, Transaction } from "@/schemas";
 
 interface Props {
   date: Date;
@@ -68,13 +68,11 @@ export function CalendarCard({
     }
 
     try {
-      // Use mock address for demo
+      // mock address0x742d35Cc6634C0532925a3b844Bc454e443844e
       const walletAddress = currentUserAddress;
 
       // Get or create wallet with proper response handling
-      const walletResponse = await apiRequest("POST", "/api/wallets", {
-        address: walletAddress,
-      });
+      const walletResponse = await apiRequest("GET", `/api/wallets/${walletAddress}`);
 
       const walletData = await walletResponse.json();
 
@@ -245,9 +243,9 @@ export function CalendarCard({
                     );
                     const performance = prevDayCoin
                       ? ((parseFloat(coin.valueUsd) -
-                          parseFloat(prevDayCoin.valueUsd)) /
-                          parseFloat(prevDayCoin.valueUsd)) *
-                        100
+                        parseFloat(prevDayCoin.valueUsd)) /
+                        parseFloat(prevDayCoin.valueUsd)) *
+                      100
                       : 0;
 
                     return (
@@ -304,8 +302,8 @@ export function CalendarCard({
                 {transactions.map((tx) => {
                   const performance = tx.currentValue
                     ? ((parseFloat(tx.currentValue) - parseFloat(tx.valueUsd)) /
-                        parseFloat(tx.valueUsd)) *
-                      100
+                      parseFloat(tx.valueUsd)) *
+                    100
                     : 0;
 
                   return (

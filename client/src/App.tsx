@@ -15,6 +15,7 @@ import { Trophy, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import Dashboard from "./pages/dashboard";
+import PrivyProvider from "./providers/privy";
 
 function Layout({ children }: { children: React.ReactNode; }) {
   const handleWalletConnect = (address: string) => {
@@ -75,8 +76,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <PrivyProvider>
+        <Router />
+        <Toaster />
+      </PrivyProvider>
     </QueryClientProvider>
   );
 }

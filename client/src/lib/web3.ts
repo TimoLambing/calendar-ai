@@ -61,14 +61,14 @@ export function getMockLeaderboardData(
       (period === "24h"
         ? 0.3 // More volatile short-term movements
         : period === "7d"
-        ? 0.7
-        : period === "30d"
-        ? 1.2
-        : period === "60d"
-        ? 1.8
-        : period === "180d"
-        ? 2.5
-        : 3.0); // 360d - Most volatile
+          ? 0.7
+          : period === "30d"
+            ? 1.2
+            : period === "60d"
+              ? 1.8
+              : period === "180d"
+                ? 2.5
+                : 3.0); // 360d - Most volatile
 
     wallets.push({
       address: generateWalletAddress(),
@@ -107,8 +107,8 @@ export async function getWalletHistory(address: string): Promise<DayData[]> {
   const currentUserAddress = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
 
   // Generate more volatile data for other wallets
-  const volatilityFactor = address === currentUserAddress ? 1 : 2;
-  return generateMockData(28, volatilityFactor);
+  // const volatilityFactor = address === currentUserAddress ? 1 : 2;
+  return generateMockData(28);
 }
 
 // Generate mock journal entries for the last few days

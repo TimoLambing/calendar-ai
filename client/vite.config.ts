@@ -15,12 +15,11 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-
   server: {
-    port: 4000,
+    port: 5000,
     proxy: {
       "/api": {
-        target: "http://localhost:5000",
+        target: "http://localhost:6000",
         changeOrigin: true,
         secure: false,
       },

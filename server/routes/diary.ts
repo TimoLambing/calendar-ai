@@ -47,23 +47,23 @@ router.get("/diary-entries/date/:date", async (req, res) => {
 // 3) Create a new diary entry
 router.post("/diary-entries", async (req, res) => {
   try {
-    const data = req.body;
+    const { walletId, comment, timestamp, portfolioValue, valueChange, authorAddress } = req.body;
 
     // Validate wallet existence or connect
     // If you need to ensure the wallet is in the DB, do connectOrCreate here:
     const wallet = await prisma.wallet.upsert({
-      where: { address: data.walletId },
+      where: { address: walletId },
       update: {},
-      create: { address: data.walletId },
+      create: { address: walletId },
     });
 
     const entry = await prisma.tradingDiaryEntry.create({
       data: {
-        comment: data.comment,
-        timestamp: new Date(data.timestamp),
-        portfolioValue: data.portfolioValue,
-        valueChange: data.valueChange,
-        authorAddress: data.authorAddress,
+        comment: comment,
+        timestamp: new Date(timestamp),
+        portfolioValue: portfolioValue,
+        valueChange: valueChange,
+        authorAddress: authorAddress,
         walletId: wallet.id,
       },
       include: { comments: true },

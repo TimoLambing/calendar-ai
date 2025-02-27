@@ -8,7 +8,8 @@
         "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
         "start": "NODE_ENV=production node dist/index.js",
         "build:tw": "tailwindcss -i ./src/index.css -o ./src/style.css",
-        "check": "tsc"
+        "check": "tsc",
+        "postinstall": "npm run build:tw"
     },
     "dependencies": {
         "@hookform/resolvers": "^3.9.1",
@@ -57,7 +58,6 @@
         "memorystore": "^1.6.7",
         "passport": "^0.7.0",
         "passport-local": "^1.0.0",
-        "prisma": "^6.4.1",
         "react": "^18.3.1",
         "react-day-picker": "^8.10.1",
         "react-dom": "^18.3.1",

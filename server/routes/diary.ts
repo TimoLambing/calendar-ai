@@ -1,26 +1,8 @@
 import { Router } from "express";
 import { prisma } from "../prisma/prisma";
-import { z } from "zod";
 
 const router = Router();
 
-// Schema for creating diary entries
-const createDiaryEntrySchema = z.object({
-  comment: z.string(),
-  timestamp: z.string(), // or 'Date', but typically sent as string
-  portfolioValue: z.number(),
-  valueChange: z.number(),
-  walletId: z.string(),
-  authorAddress: z.string(),
-});
-
-// Schema for creating comments
-const createCommentSchema = z.object({
-  comment: z.string(),
-  authorAddress: z.string(),
-});
-
-// 1) Get all diary entries
 router.get("/diary-entries", async (_req, res) => {
   try {
     const entries = await prisma.tradingDiaryEntry.findMany({
@@ -65,7 +47,7 @@ router.get("/diary-entries/date/:date", async (req, res) => {
 // 3) Create a new diary entry
 router.post("/diary-entries", async (req, res) => {
   try {
-    const data = createDiaryEntrySchema.parse(req.body);
+    const data = req.body;
 
     // Validate wallet existence or connect
     // If you need to ensure the wallet is in the DB, do connectOrCreate here:
@@ -111,7 +93,7 @@ router.get("/diary-entries/:entryId/comments", async (req, res) => {
 // 5) Add a comment to a diary entry
 router.post("/diary-entries/:entryId/comments", async (req, res) => {
   try {
-    const { comment, authorAddress } = createCommentSchema.parse(req.body);
+    const { comment, authorAddress } = req.body;
     const entryId = req.params.entryId;
 
     const newComment = await prisma.tradingDiaryComment.create({

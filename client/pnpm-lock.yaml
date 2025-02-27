@@ -146,9 +146,6 @@ importers:
       passport-local:
         specifier: ^1.0.0
         version: 1.0.0
-      prisma:
-        specifier: ^6.4.1
-        version: 6.4.1(typescript@5.7.3)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -5430,9 +5427,11 @@ snapshots:
       prisma: 6.4.1(typescript@5.7.3)
       typescript: 5.7.3
 
-  '@prisma/debug@6.4.1': {}
+  '@prisma/debug@6.4.1':
+    optional: true
 
-  '@prisma/engines-version@6.4.0-29.a9055b89e58b4b5bfb59600785423b1db3d0e75d': {}
+  '@prisma/engines-version@6.4.0-29.a9055b89e58b4b5bfb59600785423b1db3d0e75d':
+    optional: true
 
   '@prisma/engines@6.4.1':
     dependencies:
@@ -5440,16 +5439,19 @@ snapshots:
       '@prisma/engines-version': 6.4.0-29.a9055b89e58b4b5bfb59600785423b1db3d0e75d
       '@prisma/fetch-engine': 6.4.1
       '@prisma/get-platform': 6.4.1
+    optional: true
 
   '@prisma/fetch-engine@6.4.1':
     dependencies:
       '@prisma/debug': 6.4.1
       '@prisma/engines-version': 6.4.0-29.a9055b89e58b4b5bfb59600785423b1db3d0e75d
       '@prisma/get-platform': 6.4.1
+    optional: true
 
   '@prisma/get-platform@6.4.1':
     dependencies:
       '@prisma/debug': 6.4.1
+    optional: true
 
   '@privy-io/api-base@1.4.1':
     dependencies:
@@ -8040,6 +8042,7 @@ snapshots:
       esbuild: 0.25.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   esbuild@0.21.5:
     optionalDependencies:
@@ -8942,6 +8945,7 @@ snapshots:
       typescript: 5.7.3
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   process-warning@1.0.0: {}
 

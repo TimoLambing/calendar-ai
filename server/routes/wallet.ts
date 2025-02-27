@@ -32,7 +32,7 @@ router.get('/wallets/:address', async (req, res) => {
     const latestSnapshot = wallet.snapshots[0];
     const totalValue = latestSnapshot?.totalValue || 0;
 
-    res.json({
+    return res.json({
       address: wallet.address,
       isFollowed: wallet.followedBy.length > 0,
       performanceStats: {
@@ -44,7 +44,7 @@ router.get('/wallets/:address', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching wallet:', error);
-    res.status(500).json({ error: 'Failed to fetch wallet details' });
+    return res.status(500).json({ error: 'Failed to fetch wallet details' });
   }
 });
 
@@ -118,17 +118,17 @@ router.get('/followed-wallets', async (req, res) => {
       return res.json([]);
     }
 
-    const followedWallets = wallet.following.map((followed, index) => ({
+    const followedWallets = wallet.following.map((followed: any, index: number) => ({
       address: followed.address,
       performancePercent: calculatePerformance(followed.snapshots, '24h'),
       totalValue: followed.snapshots[0]?.totalValue || 0,
       rank: index + 1
     }));
 
-    res.json(followedWallets);
+    return res.json(followedWallets);
   } catch (error) {
     console.error('Error fetching followed wallets:', error);
-    res.status(500).json({ error: 'Failed to fetch followed wallets' });
+    return res.status(500).json({ error: 'Failed to fetch followed wallets' });
   }
 });
 

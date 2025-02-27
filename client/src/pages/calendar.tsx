@@ -1,15 +1,13 @@
-// client/src/pages/calendar.tsx
-
 import { CalendarCard } from "@/components/CalendarCard";
 import { PortfolioStats } from "@/components/PortfolioStats";
 import { WalletConnect } from "@/components/WalletConnect";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ScrollText } from "lucide-react";
-import { generateMockData, type DayData } from "@/lib/mockData";
 import { useState } from "react";
-import { getWalletHistory } from "@/lib/web3";
 import { useQuery } from "@tanstack/react-query";
+import type { DayData } from "@/lib/mockData";
+import { getWalletHistory } from "@/lib/web3";
 
 export default function Calendar() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -20,22 +18,25 @@ export default function Calendar() {
     queryKey: ["wallet-history", walletAddress],
     queryFn: async () => {
       if (!walletAddress) return [];
+      // IMPORTANT: getWalletHistory should fetch real data from your backend
+      // For example, you could do:
+      // const res = await fetch(`/api/wallets/${walletAddress}/snapshots`);
+      // return await res.json();
+      // or rely on getWalletHistory if it’s already replaced with real fetch logic
       return getWalletHistory(walletAddress);
     },
     enabled: !!walletAddress,
-    staleTime: 30000, // Refresh every 30 seconds
+    staleTime: 30000, // 30 seconds
   });
-
-  // Fallback to mock data when wallet is not connected
-  const mockData: DayData[] = generateMockData(28);
 
   const handleWalletConnect = (address: string) => {
     setWalletAddress(address);
     setWalletConnected(true);
   };
 
-  // Use wallet data if available, otherwise use mock data
-  const displayData = walletConnected ? walletData || [] : mockData;
+  // If there's no wallet connected, no data is displayed at all.
+  // If there's no data from the backend, show "No transaction history..."
+  const displayData = walletData || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
@@ -51,8 +52,7 @@ export default function Calendar() {
               </p>
               {!walletConnected && (
                 <p className="text-yellow-400 mt-2 text-sm">
-                  Currently showing mock data. Connect wallet to see your actual
-                  portfolio.
+                  Connect a wallet to see your actual portfolio data.
                 </p>
               )}
             </div>

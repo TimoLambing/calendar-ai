@@ -1,5 +1,3 @@
-// client/src/components/JournalEntries.tsx
-
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -18,21 +16,17 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface Props {
   date?: Date; // Optional date filter
-  value?: number; // Portfolio value
-  valueChange?: number; // Daily performance change
-}
-
-interface EntryWithComments extends TradingDiaryEntry {
-  comments?: TradingDiaryComment[];
-  isExpanded?: boolean;
+  value?: number; // Optional portfolio value for that day
+  valueChange?: number; // Optional daily performance change
 }
 
 export function JournalEntries({ date, value, valueChange }: Props) {
-  // Use different query key and endpoint based on whether a date is provided
+  // If date is provided, we fetch only that day's entries. Otherwise, all.
   const queryKey = date
     ? ["diary-entries", "date", date.toISOString()]
     : ["diary-entries"];
 
+  // Load diary entries from your backend
   const { data: entries } = useQuery<TradingDiaryEntry[]>({
     queryKey,
     queryFn: async () => {
@@ -45,13 +39,16 @@ export function JournalEntries({ date, value, valueChange }: Props) {
     },
   });
 
-  const [expandedEntries, setExpandedEntries] = useState<Set<number>>(
+  // Track which entries are expanded (to show comments)
+  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(
     new Set()
   );
-  const [newComments, setNewComments] = useState<Record<number, string>>({});
+  // Track new comment text, keyed by entry ID
+  const [newComments, setNewComments] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
-  const { data: commentsMap } = useQuery<Record<number, TradingDiaryComment[]>>(
+  // For each expanded entry, load comments
+  const { data: commentsMap } = useQuery<Record<string, TradingDiaryComment[]>>(
     {
       queryKey: ["diary-comments", Array.from(expandedEntries)],
       queryFn: async () => {
@@ -72,7 +69,7 @@ export function JournalEntries({ date, value, valueChange }: Props) {
     }
   );
 
-  const toggleComments = (entryId: number) => {
+  const toggleComments = (entryId: string) => {
     const newExpanded = new Set(expandedEntries);
     if (newExpanded.has(entryId)) {
       newExpanded.delete(entryId);
@@ -82,7 +79,7 @@ export function JournalEntries({ date, value, valueChange }: Props) {
     setExpandedEntries(newExpanded);
   };
 
-  const handleAddComment = async (entryId: number) => {
+  const handleAddComment = async (entryId: string) => {
     const comment = newComments[entryId];
     if (!comment?.trim()) {
       toast({
@@ -96,10 +93,11 @@ export function JournalEntries({ date, value, valueChange }: Props) {
     try {
       await apiRequest("POST", `/api/diary-entries/${entryId}/comments`, {
         comment,
-        authorAddress: window.ethereum?.selectedAddress || "Anonymous", // Fallback for unconnected users
+        authorAddress: window.ethereum?.selectedAddress || "Anonymous", // Fallback
       });
 
-      queryClient.invalidateQueries({ queryKey: ["diary-comments"] });
+      // Refresh the comments for this entry
+      queryClient.invalidateQueries(["diary-comments"]);
 
       toast({
         title: "Comment Added",
@@ -116,6 +114,7 @@ export function JournalEntries({ date, value, valueChange }: Props) {
     }
   };
 
+  // If no entries found
   if (!entries?.length) {
     return (
       <Card>
@@ -149,6 +148,8 @@ export function JournalEntries({ date, value, valueChange }: Props) {
                         </span>
                       )}
                     </div>
+
+                    {/* If we want to show performance stats */}
                     {(entry.valueChange || valueChange) &&
                       (entry.portfolioValue || value) && (
                         <div
@@ -197,30 +198,31 @@ export function JournalEntries({ date, value, valueChange }: Props) {
                   </Button>
                 </div>
 
+                {/* The main diary comment */}
                 <div className="mt-2 text-sm whitespace-pre-wrap">
                   {entry.comment}
                 </div>
 
+                {/* Comments thread */}
                 {expandedEntries.has(entry.id) && (
                   <div className="mt-4 pl-4 border-l-2 space-y-4">
-                    {commentsMap?.[entry.id]?.map((comment) => (
-                      <div key={comment.id} className="text-sm">
+                    {commentsMap?.[entry.id]?.map((c) => (
+                      <div key={c.id} className="text-sm">
                         <div className="flex items-center gap-2 text-muted-foreground">
-                          {comment.authorAddress && (
+                          {c.authorAddress && (
                             <span>
-                              {comment.authorAddress.slice(0, 6)}...
-                              {comment.authorAddress.slice(-4)}
+                              {c.authorAddress.slice(0, 6)}...
+                              {c.authorAddress.slice(-4)}
                             </span>
                           )}
                           <span>•</span>
-                          <span>
-                            {new Date(comment.createdAt!).toLocaleString()}
-                          </span>
+                          <span>{new Date(c.createdAt!).toLocaleString()}</span>
                         </div>
-                        <div className="mt-1">{comment.comment}</div>
+                        <div className="mt-1">{c.comment}</div>
                       </div>
                     ))}
 
+                    {/* Add a new comment */}
                     <div className="space-y-2">
                       <Textarea
                         placeholder="Add a comment..."

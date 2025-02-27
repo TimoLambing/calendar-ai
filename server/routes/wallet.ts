@@ -33,6 +33,7 @@ router.get('/wallets/:address', async (req, res) => {
     const totalValue = latestSnapshot?.totalValue || 0;
 
     return res.json({
+      id: wallet.id,
       address: wallet.address,
       isFollowed: wallet.followedBy.length > 0,
       performanceStats: {
@@ -152,5 +153,29 @@ function calculatePerformance(snapshots: any[], period: '24h' | '7d' | '30d'): n
 
   return ((latest.totalValue - previous.totalValue) / previous.totalValue) * 100;
 }
+
+// Create or update a wallet
+router.post('/wallets', async (req, res) => {
+  try {
+    // rest is all the fields except address.
+    // This will be useful when updating the wallet.
+    const { address, ...rest } = req.body;
+
+    if (!address) {
+      return res.status(400).json({ error: 'Address is required' });
+    }
+
+    const wallet = await prisma.wallet.upsert({
+      where: { address },
+      update: { ...rest },
+      create: { address },
+    });
+
+    return res.json(wallet);
+  } catch (error) {
+    console.error('Error creating/updating wallet:', error);
+    return res.status(500).json({ error: 'Failed to create or update wallet' });
+  }
+});
 
 export default router;

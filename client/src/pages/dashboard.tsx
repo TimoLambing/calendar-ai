@@ -8,31 +8,37 @@ import { JournalEntries } from "@/components/JournalEntries";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Calendar, ScrollText } from "lucide-react";
-import { useState } from "react";
-import type { WalletConnection } from "@/lib/web3";
 import { useQuery } from "@tanstack/react-query";
 import { getMockJournalEntries } from "@/lib/web3";
+import { useAppState } from "@/store/appState";
 
+type WalletData = {
+  id: string;
+  latestSnapshot: {
+    balances: { symbol: string; amount: number; }[];
+  };
+};
 export default function Dashboard() {
-  const [wallet, setWallet] = useState<WalletConnection>();
+  const { state: { address } } = useAppState();
 
-  const { data: walletData } = useQuery({
-    queryKey: [`/api/wallets/${wallet?.address}`],
-    enabled: !!wallet,
+  const { data: walletData } = useQuery<WalletData>({
+    queryKey: [`/api/wallets/${address}`],
+    enabled: !!address,
   });
 
   // Fetch journal entries
   const { data: journalEntries } = useQuery({
-    queryKey: ["journal-entries", wallet?.address],
-    queryFn: () => getMockJournalEntries(wallet?.address || ""),
-    enabled: !!wallet?.address,
+    queryKey: ["journal-entries", address],
+    queryFn: () => getMockJournalEntries(address || ""),
+    enabled: !!address,
   });
+  console.log(journalEntries);
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        {!wallet ? (
-          <WalletConnect onConnect={setWallet} />
+        {!address ? (
+          <WalletConnect />
         ) : (
           <div className="space-y-8">
             <div className="flex justify-between items-center">
@@ -54,7 +60,8 @@ export default function Dashboard() {
             </div>
 
             <div className="grid gap-8 md:grid-cols-2">
-              <PortfolioValue walletId={walletData?.id} />
+              {/* TODO: Remove non null assertion */}
+              <PortfolioValue walletId={walletData?.id!} />
               <CoinPerformance
                 balances={walletData?.latestSnapshot?.balances || []}
               />

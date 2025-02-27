@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { JournalEntries } from "@/components/JournalEntries";
 import { CoinBalance, Transaction } from "@/schemas";
+import { useAppState } from "@/store/appState";
 
 interface Props {
   date: Date;
@@ -53,9 +54,9 @@ export function CalendarCard({
   const [isFlipped, setIsFlipped] = useState(false);
   const [comment, setComment] = useState("");
   const { toast } = useToast();
-
+  const { state: { address } } = useAppState();
   // Use mock address for demo
-  const currentUserAddress = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
+  const currentUserAddress = address;
 
   async function handleAddComment() {
     if (!comment.trim()) {
@@ -75,7 +76,7 @@ export function CalendarCard({
       const walletResponse = await apiRequest("GET", `/api/wallets/${walletAddress}`);
 
       const walletData = await walletResponse.json();
-
+      console.log(walletData);
       await apiRequest("POST", "/api/diary-entries", {
         comment,
         timestamp: date.toISOString(),

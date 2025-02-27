@@ -1,5 +1,3 @@
-// client/src/App.tsx
-
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -16,17 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import Dashboard from "./pages/dashboard";
 import PrivyProvider from "./providers/privy";
-import { AppStateProvider, useAppState } from "./store/appState";
-import { useCallback } from "react";
+import { AppStateProvider } from "./store/appState";
 
 function Layout({ children }: { children: React.ReactNode; }) {
-  const { setState } = useAppState();
-
-  const handleWalletConnect = useCallback((address: string) => {
-    console.log("Wallet connected:", address);
-    setState({ address });
-  }, []);
-
   return (
     <div className="min-h-screen">
       <header className="border-b">
@@ -54,7 +44,7 @@ function Layout({ children }: { children: React.ReactNode; }) {
               </Link>
             </nav>
           </div>
-          <WalletConnect onConnect={handleWalletConnect} minimal />
+          <WalletConnect minimal />
         </div>
       </header>
       <main>{children}</main>

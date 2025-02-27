@@ -14,18 +14,21 @@
  * the Privy provider in your root application.
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAppState } from "@/store/appState";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Props {
-  onConnect: (walletAddress: string) => void;
   minimal?: boolean;
 }
 
-export function WalletConnect({ onConnect, minimal = false }: Props) {
+export function WalletConnect({ minimal = false }: Props) {
+  const { state: { address }, setState } = useAppState();
+
   // Toast notifications
   const { toast } = useToast();
 
@@ -35,12 +38,14 @@ export function WalletConnect({ onConnect, minimal = false }: Props) {
   // Track connection state
   const [isConnected, setIsConnected] = useState(false);
 
-  // Currently displayed wallet address
-  const [address, setAddress] = useState("");
+  const createOrUpdateWallet = useCallback(async (address: string) => {
+    await apiRequest("POST", "/api/wallets", { address });
+  }, []);
 
   // Whenever the user / privy state changes, check if they're authenticated and have a wallet
   useEffect(() => {
     if (ready && authenticated && user) {
+
       // Find a linked wallet in the user's accounts
       const linkedWallet = user.linkedAccounts?.find(
         (acct) => acct.type === "wallet" && acct.address
@@ -49,9 +54,10 @@ export function WalletConnect({ onConnect, minimal = false }: Props) {
         setIsConnected(true);
         // We cannot assert that all wallets have addresses, but we'll assume so.
         //@ts-ignore
-        setAddress(linkedWallet.address);
+        setState({ address: linkedWallet.address });
+        // We cannot assert that all wallets have addresses, but we'll assume so.
         //@ts-ignore
-        onConnect(linkedWallet.address);
+        createOrUpdateWallet(linkedWallet.address);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -107,7 +113,7 @@ export function WalletConnect({ onConnect, minimal = false }: Props) {
     try {
       await logout();
       setIsConnected(false);
-      setAddress("");
+      setState({ address: "" });
       toast({
         title: "Wallet Disconnected",
         description: "You have been logged out of Privy.",
@@ -132,7 +138,7 @@ export function WalletConnect({ onConnect, minimal = false }: Props) {
         className="flex items-center gap-2"
       >
         <Wallet className="h-4 w-4" />
-        {address.slice(0, 6)}...{address.slice(-4)}
+        {address?.slice(0, 6)}...{address?.slice(-4)}
       </Button>
     ) : (
       <Button

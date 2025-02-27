@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { prisma } from '../prisma';
+import { prisma } from '../prisma/prisma';
 
 const router = Router();
 
@@ -7,7 +7,7 @@ const router = Router();
 router.get('/wallets/:address', async (req, res) => {
   try {
     const { address } = req.params;
-    
+
     // Get or create wallet
     const wallet = await prisma.wallet.findUnique({
       where: { address },

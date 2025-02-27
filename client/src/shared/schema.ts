@@ -1,15 +1,13 @@
-// shared/schema.ts
-
 import { z } from "zod";
-import type { Prisma } from "@prisma/client";
+// import type { Prisma } from "@prisma/client";
 
-// Export Prisma types
-export type Wallet = Prisma.WalletGetPayload<{}>;
-export type TradingDiaryEntry = Prisma.TradingDiaryEntryGetPayload<{}>;
-export type TradingDiaryComment = Prisma.TradingDiaryCommentGetPayload<{}>;
-export type WalletSnapshot = Prisma.WalletSnapshotGetPayload<{}>;
-export type CoinBalance = Prisma.CoinBalanceGetPayload<{}>;
-export type Transaction = Prisma.TransactionGetPayload<{}>;
+// // Export Prisma types
+// export type Wallet = Prisma.WalletGetPayload<{}>;
+// export type TradingDiaryEntry = Prisma.TradingDiaryEntryGetPayload<{}>;
+// export type TradingDiaryComment = Prisma.TradingDiaryCommentGetPayload<{}>;
+// export type WalletSnapshot = Prisma.WalletSnapshotGetPayload<{}>;
+// export type CoinBalance = Prisma.CoinBalanceGetPayload<{}>;
+// export type Transaction = Prisma.TransactionGetPayload<{}>;
 
 // Zod schemas for validation
 export const walletSchema = z.object({

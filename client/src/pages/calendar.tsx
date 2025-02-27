@@ -10,7 +10,7 @@ import type { DayData } from "@/lib/mockData";
 import { getWalletHistory } from "@/lib/web3";
 
 export default function Calendar() {
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>("0x742d35Cc6634C0532925a3b844Bc454e4438f44e");
   const [walletConnected, setWalletConnected] = useState(false);
 
   // Query for wallet history when connected
@@ -37,6 +37,8 @@ export default function Calendar() {
   // If there's no wallet connected, no data is displayed at all.
   // If there's no data from the backend, show "No transaction history..."
   const displayData = walletData || [];
+
+  console.log(walletData);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">

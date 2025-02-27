@@ -1,5 +1,3 @@
-// client/src/lib/mockData.ts
-
 import { CoinBalance, Transaction } from "@shared/schema";
 
 // You can customize the comments for each volatility range by editing the comments arrays below

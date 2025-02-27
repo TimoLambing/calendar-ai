@@ -14,8 +14,9 @@ import { WalletConnect } from "@/components/WalletConnect";
 import { Trophy, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import Dashboard from "./pages/dashboard";
 
-function Layout({ children }: { children: React.ReactNode }) {
+function Layout({ children }: { children: React.ReactNode; }) {
   const handleWalletConnect = (address: string) => {
     console.log("Wallet connected:", address);
   };
@@ -59,7 +60,8 @@ function Router() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={Calendar} />
+        <Route path="/" component={Dashboard} />
+        <Route path="/calendar" component={Calendar} />
         <Route path="/journal" component={Journal} />
         <Route path="/leaderboard" component={Leaderboard} />
         <Route path="/following" component={Following} />

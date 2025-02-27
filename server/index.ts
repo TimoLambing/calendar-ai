@@ -1,10 +1,8 @@
-// server/index.ts
-
 import express, { type Request, Response, NextFunction } from "express";
 import diaryRoutes from "./routes/diary";
 import walletRoutes from "./routes/wallet";
-import { setupVite, serveStatic, log } from "./vite";
-import { prisma } from "./prisma";
+import { prisma } from "./prisma/prisma";
+import { log } from "./utils/log";
 
 const app = express();
 app.use(express.json());
@@ -41,6 +39,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// Error handling middleware
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  console.error("Application error:", err);
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  res.status(status).json({ message });
+});
+
 // Test database connection before starting server
 async function testDatabaseConnection() {
   try {
@@ -65,43 +71,16 @@ app.use("/api", walletRoutes);
       throw new Error("Could not establish database connection");
     }
 
-    // Error handling middleware
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      console.error("Application error:", err);
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-      res.status(status).json({ message });
-    });
+    app.listen(
+      {
+        port: 5000,
+        // host: "0.0.0.0",
+        // reusePort: true,
+      },
+      () => {
+        log(`Server running on port 5000`);
+      });
 
-    // Setup Vite in development
-    if (app.get("env") === "development") {
-      // Create HTTP server instance
-      const server = app.listen(
-        {
-          port: 5000,
-          // host: "0.0.0.0",
-          // reusePort: true,
-        },
-        () => {
-          log(`Server running on port 5000`);
-        }
-      );
-
-      // Setup Vite with server instance
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
-      app.listen(
-        {
-          port: 5000,
-          // host: "0.0.0.0",
-          // reusePort: true,
-        },
-        () => {
-          log(`Server running on port 5000`);
-        }
-      );
-    }
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);

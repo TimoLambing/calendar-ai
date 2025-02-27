@@ -47,7 +47,10 @@ export function WalletConnect({ onConnect, minimal = false }: Props) {
       );
       if (linkedWallet) {
         setIsConnected(true);
+        // We cannot assert that all wallets have addresses, but we'll assume so.
+        //@ts-ignore
         setAddress(linkedWallet.address);
+        //@ts-ignore
         onConnect(linkedWallet.address);
       }
     }

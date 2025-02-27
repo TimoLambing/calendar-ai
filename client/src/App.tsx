@@ -16,11 +16,16 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import Dashboard from "./pages/dashboard";
 import PrivyProvider from "./providers/privy";
+import { AppStateProvider, useAppState } from "./store/appState";
+import { useCallback } from "react";
 
 function Layout({ children }: { children: React.ReactNode; }) {
-  const handleWalletConnect = (address: string) => {
+  const { setState } = useAppState();
+
+  const handleWalletConnect = useCallback((address: string) => {
     console.log("Wallet connected:", address);
-  };
+    setState({ address });
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -77,8 +82,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <PrivyProvider>
-        <Router />
-        <Toaster />
+        <AppStateProvider>
+          <Router />
+          <Toaster />
+        </AppStateProvider>
       </PrivyProvider>
     </QueryClientProvider>
   );

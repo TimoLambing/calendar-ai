@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../prisma/prisma';
 import { getEtherWalletTransactions, getMoralisTransactions } from '../api/wallet';
+import { decodeTransaction } from '../utils/ether-decode';
 
 const router = Router();
 
@@ -173,13 +174,13 @@ router.post('/wallets', async (req, res) => {
     });
 
     // If Moralis supports both networks we can remove getEtherWalletTransactions.
-    const transactions = await Promise.all([
-      getEtherWalletTransactions(wallet.address),
-      getMoralisTransactions(wallet.address),
-    ]);
-
-    console.log(transactions);
-
+    // const transactions = await Promise.all([
+    //   getEtherWalletTransactions(wallet.address),
+    //   getMoralisTransactions(wallet.address),
+    // ]);
+    const transactions = await getEtherWalletTransactions(wallet.address);
+    const decodedTransfer = decodeTransaction(transactions.result[3]);
+    console.log(decodedTransfer);
     return res.json(wallet);
   } catch (error) {
     console.error('Error creating/updating wallet:', error);

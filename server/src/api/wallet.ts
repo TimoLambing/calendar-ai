@@ -1,10 +1,11 @@
+
 export const getEtherWalletTransactions = async (walletAddress: string) => {
     try {
         const url = new URL('https://api.etherscan.io/v2/api');
 
         url.searchParams.append('chainid', '1');
         url.searchParams.append('module', 'account');
-        url.searchParams.append('action', 'txlist');
+        url.searchParams.append('action', 'txlist'); // might need to make it a dynamic function to get balance or txlist
         url.searchParams.append('address', walletAddress);
         url.searchParams.append('tag', 'latest');
         url.searchParams.append('apikey', process.env.ETHERSCAN_API_KEY!);

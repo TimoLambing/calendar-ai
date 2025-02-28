@@ -4,41 +4,35 @@ import { WalletConnect } from "@/components/WalletConnect";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ScrollText } from "lucide-react";
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { DayData } from "@/lib/mockData";
 import { getWalletHistory } from "@/lib/web3";
+import { useAppState } from "@/store/appState";
 
 export default function Calendar() {
-  const [walletAddress, setWalletAddress] = useState<string | null>("0x742d35Cc6634C0532925a3b844Bc454e4438f44e");
-  const [walletConnected, setWalletConnected] = useState(false);
-
+  const { state: { address } } = useAppState();
   // Query for wallet history when connected
   const { data: walletData, isLoading } = useQuery<DayData[]>({
-    queryKey: ["wallet-history", walletAddress],
+    queryKey: ["wallet-history", address],
     queryFn: async () => {
-      if (!walletAddress) return [];
+      if (!address) return [];
       // IMPORTANT: getWalletHistory should fetch real data from your backend
       // For example, you could do:
       // const res = await fetch(`/api/wallets/${walletAddress}/snapshots`);
       // return await res.json();
       // or rely on getWalletHistory if it’s already replaced with real fetch logic
-      return getWalletHistory(walletAddress);
+      return getWalletHistory(address);
     },
-    enabled: !!walletAddress,
+    enabled: !!address,
     staleTime: 30000, // 30 seconds
   });
 
-  const handleWalletConnect = (address: string) => {
-    setWalletAddress(address);
-    setWalletConnected(true);
-  };
+
 
   // If there's no wallet connected, no data is displayed at all.
   // If there's no data from the backend, show "No transaction history..."
   const displayData = walletData || [];
 
-  console.log(walletData);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
@@ -52,14 +46,14 @@ export default function Calendar() {
               <p className="text-gray-400 mt-1">
                 Track your daily portfolio performance
               </p>
-              {!walletConnected && (
+              {!address && (
                 <p className="text-yellow-400 mt-2 text-sm">
                   Connect a wallet to see your actual portfolio data.
                 </p>
               )}
             </div>
             <div className="flex items-center gap-4">
-              <WalletConnect onConnect={handleWalletConnect} minimal />
+              <WalletConnect minimal />
               <Link href="/journal">
                 <Button
                   variant="outline"

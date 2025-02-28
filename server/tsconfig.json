@@ -19,5 +19,5 @@
     "skipLibCheck": true
   },
   "include": [ "./**/*" ],
-  "exclude": [ "./dist/**/*", "./src/public/**/*" ]
+  "exclude": [ "./dist/**/*", "./public/**/*" ]
 }

@@ -25,7 +25,9 @@ if (!isDbConnected) {
   throw new Error("Could not establish database connection");
 }
 
-app.listen(6000, () => { log(`Server running on port 6000`); });
+app.listen(6000, () => {
+  log(`Server running on port 6000`);
+});
 
 process.on("beforeExit", async () => {
   await prisma.$disconnect();

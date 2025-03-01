@@ -1,3 +1,5 @@
+// server/src/storage.ts
+
 import { prisma } from "./prisma/prisma";
 
 // The storage interface is now implemented directly in the routes

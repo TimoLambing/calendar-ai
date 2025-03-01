@@ -1,3 +1,5 @@
+// server/src/routes/diary.ts
+
 import { Router } from "express";
 import { prisma } from "../prisma/prisma";
 
@@ -47,7 +49,14 @@ router.get("/diary-entries/date/:date", async (req, res) => {
 // 3) Create a new diary entry
 router.post("/diary-entries", async (req, res) => {
   try {
-    const { walletId, comment, timestamp, portfolioValue, valueChange, authorAddress } = req.body;
+    const {
+      walletId,
+      comment,
+      timestamp,
+      portfolioValue,
+      valueChange,
+      authorAddress,
+    } = req.body;
 
     // Validate wallet existence or connect
     // If you need to ensure the wallet is in the DB, do connectOrCreate here:

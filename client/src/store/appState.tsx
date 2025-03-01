@@ -1,3 +1,5 @@
+// client/src/store/appState.tsx
+
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 // Define the shape of the state
@@ -13,10 +15,12 @@ interface AppStateContextType {
 }
 
 // Create Context
-const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
+const AppStateContext = createContext<AppStateContextType | undefined>(
+  undefined
+);
 
 // Create Provider component
-export const AppStateProvider = ({ children }: { children: ReactNode; }) => {
+export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<AppState>({
     isConnected: false,
     address: null,

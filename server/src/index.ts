@@ -1,3 +1,5 @@
+// server/src/index.ts
+
 import express from "express";
 import diaryRoutes from "./routes/diary";
 import walletRoutes from "./routes/wallet";
@@ -32,5 +34,3 @@ app.listen(6000, () => {
 process.on("beforeExit", async () => {
   await prisma.$disconnect();
 });
-
-

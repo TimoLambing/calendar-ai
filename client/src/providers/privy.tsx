@@ -1,21 +1,28 @@
-import { PrivyProvider as CorePrivyProvider } from '@privy-io/react-auth';
+// client/src/lib/utils.ts
+
+import { PrivyProvider as CorePrivyProvider } from "@privy-io/react-auth";
 
 /**
- * Wrapper around Privy provider to set up the Privy SDK. 
+ * Wrapper around Privy provider to set up the Privy SDK.
  */
-export default function PrivyProvider({ children }: { children: React.ReactNode; }) {
-    return (
-        <CorePrivyProvider
-            appId={import.meta.env.VITE_PRIVY_APP_ID}
-            config={{
-                embeddedWallets: {
-                    createOnLogin: 'users-without-wallets'
-                },
-                appearance: {
-                    // theme: 'dark'
-                }
-            }} >
-            {children}
-        </CorePrivyProvider >
-    );
+export default function PrivyProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <CorePrivyProvider
+      appId={import.meta.env.VITE_PRIVY_APP_ID}
+      config={{
+        embeddedWallets: {
+          createOnLogin: "users-without-wallets",
+        },
+        appearance: {
+          // theme: 'dark'
+        },
+      }}
+    >
+      {children}
+    </CorePrivyProvider>
+  );
 }

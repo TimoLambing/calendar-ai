@@ -1,5 +1,51 @@
 // client/src/lib/web3.ts
 
+export interface DayData {
+  date: Date;
+  totalValue: number;
+  coins: {
+    id: string;
+    symbol: string;
+    amount: number;
+    valueUsd: number;
+  }[];
+  transactions: any[];
+}
+
+/**
+ * Fetch daily snapshot data from our backend route:
+ * GET /api/wallets/:address/history?chain=ethereum (or solana)
+ * If chain is omitted, default to "ethereum"
+ */
+export const getWalletHistory = async (
+  address: string,
+  chain?: "ethereum" | "solana"
+) => {
+  const effectiveChain = chain || "ethereum"; // default
+  const response = await fetch(
+    `/api/wallets/${address}/history?chain=${effectiveChain}`
+  );
+  if (!response.ok) {
+    throw new Error("Failed to fetch wallet history");
+  }
+  return response.json();
+};
+
+// All mock functions removed or throw errors:
+export const getMockJournalEntries = async () => {
+  throw new Error("Mock removed, use real API");
+};
+
+export const getMockWalletDetails = async () => {
+  throw new Error("Mock removed, use real API");
+};
+
+export const getMockLeaderboardData = async () => {
+  throw new Error("Mock removed, use real API");
+};
+
+/* // client/src/lib/web3.ts
+
 import { DayData } from "./mockData";
 import { generateMockData } from "./mockData";
 
@@ -61,14 +107,14 @@ export function getMockLeaderboardData(
       (period === "24h"
         ? 0.3 // More volatile short-term movements
         : period === "7d"
-          ? 0.7
-          : period === "30d"
-            ? 1.2
-            : period === "60d"
-              ? 1.8
-              : period === "180d"
-                ? 2.5
-                : 3.0); // 360d - Most volatile
+        ? 0.7
+        : period === "30d"
+        ? 1.2
+        : period === "60d"
+        ? 1.8
+        : period === "180d"
+        ? 2.5
+        : 3.0); // 360d - Most volatile
 
     wallets.push({
       address: generateWalletAddress(),
@@ -147,3 +193,4 @@ export function getMockJournalEntries(address: string): JournalEntry[] {
 export async function getWalletTokens(address: string) {
   return [];
 }
+ */

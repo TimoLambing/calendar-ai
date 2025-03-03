@@ -1,3 +1,5 @@
+// client/src/App.tsx
+
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -16,7 +18,7 @@ import Dashboard from "./pages/dashboard";
 import PrivyProvider from "./providers/privy";
 import { AppStateProvider } from "./store/appState";
 
-function Layout({ children }: { children: React.ReactNode; }) {
+function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen">
       <header className="border-b">

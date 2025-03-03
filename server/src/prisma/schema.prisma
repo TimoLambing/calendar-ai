@@ -18,6 +18,7 @@ model Wallet {
   snapshots    WalletSnapshot[]
   followedBy   Wallet[]            @relation("WalletFollows")
   following    Wallet[]            @relation("WalletFollows")
+  Snapshot     TokenSnapshot[]
 }
 
 model TradingDiaryEntry {
@@ -83,4 +84,20 @@ model Transaction {
   // Relations
   snapshot   WalletSnapshot @relation(fields: [snapshotId], references: [id])
   snapshotId String
+}
+
+// Meelis created this model for testing purposes.
+model TokenSnapshot {
+  id         String   @id @default(cuid())
+  timestamp  DateTime
+  totalValue Float
+  symbol     String
+  createdAt  DateTime @default(now())
+  name       String
+  logo       String
+  thumbnail  String
+
+  // Relations
+  wallet   Wallet @relation(fields: [walletId], references: [id])
+  walletId String
 }

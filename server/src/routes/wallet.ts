@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../prisma/prisma';
-import { getEtherWalletTransactions, getMoralisTransactions } from '../api/wallet';
-import { decodeTransaction } from '../utils/ether-decode';
+import { getWalletTokenBalanceSnapshots } from '../api/wallet';
 
 const router = Router();
 
@@ -173,14 +172,43 @@ router.post('/wallets', async (req, res) => {
       create: { address },
     });
 
-    // If Moralis supports both networks we can remove getEtherWalletTransactions.
-    // const transactions = await Promise.all([
-    //   getEtherWalletTransactions(wallet.address),
-    //   getMoralisTransactions(wallet.address),
-    // ]);
-    const transactions = await getEtherWalletTransactions(wallet.address);
-    const decodedTransfer = decodeTransaction(transactions.result[3]);
-    console.log(decodedTransfer);
+    // TEST ADDRESS
+    // const walletAddress = '0x1e58fdeff054b68cdd33db44b9f724e7bd87dfe7'; 
+
+    const startDate = "2022-01-03";
+    const endDate = "2022-01-04";
+
+    const snapshots = await getWalletTokenBalanceSnapshots(address, '0x1', startDate, endDate);
+
+    // Iterate over snapshots and save to Prisma if not already existing
+    for (const snapshot of snapshots) {
+      const { walletId, timestamp, symbol, totalValue, name, logo, thumbnail } = snapshot;
+
+      // Check if snapshot with same walletId, timestamp, and symbol already exists
+      const existingSnapshot = await prisma.tokenSnapshot.findFirst({
+        where: {
+          walletId,
+          timestamp: new Date(timestamp),  // Ensure the timestamp is a Date object
+          symbol,
+        },
+      });
+      // Only save if no existing snapshot found
+      if (!existingSnapshot) {
+        console.log('Creating snapshot:', snapshot);
+        await prisma.tokenSnapshot.create({
+          data: {
+            walletId,
+            timestamp: new Date(timestamp),
+            symbol,
+            totalValue,
+            name,
+            logo,
+            thumbnail,
+          },
+        });
+      }
+    }
+
     return res.json(wallet);
   } catch (error) {
     console.error('Error creating/updating wallet:', error);

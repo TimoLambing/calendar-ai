@@ -78,6 +78,22 @@ CREATE TABLE "_WalletFollows" (
     CONSTRAINT "_WalletFollows_AB_pkey" PRIMARY KEY ("A","B")
 );
 
+-- CreateTable
+CREATE TABLE "TokenSnapshot" (
+    "id" TEXT NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL,
+    "totalValue" DOUBLE PRECISION NOT NULL,
+    "symbol" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "name" TEXT NOT NULL,
+    "logo" TEXT NOT NULL,
+    "thumbnail" TEXT NOT NULL,
+    "walletId" TEXT NOT NULL,
+
+    CONSTRAINT "TokenSnapshot_pkey" PRIMARY KEY ("id")
+);
+
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Wallet_address_key" ON "Wallet"("address");
 
@@ -104,3 +120,6 @@ ALTER TABLE "_WalletFollows" ADD CONSTRAINT "_WalletFollows_A_fkey" FOREIGN KEY 
 
 -- AddForeignKey
 ALTER TABLE "_WalletFollows" ADD CONSTRAINT "_WalletFollows_B_fkey" FOREIGN KEY ("B") REFERENCES "Wallet"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TokenSnapshot" ADD CONSTRAINT "Snapshot_walletId_fkey" FOREIGN KEY ("walletId") REFERENCES "Wallet"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

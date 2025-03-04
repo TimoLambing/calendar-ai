@@ -13,10 +13,30 @@ async function initializeMoralis() {
 }
 
 /**
- * Fetches EVM transactions for a wallet (Ethereum or Base).
+ * Fetches the current ETH price for a given chain.
+ * @param chain Chain ID ("0x1" for Ethereum, "0x2105" for Base)
+ * @returns ETH price in USD
+ */
+export async function getEthPrice(
+  chain: "0x1" | "0x2105" = "0x1"
+): Promise<number> {
+  try {
+    const response = await Moralis.EvmApi.token.getTokenPrice({
+      address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", // ETH address
+      chain,
+    });
+    return response.toJSON().usdPrice || 2100.92; // Default to $2,100.92 if no price
+  } catch (error) {
+    console.error("[getEthPrice] Error:", error);
+    return 2100.92; // Fallback price
+  }
+}
+
+/**
+ * Fetches EVM transactions (native ETH) for a wallet.
  * @param walletAddress Wallet address
  * @param chain Chain ID ("0x1" for Ethereum, "0x2105" for Base)
- * @returns Array of transactions
+ * @returns Array of transactions with calculated valueUsd
  */
 export async function fetchEvmTransactions(
   walletAddress: string,
@@ -33,9 +53,43 @@ export async function fetchEvmTransactions(
       chain,
       limit: 100,
     });
-    return response.toJSON().result || [];
+    const ethPrice = await getEthPrice(chain);
+    const transactions = response.toJSON().result || [];
+
+    return transactions.map((tx) => ({
+      ...tx,
+      value_usd: parseFloat(ethers.formatEther(tx.value || "0")) * ethPrice,
+    }));
   } catch (error) {
     console.error("[fetchEvmTransactions] Error:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetches EVM token transfers (ERC-20) for a wallet.
+ * @param walletAddress Wallet address
+ * @param chain Chain ID ("0x1" for Ethereum, "0x2105" for Base)
+ * @returns Array of token transfer transactions
+ */
+export async function fetchEvmTokenTransfers(
+  walletAddress: string,
+  chain: "0x1" | "0x2105" = "0x1"
+) {
+  try {
+    await initializeMoralis();
+    console.log(
+      `[fetchEvmTokenTransfers] wallet = ${walletAddress}, chain = ${chain}`
+    );
+
+    const response = await Moralis.EvmApi.token.getWalletTokenTransfers({
+      address: walletAddress,
+      chain,
+      limit: 100,
+    });
+    return response.toJSON().result || [];
+  } catch (error) {
+    console.error("[fetchEvmTokenTransfers] Error:", error);
     return [];
   }
 }
@@ -77,34 +131,33 @@ export async function fetchSolanaTokenBalances(walletAddress: string) {
     await initializeMoralis();
     console.log("[fetchSolanaTokenBalances] wallet =", walletAddress);
 
-    // Fetch SPL token balances
     const splResponse = await Moralis.SolApi.account.getSPL({
       address: walletAddress,
       network: "mainnet",
     });
     const splTokens = splResponse.toJSON();
 
-    // Fetch native SOL balance
     const nativeResponse = await Moralis.SolApi.account.getBalance({
       address: walletAddress,
       network: "mainnet",
     });
     const solBalance = nativeResponse.toJSON();
 
-    // Combine SOL and SPL tokens
     const allTokens = [
       {
         symbol: "SOL",
-        balance: solBalance?.solana || "0", // Lamports
+        balance: solBalance?.balance || "0",
         decimals: "9",
-        usdValue: solBalance?.solana ? await getSolPrice(solBalance.solana) : 0,
+        usdValue: solBalance?.balance
+          ? await getSolPrice(solBalance.balance)
+          : 0,
         logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111111/logo.png",
         thumbnail:
           "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111111/logo.png",
       },
       ...splTokens.map((token: any) => ({
         symbol: token.symbol || "Unknown",
-        balance: token.amountRaw || "0", // Raw lamports or token units
+        balance: token.amountRaw || "0",
         decimals: token.decimals || "9",
         usdValue: token.usdPrice
           ? parseFloat(token.amount) * token.usdPrice
@@ -112,7 +165,7 @@ export async function fetchSolanaTokenBalances(walletAddress: string) {
         logo: token.logo || null,
         thumbnail: token.thumbnail || null,
       })),
-    ].filter((token) => parseFloat(token.balance) >= 0); // Ensure no negative balances
+    ].filter((token) => parseFloat(token.balance) >= 0);
 
     return allTokens;
   } catch (error) {
@@ -132,17 +185,19 @@ export async function fetchSolanaTokenBalances(walletAddress: string) {
 }
 
 /**
- * Fetches Solana transaction history (placeholder; Moralis lacks full support).
+ * Fetches Solana transaction history (limited support via Moralis).
  * @param walletAddress Solana wallet address
- * @returns Array of transactions (currently empty)
+ * @returns Array of transactions (currently limited)
  */
 export async function fetchSolanaTransactions(walletAddress: string) {
   try {
     await initializeMoralis();
     console.log("[fetchSolanaTransactions] wallet =", walletAddress);
-    // Note: Moralis doesn’t provide full Solana transaction history.
-    // For accurate history, integrate Helius or another Solana RPC provider.
-    return [];
+    const response = await Moralis.SolApi.account.getPortfolio({
+      address: walletAddress,
+      network: "mainnet",
+    });
+    return []; // Placeholder until a better solution is integrated
   } catch (error) {
     console.error("[fetchSolanaTransactions] Error:", error);
     return [];
@@ -175,7 +230,6 @@ export async function fetchDailyTokenBalances(
   while (currentDate <= endDate) {
     try {
       if (chain === "0x1" || chain === "0x2105") {
-        // EVM (Ethereum or Base)
         const blockResponse = await Moralis.EvmApi.block.getDateToBlock({
           date: currentDate.toISOString(),
           chain,
@@ -203,7 +257,6 @@ export async function fetchDailyTokenBalances(
           })),
         });
       } else if (chain === "solana") {
-        // Solana: Moralis doesn’t support historical balances, so use current balances
         const balances = await fetchSolanaTokenBalances(walletAddress);
         dailyResults.push({
           date: new Date(currentDate),
@@ -245,6 +298,6 @@ async function getSolPrice(balance?: string): Promise<number> {
     return balance ? (parseFloat(balance) / 1e9) * usdPrice : usdPrice;
   } catch (error) {
     console.error("[getSolPrice] Error:", error);
-    return balance ? (parseFloat(balance) / 1e9) * 150 : 150; // Fallback
+    return balance ? (parseFloat(balance) / 1e9) * 150 : 150;
   }
 }

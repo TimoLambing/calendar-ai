@@ -3,24 +3,33 @@ import { prisma } from "../prisma/prisma";
 import { ethers } from "ethers";
 import {
   fetchEvmTransactions,
+  fetchEvmTokenTransfers,
   fetchEvmTokenBalances,
   fetchSolanaTransactions,
   fetchSolanaTokenBalances,
   fetchDailyTokenBalances,
+  getEthPrice,
 } from "../services/moralisService";
 
 /**
- * Parses an EVM transaction into our Transaction model.
+ * Parses an EVM native transaction into our Transaction model.
  * @param tx Raw transaction data
  * @param userAddr User's wallet address
+ * @param chain Chain ID ("0x1" for Ethereum, "0x2105" for Base)
  * @returns Parsed transaction object
  */
-function parseEvmTransaction(tx: any, userAddr: string) {
-  const fromAddr = (tx.from_address || "").toLowerCase();
+async function parseEvmTransaction(
+  tx: any,
+  userAddr: string,
+  chain: "0x1" | "0x2105" = "0x1"
+) {
+  const fromAddr = (tx.from || "").toLowerCase();
+  const toAddr = (tx.to || "").toLowerCase();
   const isOutbound = fromAddr === userAddr.toLowerCase();
   const type = isOutbound ? "SELL" : "BUY";
   const rawWei = tx.value || "0";
   const ethAmount = parseFloat(ethers.formatEther(rawWei));
+  const ethPrice = await getEthPrice(chain);
   const timeMs = tx.block_timestamp
     ? Date.parse(tx.block_timestamp)
     : Date.now();
@@ -29,8 +38,35 @@ function parseEvmTransaction(tx: any, userAddr: string) {
     symbol: "ETH",
     type,
     amount: ethAmount,
-    valueUsd: 0, // Moralis doesn’t provide tx USD value; fetch separately if needed
+    valueUsd: ethAmount * ethPrice,
     timestamp: new Date(timeMs),
+    txHash: tx.hash,
+    toAddress: toAddr,
+  };
+}
+
+/**
+ * Parses an EVM token transfer into our Transaction model.
+ * @param tx Raw token transfer data
+ * @param userAddr User's wallet address
+ * @returns Parsed transaction object
+ */
+function parseEvmTokenTransfer(tx: any, userAddr: string) {
+  const fromAddr = (tx.from_address || "").toLowerCase();
+  const toAddr = (tx.to_address || "").toLowerCase();
+  const isOutbound = fromAddr === userAddr.toLowerCase();
+  const type = isOutbound ? "SELL" : "BUY";
+  const decimals = parseInt(tx.value_decimals || "18", 10);
+  const amount = parseFloat(tx.value || "0") / 10 ** decimals;
+
+  return {
+    symbol: tx.token_symbol || "Unknown",
+    type,
+    amount,
+    valueUsd: tx.value_usd || amount * (tx.usdPrice || 0), // Use token USD price if available
+    timestamp: new Date(tx.block_timestamp),
+    txHash: tx.transaction_hash,
+    toAddress: toAddr,
   };
 }
 
@@ -47,11 +83,13 @@ function parseSolanaTransaction(tx: any, userAddr: string) {
     amount: 0,
     valueUsd: 0,
     timestamp: new Date(),
+    txHash: tx.signature || null,
+    toAddress: null,
   };
 }
 
 /**
- * Creates or updates a daily snapshot for a wallet.
+ * Creates or updates a daily snapshot with transactions.
  * @param address Wallet address
  * @param chain Chain type ("ethereum", "base", "solana")
  * @returns Snapshot object or null on error
@@ -63,10 +101,15 @@ async function createOrUpdateDailySnapshot(
   const chainId =
     chain === "ethereum" ? "0x1" : chain === "base" ? "0x2105" : "solana";
   let rawTxs: any[] = [];
+  let rawTokenTxs: any[] = [];
   let rawBalances: any[] = [];
 
   if (chain === "ethereum" || chain === "base") {
     rawTxs = await fetchEvmTransactions(address, chainId as "0x1" | "0x2105");
+    rawTokenTxs = await fetchEvmTokenTransfers(
+      address,
+      chainId as "0x1" | "0x2105"
+    );
     rawBalances = await fetchEvmTokenBalances(
       address,
       chainId as "0x1" | "0x2105"
@@ -78,7 +121,14 @@ async function createOrUpdateDailySnapshot(
 
   const txsToCreate =
     chain !== "solana"
-      ? rawTxs.map((tx) => parseEvmTransaction(tx, address))
+      ? [
+          ...(await Promise.all(
+            rawTxs.map((tx) =>
+              parseEvmTransaction(tx, address, chainId as "0x1" | "0x2105")
+            )
+          )),
+          ...rawTokenTxs.map((tx) => parseEvmTokenTransfer(tx, address)),
+        ]
       : rawTxs.map((tx) => parseSolanaTransaction(tx, address));
 
   const coinBalances = rawBalances.map((token) => ({
@@ -93,7 +143,6 @@ async function createOrUpdateDailySnapshot(
   }));
 
   const totalValue = coinBalances.reduce((sum, c) => sum + c.valueUsd, 0);
-
   const wallet = await prisma.wallet.upsert({
     where: { address },
     update: {},
@@ -135,7 +184,7 @@ async function createOrUpdateDailySnapshot(
 }
 
 /**
- * Builds full daily history of snapshots from earliest transaction to today.
+ * Builds full daily history of snapshots with transactions.
  * @param req Express request object
  * @param res Express response object
  */
@@ -150,12 +199,29 @@ export async function dailyFullHistory(req: Request, res: Response) {
       chain === "ethereum" ? "0x1" : chain === "base" ? "0x2105" : "solana";
     const allTxs =
       chain !== "solana"
-        ? await fetchEvmTransactions(address, chainId as "0x1" | "0x2105")
+        ? [
+            ...(await fetchEvmTransactions(
+              address,
+              chainId as "0x1" | "0x2105"
+            )),
+            ...(await fetchEvmTokenTransfers(
+              address,
+              chainId as "0x1" | "0x2105"
+            )),
+          ]
         : await fetchSolanaTransactions(address);
+
     const parsedTxs =
       chain !== "solana"
-        ? allTxs.map((tx) => parseEvmTransaction(tx, address))
+        ? await Promise.all(
+            allTxs.map((tx) =>
+              tx.value
+                ? parseEvmTransaction(tx, address, chainId as "0x1" | "0x2105")
+                : parseEvmTokenTransfer(tx, address)
+            )
+          )
         : allTxs.map((tx) => parseSolanaTransaction(tx, address));
+
     let earliestDate = parsedTxs.length
       ? parsedTxs.reduce(
           (min, tx) => (tx.timestamp < min ? tx.timestamp : min),
@@ -455,7 +521,7 @@ export async function getFollowedWallets(req: Request, res: Response) {
 }
 
 /**
- * Creates or updates a wallet and generates 30-day history for new wallets.
+ * Creates or updates a wallet and generates 30-day history with transactions.
  * @param req Express request object
  * @param res Express response object
  */
@@ -478,7 +544,35 @@ export async function createOrUpdateWallet(req: Request, res: Response) {
     if (!existingWallet) {
       const endDate = new Date();
       const startDate = new Date(endDate);
-      startDate.setDate(endDate.getDate() - 30);
+      startDate.setDate(endDate.getDate() - 70);
+
+      const allTxs =
+        chain !== "solana"
+          ? [
+              ...(await fetchEvmTransactions(
+                address,
+                chainId as "0x1" | "0x2105"
+              )),
+              ...(await fetchEvmTokenTransfers(
+                address,
+                chainId as "0x1" | "0x2105"
+              )),
+            ]
+          : await fetchSolanaTransactions(address);
+      const parsedTxs =
+        chain !== "solana"
+          ? await Promise.all(
+              allTxs.map((tx) =>
+                tx.value
+                  ? parseEvmTransaction(
+                      tx,
+                      address,
+                      chainId as "0x1" | "0x2105"
+                    )
+                  : parseEvmTokenTransfer(tx, address)
+              )
+            )
+          : allTxs.map((tx) => parseSolanaTransaction(tx, address));
 
       const dailyBalances = await fetchDailyTokenBalances(
         address,
@@ -505,6 +599,12 @@ export async function createOrUpdateWallet(req: Request, res: Response) {
         );
         const dayStart = new Date(date);
         dayStart.setHours(0, 0, 0, 0);
+        const dayTxs = parsedTxs.filter(
+          (tx) =>
+            tx.timestamp.getDate() === dayStart.getDate() &&
+            tx.timestamp.getMonth() === dayStart.getMonth() &&
+            tx.timestamp.getFullYear() === dayStart.getFullYear()
+        );
 
         let snapshot = await prisma.walletSnapshot.findFirst({
           where: { walletAddress: address, timestamp: dayStart },
@@ -517,7 +617,7 @@ export async function createOrUpdateWallet(req: Request, res: Response) {
               timestamp: dayStart,
               totalValue,
               balances: { create: coinBalances },
-              transactions: { create: [] },
+              transactions: { create: dayTxs },
             },
           });
         } else {
@@ -526,7 +626,7 @@ export async function createOrUpdateWallet(req: Request, res: Response) {
             data: {
               totalValue,
               balances: { deleteMany: {}, create: coinBalances },
-              transactions: { deleteMany: {}, create: [] },
+              transactions: { deleteMany: {}, create: dayTxs },
             },
           });
         }

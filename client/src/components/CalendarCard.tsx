@@ -1,5 +1,3 @@
-// client/src/components/CalendarCard.tsx
-
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -54,8 +52,9 @@ export function CalendarCard({
   const [isFlipped, setIsFlipped] = useState(false);
   const [comment, setComment] = useState("");
   const { toast } = useToast();
-  const { state: { address } } = useAppState();
-  // Use mock address for demo
+  const {
+    state: { address },
+  } = useAppState();
   const currentUserAddress = address;
 
   async function handleAddComment() {
@@ -69,21 +68,19 @@ export function CalendarCard({
     }
 
     try {
-      // mock address0x742d35Cc6634C0532925a3b844Bc454e443844e
-      const walletAddress = currentUserAddress;
-
-      // Get or create wallet with proper response handling
-      const walletResponse = await apiRequest("GET", `/api/wallets/${walletAddress}`);
-
+      const walletResponse = await apiRequest(
+        "GET",
+        `/api/wallets/${currentUserAddress}`
+      );
       const walletData = await walletResponse.json();
-      console.log(walletData);
+
       await apiRequest("POST", "/api/diary-entries", {
         comment,
         timestamp: date.toISOString(),
         portfolioValue: value,
         valueChange: valueChange,
         walletId: walletData.id,
-        authorAddress: walletAddress,
+        authorAddress: currentUserAddress,
       });
 
       queryClient.invalidateQueries({ queryKey: ["diary-entries"] });
@@ -106,7 +103,6 @@ export function CalendarCard({
     }
   }
 
-  // Fetch diary entries for this date
   const { data: diaryEntries } = useQuery<TradingDiaryEntry[]>({
     queryKey: ["diary-entries", date.toISOString()],
     queryFn: async () => {
@@ -116,11 +112,14 @@ export function CalendarCard({
     },
   });
 
-  const valueChange = previousDayValue
-    ? ((value - previousDayValue) / previousDayValue) * 100
-    : 0;
+  // Calculate value change, handling zero or undefined previousDayValue
+  const valueChange =
+    previousDayValue && previousDayValue !== 0
+      ? ((value - previousDayValue) / previousDayValue) * 100
+      : value > 0
+      ? 100
+      : 0; // Default to 100% if no previous value but current value exists, or 0% if no value
 
-  // Define percentage ranges
   const isExtremeGain = valueChange > 50;
   const isHighGain = valueChange > 30 && valueChange <= 50;
   const isGoodGain = valueChange > 15 && valueChange <= 30;
@@ -130,7 +129,6 @@ export function CalendarCard({
   const isHighLoss = valueChange < -30 && valueChange >= -50;
   const isExtremeLoss = valueChange < -50;
 
-  // Define color classes based on user type
   const getColorClasses = () => {
     if (isOtherUser) {
       return {
@@ -204,7 +202,7 @@ export function CalendarCard({
                   <div className="text-2xl font-bold mt-2">
                     ${value.toLocaleString()}
                   </div>
-                  {previousDayValue && (
+                  {previousDayValue !== undefined && (
                     <div
                       className={cn(
                         "text-sm mt-1 font-semibold flex items-center gap-1",
@@ -242,12 +240,13 @@ export function CalendarCard({
                     const prevDayCoin = transactions.find(
                       (t) => t.symbol === coin.symbol
                     );
-                    const performance = prevDayCoin
-                      ? ((parseFloat(coin.valueUsd) -
-                        parseFloat(prevDayCoin.valueUsd)) /
-                        parseFloat(prevDayCoin.valueUsd)) *
-                      100
-                      : 0;
+                    const performance =
+                      prevDayCoin && prevDayCoin.valueUsd !== 0
+                        ? ((parseFloat(coin.valueUsd.toString()) -
+                            parseFloat(prevDayCoin.valueUsd)) /
+                            parseFloat(prevDayCoin.valueUsd)) *
+                          100
+                        : 0;
 
                     return (
                       <div
@@ -301,11 +300,13 @@ export function CalendarCard({
             {transactions.length > 0 ? (
               <div className="space-y-4">
                 {transactions.map((tx) => {
-                  const performance = tx.currentValue
-                    ? ((parseFloat(tx.currentValue) - parseFloat(tx.valueUsd)) /
-                      parseFloat(tx.valueUsd)) *
-                    100
-                    : 0;
+                  const performance =
+                    tx.currentValue && tx.valueUsd !== 0
+                      ? ((parseFloat(tx.currentValue) -
+                          parseFloat(tx.valueUsd)) /
+                          parseFloat(tx.valueUsd)) *
+                        100
+                      : 0;
 
                   return (
                     <Card key={tx.id}>
@@ -320,7 +321,10 @@ export function CalendarCard({
                           </div>
                           <div className="text-right">
                             <div>
-                              ${parseFloat(tx.valueUsd).toLocaleString()}
+                              $
+                              {parseFloat(
+                                tx.valueUsd.toString()
+                              ).toLocaleString()}
                             </div>
                             {tx.currentValue && (
                               <div
@@ -351,7 +355,6 @@ export function CalendarCard({
 
           <TabsContent value="journal" className="space-y-4">
             <div className="space-y-4">
-              {/* Add performance summary for the day */}
               <div className="flex justify-between items-center p-4 bg-card rounded-lg border">
                 <div>
                   <div className="text-sm text-muted-foreground">
@@ -361,7 +364,7 @@ export function CalendarCard({
                     ${value.toLocaleString()}
                   </div>
                 </div>
-                {previousDayValue && (
+                {previousDayValue !== undefined && (
                   <div>
                     <div className="text-sm text-muted-foreground">
                       Daily Change
@@ -384,7 +387,6 @@ export function CalendarCard({
                 )}
               </div>
 
-              {/* Add new comment section */}
               <Textarea
                 placeholder="Add your trading notes for this day..."
                 value={comment}
@@ -392,11 +394,9 @@ export function CalendarCard({
                 className="min-h-[100px]"
               />
               <Button onClick={handleAddComment} className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Note
+                <Plus className="h-4 w-4 mr-2" /> Add Note
               </Button>
 
-              {/* Display entries for this specific day */}
               <JournalEntries
                 date={
                   new Date(date.getFullYear(), date.getMonth(), date.getDate())

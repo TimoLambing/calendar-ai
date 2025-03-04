@@ -8,21 +8,12 @@ datasource db {
 }
 
 model Wallet {
-  // Use address as the primary key
   address   String   @id
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // For diaries
   diaryEntries TradingDiaryEntry[]
-
-  // For daily snapshots
   snapshots WalletSnapshot[]
-
-  // If you still use the older single-coin Snapshot model
   Snapshot Snapshot[]
-
-  // Self many-to-many relation for "following" & "followedBy"
   following  Wallet[] @relation("WalletFollows")
   followedBy Wallet[] @relation("WalletFollows")
 }
@@ -35,8 +26,6 @@ model TradingDiaryEntry {
   valueChange    Float
   createdAt      DateTime          @default(now())
   authorAddress  String
-
-  // References Wallet.address
   walletAddress String
   wallet        Wallet            @relation(fields: [walletAddress], references: [address])
   comments      TradingDiaryComment[]
@@ -47,7 +36,6 @@ model TradingDiaryComment {
   comment       String
   createdAt     DateTime          @default(now())
   authorAddress String
-
   entryId String
   entry   TradingDiaryEntry @relation(fields: [entryId], references: [id])
 }
@@ -57,15 +45,11 @@ model WalletSnapshot {
   timestamp  DateTime
   totalValue Float
   createdAt  DateTime       @default(now())
-
-  // Reference the wallet's address
   walletAddress String
   wallet        Wallet       @relation(fields: [walletAddress], references: [address])
-
   balances     CoinBalance[]
   transactions Transaction[]
-
-  @@unique([walletAddress, timestamp]) // Add composite unique key
+  @@unique([walletAddress, timestamp])
 }
 
 model CoinBalance {
@@ -74,11 +58,8 @@ model CoinBalance {
   amount    Float
   valueUsd  Float
   timestamp DateTime
-
-  // Add optional fields for token logos
   logo       String?
   thumbnail  String?
-
   snapshotId String
   snapshot   WalletSnapshot @relation(fields: [snapshotId], references: [id])
 }
@@ -91,12 +72,12 @@ model Transaction {
   valueUsd     Float
   timestamp    DateTime
   currentValue Float?
-
-  snapshotId String
-  snapshot   WalletSnapshot @relation(fields: [snapshotId], references: [id])
+  txHash       String?        // Added for transaction hash
+  toAddress    String?        // Added for recipient address
+  snapshotId   String
+  snapshot     WalletSnapshot @relation(fields: [snapshotId], references: [id])
 }
 
-// If you still want the older single-coin snapshot approach
 model Snapshot {
   id         String   @id
   timestamp  DateTime
@@ -106,7 +87,6 @@ model Snapshot {
   name       String
   logo       String
   thumbnail  String
-
   walletAddress String
   Wallet        Wallet   @relation(fields: [walletAddress], references: [address])
 }

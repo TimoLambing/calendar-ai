@@ -32,7 +32,8 @@ export default function Calendar() {
     queryKey: ["wallet-snapshots", address],
     queryFn: () => fetchAllSnapshots(address),
     enabled: !!address,
-    refetchInterval: (data) => (data?.length ? false : 5000), // Poll every 5s until snapshots appear
+    refetchInterval: (data) =>
+      Array.isArray(data) && data.length ? false : 5000, // Poll every 5s until snapshots appear
   });
 
   if (isLoading || (!snapshots?.length && !error)) {

@@ -122,13 +122,13 @@ async function createOrUpdateDailySnapshot(
   const txsToCreate =
     chain !== "solana"
       ? [
-          ...(await Promise.all(
-            rawTxs.map((tx) =>
-              parseEvmTransaction(tx, address, chainId as "0x1" | "0x2105")
-            )
-          )),
-          ...rawTokenTxs.map((tx) => parseEvmTokenTransfer(tx, address)),
-        ]
+        ...(await Promise.all(
+          rawTxs.map((tx) =>
+            parseEvmTransaction(tx, address, chainId as "0x1" | "0x2105")
+          )
+        )),
+        ...rawTokenTxs.map((tx) => parseEvmTokenTransfer(tx, address)),
+      ]
       : rawTxs.map((tx) => parseSolanaTransaction(tx, address));
 
   const coinBalances = rawBalances.map((token) => ({
@@ -200,33 +200,33 @@ export async function dailyFullHistory(req: Request, res: Response) {
     const allTxs =
       chain !== "solana"
         ? [
-            ...(await fetchEvmTransactions(
-              address,
-              chainId as "0x1" | "0x2105"
-            )),
-            ...(await fetchEvmTokenTransfers(
-              address,
-              chainId as "0x1" | "0x2105"
-            )),
-          ]
+          ...(await fetchEvmTransactions(
+            address,
+            chainId as "0x1" | "0x2105"
+          )),
+          ...(await fetchEvmTokenTransfers(
+            address,
+            chainId as "0x1" | "0x2105"
+          )),
+        ]
         : await fetchSolanaTransactions(address);
 
     const parsedTxs =
       chain !== "solana"
         ? await Promise.all(
-            allTxs.map((tx) =>
-              tx.value
-                ? parseEvmTransaction(tx, address, chainId as "0x1" | "0x2105")
-                : parseEvmTokenTransfer(tx, address)
-            )
+          allTxs.map((tx) =>
+            tx.value
+              ? parseEvmTransaction(tx, address, chainId as "0x1" | "0x2105")
+              : parseEvmTokenTransfer(tx, address)
           )
+        )
         : allTxs.map((tx) => parseSolanaTransaction(tx, address));
 
     let earliestDate = parsedTxs.length
       ? parsedTxs.reduce(
-          (min, tx) => (tx.timestamp < min ? tx.timestamp : min),
-          new Date()
-        )
+        (min, tx) => (tx.timestamp < min ? tx.timestamp : min),
+        new Date()
+      )
       : new Date(Date.now() - 86400000);
     const now = new Date();
 
@@ -344,17 +344,43 @@ export async function getWalletHistory(req: Request, res: Response) {
 export async function getWalletSnapshots(req: Request, res: Response) {
   try {
     const { address } = req.params;
+    const { startDate, endDate } = req.query;
+
     if (!address) return res.status(400).json({ error: "Address is required" });
+
+    // Parse and validate dates if provided
+    let dateFilter = {};
+    if (startDate || endDate) {
+      dateFilter = {
+        ...(startDate && { gte: new Date(startDate as string) }),
+        ...(endDate && { lte: new Date(endDate as string) }),
+      };
+
+      // Validate date formats
+      if (startDate && isNaN(Date.parse(startDate as string))) {
+        return res.status(400).json({ error: "Invalid startDate format" });
+      }
+      if (endDate && isNaN(Date.parse(endDate as string))) {
+        return res.status(400).json({ error: "Invalid endDate format" });
+      }
+    }
 
     const wallet = await prisma.wallet.findUnique({
       where: { address },
       include: {
         snapshots: {
+          where: {
+            timestamp: dateFilter,
+          },
           orderBy: { timestamp: "desc" },
-          include: { balances: true, transactions: true },
+          include: {
+            balances: true,
+            transactions: true
+          },
         },
       },
     });
+
     if (!wallet) return res.status(404).json({ error: "Wallet not found" });
     return res.json(wallet.snapshots);
   } catch (error) {
@@ -395,7 +421,7 @@ export async function getWallet(req: Request, res: Response) {
       );
       return prevSnap
         ? ((latest.totalValue - prevSnap.totalValue) / prevSnap.totalValue) *
-            100
+        100
         : 0;
     };
 
@@ -499,7 +525,7 @@ export async function getFollowedWallets(req: Request, res: Response) {
       );
       return prevSnap
         ? ((latest.totalValue - prevSnap.totalValue) / prevSnap.totalValue) *
-            100
+        100
         : 0;
     };
 
@@ -521,7 +547,7 @@ export async function getFollowedWallets(req: Request, res: Response) {
 }
 
 /**
- * Creates or updates a wallet and generates 30-day history with transactions.
+ * Creates or updates a wallet without generating snapshots.
  * @param req Express request object
  * @param res Express response object
  */
@@ -530,116 +556,193 @@ export async function createOrUpdateWallet(req: Request, res: Response) {
     const { address, chain = "ethereum", ...rest } = req.body;
     if (!address) return res.status(400).json({ error: "Address is required" });
 
-    const chainId =
-      chain === "ethereum" ? "0x1" : chain === "base" ? "0x2105" : "solana";
-    const existingWallet = await prisma.wallet.findUnique({
-      where: { address },
-    });
     const wallet = await prisma.wallet.upsert({
       where: { address },
       update: { ...rest },
-      create: { address, createdAt: new Date() },
+      create: {
+        address,
+        createdAt: new Date(),
+      },
     });
 
-    if (!existingWallet) {
-      const endDate = new Date();
-      const startDate = new Date(endDate);
-      startDate.setDate(endDate.getDate() - 70);
-
-      const allTxs =
-        chain !== "solana"
-          ? [
-              ...(await fetchEvmTransactions(
-                address,
-                chainId as "0x1" | "0x2105"
-              )),
-              ...(await fetchEvmTokenTransfers(
-                address,
-                chainId as "0x1" | "0x2105"
-              )),
-            ]
-          : await fetchSolanaTransactions(address);
-      const parsedTxs =
-        chain !== "solana"
-          ? await Promise.all(
-              allTxs.map((tx) =>
-                tx.value
-                  ? parseEvmTransaction(
-                      tx,
-                      address,
-                      chainId as "0x1" | "0x2105"
-                    )
-                  : parseEvmTokenTransfer(tx, address)
-              )
-            )
-          : allTxs.map((tx) => parseSolanaTransaction(tx, address));
-
-      const dailyBalances = await fetchDailyTokenBalances(
-        address,
-        startDate,
-        endDate,
-        chainId
-      );
-      for (const daily of dailyBalances) {
-        const { date, tokens } = daily;
-        const coinBalances = tokens.map((token: any) => ({
-          symbol: token.symbol || (chain === "solana" ? "SOL" : "ETH"),
-          amount:
-            parseFloat(token.balance) /
-            10 ** parseInt(token.decimals || (chain === "solana" ? "9" : "18")),
-          valueUsd: token.usdValue || 0,
-          timestamp: new Date(date),
-          logo: token.logo || null,
-          thumbnail: token.thumbnail || null,
-        }));
-
-        const totalValue = coinBalances.reduce(
-          (sum, cb) => sum + cb.valueUsd,
-          0
-        );
-        const dayStart = new Date(date);
-        dayStart.setHours(0, 0, 0, 0);
-        const dayTxs = parsedTxs.filter(
-          (tx) =>
-            tx.timestamp.getDate() === dayStart.getDate() &&
-            tx.timestamp.getMonth() === dayStart.getMonth() &&
-            tx.timestamp.getFullYear() === dayStart.getFullYear()
-        );
-
-        let snapshot = await prisma.walletSnapshot.findFirst({
-          where: { walletAddress: address, timestamp: dayStart },
-        });
-
-        if (!snapshot) {
-          snapshot = await prisma.walletSnapshot.create({
-            data: {
-              walletAddress: address,
-              timestamp: dayStart,
-              totalValue,
-              balances: { create: coinBalances },
-              transactions: { create: dayTxs },
-            },
-          });
-        } else {
-          await prisma.walletSnapshot.update({
-            where: { id: snapshot.id },
-            data: {
-              totalValue,
-              balances: { deleteMany: {}, create: coinBalances },
-              transactions: { deleteMany: {}, create: dayTxs },
-            },
-          });
-        }
-        console.log(
-          `Created/updated snapshot for ${date.toDateString()}:`,
-          snapshot
-        );
-      }
-    }
-
-    return res.json(wallet);
+    return res.json({
+      wallet,
+      message: "Wallet created or updated successfully",
+    });
   } catch (error) {
     console.error("Error creating/updating wallet:", error);
     return res.status(500).json({ error: "Failed to create or update wallet" });
+  }
+}
+
+/**
+ * Generates wallet snapshots for a specific date range, only for missing dates.
+ * @param req Express request object
+ * @param res Express response object
+ */
+export async function generateWalletSnapshots(req: Request, res: Response) {
+  try {
+    const { address, chain = "ethereum", startDate, endDate } = req.body;
+    if (!address) return res.status(400).json({ error: "Address is required" });
+
+    // Validate date parameters
+    let start = startDate ? new Date(startDate) : null;
+    let end = endDate ? new Date(endDate) : null;
+
+    if ((startDate && isNaN(start!.getTime())) || (endDate && isNaN(end!.getTime()))) {
+      return res.status(400).json({ error: "Invalid date format" });
+    }
+
+    if (start && end && start > end) {
+      return res.status(400).json({ error: "startDate must be before endDate" });
+    }
+
+    const chainId =
+      chain === "ethereum" ? "0x1" : chain === "base" ? "0x2105" : "solana";
+
+    // Set default range to last 70 days if no dates provided
+    if (!start || !end) {
+      end = new Date();
+      start = new Date(end);
+      start.setDate(end.getDate() - 30);
+    }
+
+    // Normalize dates to start/end of day
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
+    // Verify wallet exists
+    const wallet = await prisma.wallet.findUnique({
+      where: { address },
+    });
+    if (!wallet) {
+      return res.status(404).json({ error: "Wallet not found. Please create wallet first." });
+    }
+
+    // Check for existing snapshots in the date range
+    const existingSnapshots = await prisma.walletSnapshot.findMany({
+      where: {
+        walletAddress: address,
+        timestamp: {
+          gte: start,
+          lte: end,
+        },
+      },
+      select: {
+        timestamp: true,
+      },
+    });
+
+    const existingDates = new Set(
+      existingSnapshots.map(s => s.timestamp.toDateString())
+    );
+
+    // Generate list of missing dates
+    const missingDates: Date[] = [];
+    let currentDate = new Date(start);
+    while (currentDate <= end) {
+      const dayStart = new Date(currentDate);
+      dayStart.setHours(0, 0, 0, 0);
+      if (!existingDates.has(dayStart.toDateString())) {
+        missingDates.push(dayStart);
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // If no missing dates, return early
+    if (missingDates.length === 0) {
+      return res.json({
+        createdSnapshotsCount: 0,
+        message: `All snapshots already exist from ${start.toDateString()} to ${end.toDateString()}`,
+      });
+    }
+
+    // Fetch all transactions (we'll filter later)
+    const allTxs =
+      chain !== "solana"
+        ? [
+          ...(await fetchEvmTransactions(
+            address,
+            chainId as "0x1" | "0x2105"
+          )),
+          ...(await fetchEvmTokenTransfers(
+            address,
+            chainId as "0x1" | "0x2105"
+          )),
+        ]
+        : await fetchSolanaTransactions(address);
+
+    const parsedTxs =
+      chain !== "solana"
+        ? await Promise.all(
+          allTxs.map((tx) =>
+            tx.value
+              ? parseEvmTransaction(
+                tx,
+                address,
+                chainId as "0x1" | "0x2105"
+              )
+              : parseEvmTokenTransfer(tx, address)
+          )
+        )
+        : allTxs.map((tx) => parseSolanaTransaction(tx, address));
+
+    // Fetch daily balances for the specified range
+    const dailyBalances = await fetchDailyTokenBalances(
+      address,
+      start,
+      end,
+      chainId
+    );
+
+    const createdSnapshots = [];
+
+    // Process only missing dates
+    for (const dayStart of missingDates) {
+      const dayEnd = new Date(dayStart);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      const dayTxs = parsedTxs.filter(
+        (tx) => tx.timestamp >= dayStart && tx.timestamp <= dayEnd
+      );
+
+      const foundBalance = dailyBalances.find(
+        (db) => new Date(db.date).toDateString() === dayStart.toDateString()
+      );
+
+      const tokensForDay = foundBalance ? foundBalance.tokens : [];
+      const coinBalances = tokensForDay.map((token: any) => ({
+        symbol: token.symbol || (chain === "solana" ? "SOL" : "ETH"),
+        amount:
+          parseFloat(token.balance) /
+          10 ** parseInt(token.decimals || (chain === "solana" ? "9" : "18")),
+        valueUsd: token.usdValue || 0,
+        timestamp: dayStart,
+        logo: token.logo || null,
+        thumbnail: token.thumbnail || null,
+      }));
+
+      const totalValue = coinBalances.reduce((sum, cb) => sum + cb.valueUsd, 0);
+
+      const snapshot = await prisma.walletSnapshot.create({
+        data: {
+          walletAddress: address,
+          timestamp: dayStart,
+          totalValue,
+          balances: { create: coinBalances },
+          transactions: { create: dayTxs },
+        },
+      });
+
+      createdSnapshots.push(snapshot);
+    }
+
+    return res.json({
+      createdSnapshotsCount: createdSnapshots.length,
+      message: `Processed ${createdSnapshots.length} new snapshots from ${start.toDateString()} to ${end.toDateString()}`,
+    });
+  } catch (error) {
+    console.error("Error generating wallet snapshots:", error);
+    return res.status(500).json({ error: "Failed to generate wallet snapshots" });
   }
 }

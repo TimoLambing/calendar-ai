@@ -79,8 +79,8 @@ export function CalendarCard({
         timestamp: date.toISOString(),
         portfolioValue: value,
         valueChange: valueChange,
-        walletId: walletData.id,
         authorAddress: currentUserAddress,
+        wallet: walletData,
       });
 
       queryClient.invalidateQueries({ queryKey: ["diary-entries"] });
@@ -117,8 +117,8 @@ export function CalendarCard({
     previousDayValue && previousDayValue !== 0
       ? ((value - previousDayValue) / previousDayValue) * 100
       : value > 0
-      ? 100
-      : 0; // Default to 100% if no previous value but current value exists, or 0% if no value
+        ? 100
+        : 0; // Default to 100% if no previous value but current value exists, or 0% if no value
 
   const isExtremeGain = valueChange > 50;
   const isHighGain = valueChange > 30 && valueChange <= 50;
@@ -243,9 +243,9 @@ export function CalendarCard({
                     const performance =
                       prevDayCoin && prevDayCoin.valueUsd !== 0
                         ? ((parseFloat(coin.valueUsd.toString()) -
-                            parseFloat(prevDayCoin.valueUsd)) /
-                            parseFloat(prevDayCoin.valueUsd)) *
-                          100
+                          parseFloat(prevDayCoin.valueUsd)) /
+                          parseFloat(prevDayCoin.valueUsd)) *
+                        100
                         : 0;
 
                     return (
@@ -303,9 +303,9 @@ export function CalendarCard({
                   const performance =
                     tx.currentValue && tx.valueUsd !== 0
                       ? ((parseFloat(tx.currentValue) -
-                          parseFloat(tx.valueUsd)) /
-                          parseFloat(tx.valueUsd)) *
-                        100
+                        parseFloat(tx.valueUsd)) /
+                        parseFloat(tx.valueUsd)) *
+                      100
                       : 0;
 
                   return (
@@ -398,6 +398,7 @@ export function CalendarCard({
               </Button>
 
               <JournalEntries
+                entries={diaryEntries || []}
                 date={
                   new Date(date.getFullYear(), date.getMonth(), date.getDate())
                 }
@@ -411,10 +412,17 @@ export function CalendarCard({
     </Dialog>
   );
 }
-
-interface TradingDiaryEntry {
+export interface TradingDiaryComment {
   id: string;
   comment: string;
+  createdAt: string | null;
+  authorAddress: string;
+}
+export interface TradingDiaryEntry {
+  id: string;
+  comment: string;
+  timestamp: string;
+  comments: TradingDiaryComment[];
   createdAt: string | null;
   portfolioValue: number;
   valueChange: number;

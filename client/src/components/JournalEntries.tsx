@@ -6,38 +6,39 @@ import {
   TrendingDown,
   MessageSquare,
 } from "lucide-react";
-import { TradingDiaryEntry, TradingDiaryComment } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { TradingDiaryComment, TradingDiaryEntry } from "./CalendarCard";
 
 interface Props {
   date?: Date; // Optional date filter
   value?: number; // Optional portfolio value for that day
   valueChange?: number; // Optional daily performance change
+  entries?: TradingDiaryEntry[]; // Optional entries to display
 }
 
-export function JournalEntries({ date, value, valueChange }: Props) {
+export function JournalEntries({ date, value, valueChange, entries }: Props) {
   // If date is provided, we fetch only that day's entries. Otherwise, all.
   const queryKey = date
     ? ["diary-entries", "date", date.toISOString()]
     : ["diary-entries"];
 
-  // Load diary entries from your backend
-  const { data: entries } = useQuery<TradingDiaryEntry[]>({
-    queryKey,
-    queryFn: async () => {
-      const endpoint = date
-        ? `/api/diary-entries/date/${date.toISOString()}`
-        : "/api/diary-entries";
-      const response = await fetch(endpoint);
-      if (!response.ok) throw new Error("Failed to fetch diary entries");
-      return response.json();
-    },
-  });
+  // // Load diary entries from your backend
+  // const { data: entries } = useQuery<TradingDiaryEntry[]>({
+  //   queryKey,
+  //   queryFn: async () => {
+  //     const endpoint = date
+  //       ? `/api/diary-entries/date/${date.toISOString()}`
+  //       : "/api/diary-entries";
+  //     const response = await fetch(endpoint);
+  //     if (!response.ok) throw new Error("Failed to fetch diary entries");
+  //     return response.json();
+  //   },
+  // });
 
   // Track which entries are expanded (to show comments)
   const [expandedEntries, setExpandedEntries] = useState<Set<string>>(
@@ -131,7 +132,7 @@ export function JournalEntries({ date, value, valueChange }: Props) {
 
   return (
     <div className="space-y-4">
-      {entries.map((entry) => (
+      {entries?.map((entry) => (
         <Card key={entry.id}>
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
@@ -156,32 +157,32 @@ export function JournalEntries({ date, value, valueChange }: Props) {
                           className={cn(
                             "text-sm font-medium flex items-center gap-1",
                             parseFloat(
-                              (entry.valueChange || valueChange).toString()
+                              (entry.valueChange?.toString() || valueChange?.toString() || "")
                             ) > 0
                               ? "text-green-600"
                               : "text-red-600"
                           )}
                         >
                           {parseFloat(
-                            (entry.valueChange || valueChange).toString()
+                            (entry.valueChange?.toString() || valueChange?.toString() || "")
                           ) > 0 ? (
                             <TrendingUp className="h-4 w-4" />
                           ) : (
                             <TrendingDown className="h-4 w-4" />
                           )}
                           {parseFloat(
-                            (entry.valueChange || valueChange).toString()
+                            (entry.valueChange?.toString() || valueChange?.toString() || "")
                           ) > 0
                             ? "+"
                             : ""}
                           {parseFloat(
-                            (entry.valueChange || valueChange).toString()
+                            (entry.valueChange?.toString() || valueChange?.toString() || "")
                           ).toFixed(2)}
                           %
                           <span className="text-muted-foreground ml-2">
                             $
                             {parseFloat(
-                              (entry.portfolioValue || value).toString()
+                              (entry.portfolioValue?.toString() || value?.toString() || "0")
                             ).toLocaleString()}
                           </span>
                         </div>
@@ -194,7 +195,7 @@ export function JournalEntries({ date, value, valueChange }: Props) {
                     className="flex items-center gap-2"
                   >
                     <MessageSquare className="h-4 w-4" />
-                    {commentsMap?.[entry.id]?.length || 0} Comments
+                    {entry.comments.length || 0} Comments
                   </Button>
                 </div>
 

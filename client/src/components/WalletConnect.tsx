@@ -13,7 +13,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { usePrivy, User } from "@privy-io/react-auth";
+import { usePrivy } from "@privy-io/react-auth";
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -29,30 +29,27 @@ export function WalletConnect({ minimal = false }: Props) {
     state: { address },
     setState,
   } = useAppState();
-
-  // Toast notifications
   const { toast } = useToast();
-
-  // Privy hooks
   const { ready, authenticated, user, login, logout } = usePrivy();
-
-  // Track connection state and API call state
   const [isConnected, setIsConnected] = useState(false);
   const [hasCalledAPI, setHasCalledAPI] = useState(false);
 
-  const createOrUpdateWallet = useCallback(async (address: string) => {
-    try {
-      await apiRequest("POST", "/api/wallets", { address, chain: "ethereum" });
-      setHasCalledAPI(true);
-    } catch (error) {
-      console.error("Error creating/updating wallet:", error);
-      toast({
-        title: "Wallet Error",
-        description: "Failed to register wallet with server.",
-        variant: "destructive",
-      });
-    }
-  }, []);
+  const createOrUpdateWallet = useCallback(
+    async (address: string, chain: string) => {
+      try {
+        await apiRequest("POST", "/api/wallets", { address, chain });
+        setHasCalledAPI(true);
+      } catch (error) {
+        console.error("Error creating/updating wallet:", error);
+        toast({
+          title: "Wallet Error",
+          description: "Failed to register wallet with server.",
+          variant: "destructive",
+        });
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (ready && authenticated && user && !hasCalledAPI) {
@@ -60,11 +57,15 @@ export function WalletConnect({ minimal = false }: Props) {
         (acct) => acct.type === "wallet" && "address" in acct
       );
       if (linkedWallet && "address" in linkedWallet) {
-        // Only call API if not already connected and not called before
+        const walletChain = linkedWallet.chainId?.includes("solana")
+          ? "solana"
+          : linkedWallet.chainId?.includes("8453")
+          ? "base"
+          : "ethereum"; // Base chain ID is 8453
         if (!isConnected) {
           setIsConnected(true);
           setState({ address: linkedWallet.address as string });
-          createOrUpdateWallet(linkedWallet.address as string);
+          createOrUpdateWallet(linkedWallet.address as string, walletChain);
         }
       }
     }
@@ -78,41 +79,27 @@ export function WalletConnect({ minimal = false }: Props) {
     setState,
   ]);
 
-  // Handler for connecting the wallet
   const handleConnect = async () => {
     try {
-      if (!ready) {
-        toast({
+      if (!ready)
+        return toast({
           title: "Privy Not Ready",
           description: "Please wait a moment and try again.",
           variant: "default",
         });
-        return;
-      }
-
-      if (!authenticated) {
-        // Not yet authenticated -> show login flow
-        await login();
-      } else {
-        // Already authenticated. If we don't see a wallet, prompt user to link one
-        if (!address) {
-          toast({
-            title: "No Wallet Found",
-            description:
-              "You are logged in, but no wallet is linked to your Privy account.",
-            variant: "default",
-          });
-        } else {
-          toast({
-            title: "Already Connected",
-            description: `Your wallet is connected: ${address.slice(
-              0,
-              6
-            )}...${address.slice(-4)}`,
-            variant: "default",
-          });
-        }
-      }
+      if (!authenticated) await login();
+      else if (!address)
+        toast({
+          title: "No Wallet Found",
+          description: "Logged in but no wallet linked.",
+          variant: "default",
+        });
+      else
+        toast({
+          title: "Already Connected",
+          description: `Wallet: ${address.slice(0, 6)}...${address.slice(-4)}`,
+          variant: "default",
+        });
     } catch (err) {
       console.error("Error in handleConnect =>", err);
       toast({
@@ -123,16 +110,15 @@ export function WalletConnect({ minimal = false }: Props) {
     }
   };
 
-  // Handler for disconnecting
   const handleDisconnect = async () => {
     try {
       await logout();
       setIsConnected(false);
-      setHasCalledAPI(false); // Reset API call flag on disconnect
+      setHasCalledAPI(false);
       setState({ address: "" });
       toast({
         title: "Wallet Disconnected",
-        description: "You have been logged out of Privy.",
+        description: "You have been logged out.",
         variant: "default",
       });
     } catch (err) {
@@ -145,7 +131,6 @@ export function WalletConnect({ minimal = false }: Props) {
     }
   };
 
-  // If minimal is true, render a single outline button
   if (minimal) {
     return isConnected ? (
       <Button
@@ -168,7 +153,6 @@ export function WalletConnect({ minimal = false }: Props) {
     );
   }
 
-  // Otherwise, show a larger UI with heading and text
   return (
     <div className="text-center">
       <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>

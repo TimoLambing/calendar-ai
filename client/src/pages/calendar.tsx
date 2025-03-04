@@ -8,14 +8,13 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ScrollText } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAppState } from "@/store/appState";
-import { fetchAllSnapshots } from "@/lib/web3"; // new function
+import { fetchAllSnapshots } from "@/lib/web3";
 
 export default function Calendar() {
   const {
     state: { address },
   } = useAppState();
 
-  // If no wallet, show connect
   if (!address) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -24,34 +23,55 @@ export default function Calendar() {
     );
   }
 
-  // fetch daily snapshots
   const {
     data: snapshots,
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["wallet-snapshots", address],
     queryFn: () => fetchAllSnapshots(address),
     enabled: !!address,
+    refetchInterval: (data) => (data?.length ? false : 5000), // Poll every 5s until snapshots appear
   });
 
-  if (isLoading) {
+  if (isLoading || (!snapshots?.length && !error)) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center text-gray-300">
-        Loading snapshots...
+        <div className="flex flex-col items-center gap-4">
+          <svg
+            className="animate-spin h-8 w-8 text-gray-400"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v8h-8z"
+            />
+          </svg>
+          <span>Loading wallet snapshots...</span>
+        </div>
       </div>
     );
   }
 
-  if (error || !snapshots) {
+  if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center text-red-500">
-        Failed to load snapshots
+        Failed to load snapshots: {error.message}
       </div>
     );
   }
 
-  // Filter + sort
   const validSnapshots = snapshots.filter((s: any) => s.timestamp);
   const sorted = [...validSnapshots].sort(
     (a: any, b: any) =>
@@ -106,7 +126,6 @@ export default function Calendar() {
             {sorted.map((snap: any, index: number) => {
               const currentDate = new Date(snap.timestamp);
               const nextSnap = sorted[index + 1];
-
               return (
                 <CalendarCard
                   key={snap.id}
@@ -124,7 +143,6 @@ export default function Calendar() {
     </div>
   );
 }
-
 /* import { CalendarCard } from "@/components/CalendarCard";
 import { PortfolioStats } from "@/components/PortfolioStats";
 import { WalletConnect } from "@/components/WalletConnect";

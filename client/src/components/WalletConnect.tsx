@@ -1,5 +1,3 @@
-// client/src/components/WalletConnect.tsx
-
 /**
  * This updated WalletConnect component now uses the Privy login flow,
  * instead of connecting to a mock address. It relies on the Privy
@@ -15,7 +13,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { usePrivy } from "@privy-io/react-auth";
+import { usePrivy, User } from "@privy-io/react-auth";
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -27,7 +25,10 @@ interface Props {
 }
 
 export function WalletConnect({ minimal = false }: Props) {
-  const { state: { address }, setState } = useAppState();
+  const {
+    state: { address },
+    setState,
+  } = useAppState();
 
   // Toast notifications
   const { toast } = useToast();
@@ -35,33 +36,47 @@ export function WalletConnect({ minimal = false }: Props) {
   // Privy hooks
   const { ready, authenticated, user, login, logout } = usePrivy();
 
-  // Track connection state
+  // Track connection state and API call state
   const [isConnected, setIsConnected] = useState(false);
+  const [hasCalledAPI, setHasCalledAPI] = useState(false);
 
   const createOrUpdateWallet = useCallback(async (address: string) => {
-    await apiRequest("POST", "/api/wallets", { address });
+    try {
+      await apiRequest("POST", "/api/wallets", { address, chain: "ethereum" });
+      setHasCalledAPI(true);
+    } catch (error) {
+      console.error("Error creating/updating wallet:", error);
+      toast({
+        title: "Wallet Error",
+        description: "Failed to register wallet with server.",
+        variant: "destructive",
+      });
+    }
   }, []);
 
-  // Whenever the user / privy state changes, check if they're authenticated and have a wallet
   useEffect(() => {
-    if (ready && authenticated && user) {
-
-      // Find a linked wallet in the user's accounts
+    if (ready && authenticated && user && !hasCalledAPI) {
       const linkedWallet = user.linkedAccounts?.find(
-        (acct) => acct.type === "wallet" && acct.address
+        (acct) => acct.type === "wallet" && "address" in acct
       );
-      if (linkedWallet) {
-        setIsConnected(true);
-        // We cannot assert that all wallets have addresses, but we'll assume so.
-        //@ts-ignore
-        setState({ address: linkedWallet.address });
-        // We cannot assert that all wallets have addresses, but we'll assume so.
-        //@ts-ignore
-        createOrUpdateWallet(linkedWallet.address);
+      if (linkedWallet && "address" in linkedWallet) {
+        // Only call API if not already connected and not called before
+        if (!isConnected) {
+          setIsConnected(true);
+          setState({ address: linkedWallet.address as string });
+          createOrUpdateWallet(linkedWallet.address as string);
+        }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, authenticated, user]);
+  }, [
+    ready,
+    authenticated,
+    user,
+    isConnected,
+    hasCalledAPI,
+    createOrUpdateWallet,
+    setState,
+  ]);
 
   // Handler for connecting the wallet
   const handleConnect = async () => {
@@ -113,6 +128,7 @@ export function WalletConnect({ minimal = false }: Props) {
     try {
       await logout();
       setIsConnected(false);
+      setHasCalledAPI(false); // Reset API call flag on disconnect
       setState({ address: "" });
       toast({
         title: "Wallet Disconnected",

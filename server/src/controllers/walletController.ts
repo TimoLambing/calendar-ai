@@ -649,19 +649,135 @@ export async function getFollowedWallets(req: Request, res: Response) {
 /**
  * createOrUpdateWallet
  * POST /wallets
+ * Updated to handle Privy wallet address and fetch one-month history if new
  */
 export async function createOrUpdateWallet(req: Request, res: Response) {
   try {
-    const { address, ...rest } = req.body;
+    const { address, chain = "ethereum", ...rest } = req.body;
+
     if (!address) {
       return res.status(400).json({ error: "Address is required" });
     }
 
+    // Check if wallet already exists
+    const existingWallet = await prisma.wallet.findUnique({
+      where: { address },
+    });
+
+    // Upsert wallet (only create if it doesn't exist, update otherwise)
     const wallet = await prisma.wallet.upsert({
       where: { address },
       update: { ...rest },
-      create: { address },
+      create: { address, createdAt: new Date() }, // Ensure createdAt is set
     });
+
+    // If wallet is new, fetch one-month token balance history
+    if (!existingWallet) {
+      const endDate = new Date(); // Today
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - 30); // Last 30 days
+
+      const chainId = chain === "solana" ? "solana" : "0x1"; // Ethereum or Solana
+      const dailyBalances = await fetchDailyTokenBalances(
+        address,
+        startDate,
+        endDate,
+        chainId
+      );
+
+      // Process and save daily balances
+      for (const daily of dailyBalances) {
+        const { date, tokens } = daily;
+        const coinBalances = tokens.map((token: any) => {
+          const decimals = token.decimals
+            ? parseInt(token.decimals, 10)
+            : chain === "solana"
+            ? 9
+            : 18;
+          const rawAmountStr = token.balance || "0";
+          const amount = parseFloat(rawAmountStr) / 10 ** decimals;
+          const usdValue =
+            token.usdValue ||
+            convertToUsd(token.symbol || "TKN", rawAmountStr, decimals);
+
+          return {
+            symbol: token.symbol || (chain === "solana" ? "SOL" : "ETH"),
+            amount,
+            valueUsd: usdValue,
+            timestamp: new Date(date),
+            logo: token.logo || null,
+            thumbnail: token.thumbnail || null,
+          };
+        });
+
+        const totalValue = coinBalances.reduce(
+          (sum, cb) => sum + cb.valueUsd,
+          0
+        );
+
+        // Create snapshot for this day using a unique key (walletAddress + timestamp)
+        const dayStart = new Date(date);
+        dayStart.setHours(0, 0, 0, 0);
+
+        let snapshot = await prisma.walletSnapshot.findFirst({
+          where: {
+            walletAddress: address,
+            timestamp: dayStart,
+          },
+        });
+
+        if (!snapshot) {
+          snapshot = await prisma.walletSnapshot.create({
+            data: {
+              walletAddress: address,
+              timestamp: dayStart,
+              totalValue,
+              balances: {
+                create: coinBalances.map((cb) => ({
+                  symbol: cb.symbol,
+                  amount: cb.amount,
+                  valueUsd: cb.valueUsd,
+                  timestamp: cb.timestamp,
+                  logo: cb.logo,
+                  thumbnail: cb.thumbnail,
+                })),
+              },
+              transactions: {
+                create: [], // No transactions for historical balances here, can be added later
+              },
+            },
+          });
+        } else {
+          await prisma.walletSnapshot.update({
+            where: { id: snapshot.id },
+            data: {
+              totalValue,
+              balances: {
+                deleteMany: {},
+                create: coinBalances.map((cb) => ({
+                  symbol: cb.symbol,
+                  amount: cb.amount,
+                  valueUsd: cb.valueUsd,
+                  timestamp: cb.timestamp,
+                  logo: cb.logo,
+                  thumbnail: cb.thumbnail,
+                })),
+              },
+              transactions: {
+                deleteMany: {},
+                create: [], // No transactions for historical balances here
+              },
+            },
+          });
+        }
+
+        console.log(
+          `Created/updated snapshot for ${date.toDateString()}:`,
+          snapshot
+        );
+      }
+    }
+
     return res.json(wallet);
   } catch (error) {
     console.error("Error creating/updating wallet:", error);

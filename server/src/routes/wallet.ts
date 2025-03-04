@@ -7,7 +7,7 @@ import {
   unfollowWallet,
   getFollowedWallets,
   createOrUpdateWallet,
-  dailyFullHistory, // add
+  dailyFullHistory,
 } from "../controllers/walletController";
 
 const router = Router();

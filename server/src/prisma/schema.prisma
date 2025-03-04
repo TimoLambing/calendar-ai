@@ -64,6 +64,8 @@ model WalletSnapshot {
 
   balances     CoinBalance[]
   transactions Transaction[]
+
+  @@unique([walletAddress, timestamp]) // Add composite unique key
 }
 
 model CoinBalance {

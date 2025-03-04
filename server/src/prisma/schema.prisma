@@ -8,87 +8,95 @@ datasource db {
 }
 
 model Wallet {
-  id        String   @id @default(cuid())
-  address   String   @unique
+  // Use address as the primary key
+  address   String   @id
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
+  // For diaries
   diaryEntries TradingDiaryEntry[]
-  snapshots    WalletSnapshot[]
-  followedBy   Wallet[]            @relation("WalletFollows")
-  following    Wallet[]            @relation("WalletFollows")
-  Snapshot     TokenSnapshot[]
+
+  // For daily snapshots
+  snapshots WalletSnapshot[]
+
+  // If you still use the older single-coin Snapshot model
+  Snapshot Snapshot[]
+
+  // Self many-to-many relation for "following" & "followedBy"
+  following  Wallet[] @relation("WalletFollows")
+  followedBy Wallet[] @relation("WalletFollows")
 }
 
 model TradingDiaryEntry {
-  id             String   @id @default(cuid())
+  id             String            @id @default(cuid())
   comment        String
   timestamp      DateTime
   portfolioValue Float
   valueChange    Float
-  createdAt      DateTime @default(now())
+  createdAt      DateTime          @default(now())
   authorAddress  String
 
-  // Relations
-  wallet   Wallet                @relation(fields: [walletId], references: [id])
-  walletId String
-  comments TradingDiaryComment[]
+  // References Wallet.address
+  walletAddress String
+  wallet        Wallet            @relation(fields: [walletAddress], references: [address])
+  comments      TradingDiaryComment[]
 }
 
 model TradingDiaryComment {
-  id            String   @id @default(cuid())
+  id            String            @id @default(cuid())
   comment       String
-  createdAt     DateTime @default(now())
+  createdAt     DateTime          @default(now())
   authorAddress String
 
-  // Relations
-  entry   TradingDiaryEntry @relation(fields: [entryId], references: [id])
   entryId String
+  entry   TradingDiaryEntry @relation(fields: [entryId], references: [id])
 }
 
 model WalletSnapshot {
-  id         String   @id @default(cuid())
+  id         String         @id @default(cuid())
   timestamp  DateTime
   totalValue Float
-  createdAt  DateTime @default(now())
+  createdAt  DateTime       @default(now())
 
-  // Relations
-  wallet       Wallet        @relation(fields: [walletId], references: [id])
-  walletId     String
+  // Reference the wallet's address
+  walletAddress String
+  wallet        Wallet       @relation(fields: [walletAddress], references: [address])
+
   balances     CoinBalance[]
   transactions Transaction[]
 }
 
 model CoinBalance {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   symbol    String
   amount    Float
   valueUsd  Float
   timestamp DateTime
 
-  // Relations
-  snapshot   WalletSnapshot @relation(fields: [snapshotId], references: [id])
+  // Add optional fields for token logos
+  logo       String?
+  thumbnail  String?
+
   snapshotId String
+  snapshot   WalletSnapshot @relation(fields: [snapshotId], references: [id])
 }
 
 model Transaction {
-  id           String   @id @default(cuid())
+  id           String         @id @default(cuid())
   symbol       String
-  type         String // "BUY" or "SELL"
+  type         String
   amount       Float
   valueUsd     Float
   timestamp    DateTime
-  currentValue Float? // Optional current value for tracking performance
+  currentValue Float?
 
-  // Relations
-  snapshot   WalletSnapshot @relation(fields: [snapshotId], references: [id])
   snapshotId String
+  snapshot   WalletSnapshot @relation(fields: [snapshotId], references: [id])
 }
 
-// Meelis created this model for testing purposes.
-model TokenSnapshot {
-  id         String   @id @default(cuid())
+// If you still want the older single-coin snapshot approach
+model Snapshot {
+  id         String   @id
   timestamp  DateTime
   totalValue Float
   symbol     String
@@ -97,7 +105,6 @@ model TokenSnapshot {
   logo       String
   thumbnail  String
 
-  // Relations
-  wallet   Wallet @relation(fields: [walletId], references: [id])
-  walletId String
+  walletAddress String
+  Wallet        Wallet   @relation(fields: [walletAddress], references: [address])
 }

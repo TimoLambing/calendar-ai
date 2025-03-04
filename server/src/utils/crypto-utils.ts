@@ -1,35 +1,16 @@
-// server/src/utils/ether-decode.ts
+// server/src/utils/crypto-utils.ts
 
 import { ethers } from "ethers";
-
-type Transaction = {
-  blockNumber: string;
-  blockHash: string;
-  timeStamp: string;
-  hash: string;
-  nonce: string;
-  transactionIndex: string;
-  from: string;
-  to: string;
-  value: string;
-  gas: string;
-  gasPrice: string;
-  input: string;
-  methodId: string;
-  functionName: string;
-  contractAddress: string;
-  cumulativeGasUsed: string;
-  txreceipt_status: string;
-  gasUsed: string;
-  confirmations: string;
-  isError: string;
-};
+import { EthereumTransaction } from "../types/shared-types";
 
 /**
  * Decodes a transaction and returns a structured summary
+ * @param tx - Transaction data
+ * @param contractAbi - Optional ABI for decoding contract interactions
+ * @returns Human-readable transaction summary
  */
 export function decodeTransaction(
-  tx: Transaction,
+  tx: EthereumTransaction,
   contractAbi?: string[]
 ): string {
   let summary = `Transaction Hash: ${tx.hash}\n`;

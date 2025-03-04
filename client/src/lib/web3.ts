@@ -44,6 +44,15 @@ export const getMockLeaderboardData = async () => {
   throw new Error("Mock removed, use real API");
 };
 
+// client/src/lib/web3.ts (example)
+export async function fetchAllSnapshots(address: string) {
+  const res = await fetch(`/api/wallets/${address}/snapshots`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch snapshots");
+  }
+  return res.json();
+}
+
 /* // client/src/lib/web3.ts
 
 import { DayData } from "./mockData";

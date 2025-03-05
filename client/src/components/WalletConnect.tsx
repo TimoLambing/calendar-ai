@@ -31,7 +31,7 @@ export function WalletConnect({ minimal = false }: Props) {
   const { toast } = useToast();
   const { ready, authenticated, user, login, logout } = usePrivy();
   const [isConnected, setIsConnected] = useState(false);
-  // const dummyWalletAddress = "0x1e58fdeff054b68cdd33db44b9f724e7bd87dfe7";
+  const dummyWalletAddress = "0x1e58fdeff054b68cdd33db44b9f724e7bd87dfe7";
 
   useEffect(() => {
     if (ready && authenticated && user) {
@@ -48,6 +48,7 @@ export function WalletConnect({ minimal = false }: Props) {
           setIsConnected(true);
           setState({
             address: linkedWallet.address,
+            // address: dummyWalletAddress,
             chain: walletChain,
 
           });

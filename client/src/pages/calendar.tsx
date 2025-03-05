@@ -9,14 +9,12 @@ import { ArrowLeft, ScrollText, ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAppState } from "@/store/appState";
 import { fetchAllSnapshots } from "@/lib/web3";
-import { useState } from "react";
 import useGenerateSnapshots from "@/hooks/use-generate-snapshots";
-
+import { Loader } from "lucide-react";
 export default function Calendar() {
   const { state: { address } } = useAppState();
-  const { generate, isGenerating } = useGenerateSnapshots();
+  const { currentDate, isGenerating, goToNextMonth, goToPreviousMonth } = useGenerateSnapshots();
   // State for current month/year
-  const [currentDate, setCurrentDate] = useState(new Date());
 
   // Calculate start and end dates for the current month
   const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -30,28 +28,9 @@ export default function Calendar() {
     queryKey: ["wallet-snapshots", address, startDate.toISOString(), endDate.toISOString()],
     queryFn: () => fetchAllSnapshots(address || "", startDate, endDate),
     enabled: !!address,
-    // refetchInterval: (data) =>
-    //   Array.isArray(data) && data.length ? false : 100000,
+    refetchInterval: (data) =>
+      Array.isArray(data) && data.length ? false : 5000,
   });
-
-  // Navigation handlers
-  const goToPreviousMonth = () => {
-    setCurrentDate(prev => {
-      const newDate = new Date(prev);
-      newDate.setMonth(newDate.getMonth() - 1);
-      return newDate;
-    });
-    generate({ startDate, endDate });
-  };
-
-  const goToNextMonth = () => {
-    setCurrentDate(prev => {
-      const newDate = new Date(prev);
-      newDate.setMonth(newDate.getMonth() + 1);
-      return newDate;
-    });
-    generate({ startDate, endDate });
-  };
 
   if (!address) {
     return (
@@ -150,18 +129,26 @@ export default function Calendar() {
         <div className="mb-6 flex items-center justify-between">
           <Button
             variant="outline"
-            onClick={goToPreviousMonth}
+            onClick={() => {
+              if (!isGenerating && !isLoading) {
+                goToPreviousMonth();
+              }
+            }}
             className="hover:bg-gray-700"
           >
-            <ChevronLeft className="h-4 w-4" />
+            {isGenerating || isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
           <h2 className="text-xl font-semibold text-white">{monthYear}</h2>
           <Button
             variant="outline"
-            onClick={goToNextMonth}
+            onClick={() => {
+              if (!isGenerating && !isLoading) {
+                goToNextMonth();
+              }
+            }}
             className="hover:bg-gray-700"
           >
-            <ChevronRight className="h-4 w-4" />
+            {isGenerating || isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
         </div>
 

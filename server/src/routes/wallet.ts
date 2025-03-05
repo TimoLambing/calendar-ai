@@ -8,11 +8,13 @@ import {
   getFollowedWallets,
   createOrUpdateWallet,
   dailyFullHistory,
+  generateWalletSnapshots,
 } from "../controllers/walletController";
 
 const router = Router();
 
 router.get("/wallets/:address/history", getWalletHistory);
+router.post("/wallets/:address", generateWalletSnapshots);
 router.get("/wallets/:address/snapshots", getWalletSnapshots);
 router.get("/wallets/:address", getWallet);
 

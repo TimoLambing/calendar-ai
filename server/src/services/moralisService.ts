@@ -1,6 +1,6 @@
 import Moralis from "moralis";
 import { config } from "../config/environment-config";
-
+import { ethers } from "ethers";
 /**
  * Initializes Moralis with the API key if not already started.
  */
@@ -69,7 +69,7 @@ export async function fetchEvmTransactions(
 /**
  * Fetches EVM token transfers (ERC-20) for a wallet.
  * @param walletAddress Wallet address
- * @param chain Chain ID ("0x1" for Ethereum, "0x2105" for Base)
+ * @param chain Chain ID ("0x1" for Ethereum, "0x2105" for Base)z
  * @returns Array of token transfer transactions
  */
 export async function fetchEvmTokenTransfers(

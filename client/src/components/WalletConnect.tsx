@@ -12,13 +12,12 @@
  * the Privy provider in your root application.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/store/appState";
-import { apiRequest } from "@/lib/queryClient";
 
 interface Props {
   minimal?: boolean;
@@ -32,27 +31,10 @@ export function WalletConnect({ minimal = false }: Props) {
   const { toast } = useToast();
   const { ready, authenticated, user, login, logout } = usePrivy();
   const [isConnected, setIsConnected] = useState(false);
-  const [hasCalledAPI, setHasCalledAPI] = useState(false);
-
-  const createOrUpdateWallet = useCallback(
-    async (address: string, chain: string) => {
-      try {
-        await apiRequest("POST", "/api/wallets", { address, chain });
-        setHasCalledAPI(true);
-      } catch (error) {
-        console.error("Error creating/updating wallet:", error);
-        toast({
-          title: "Wallet Error",
-          description: "Failed to register wallet with server.",
-          variant: "destructive",
-        });
-      }
-    },
-    []
-  );
+  // const dummyWalletAddress = "0x1e58fdeff054b68cdd33db44b9f724e7bd87dfe7";
 
   useEffect(() => {
-    if (ready && authenticated && user && !hasCalledAPI) {
+    if (ready && authenticated && user) {
       const linkedWallet = user.linkedAccounts?.find(
         (acct) => acct.type === "wallet" && "address" in acct
       );
@@ -60,12 +42,15 @@ export function WalletConnect({ minimal = false }: Props) {
         const walletChain = linkedWallet.chainId?.includes("solana")
           ? "solana"
           : linkedWallet.chainId?.includes("8453")
-          ? "base"
-          : "ethereum"; // Base chain ID is 8453
+            ? "base"
+            : "ethereum"; // Base chain ID is 8453
         if (!isConnected) {
           setIsConnected(true);
-          setState({ address: linkedWallet.address as string });
-          createOrUpdateWallet(linkedWallet.address as string, walletChain);
+          setState({
+            address,
+            chain: walletChain,
+
+          });
         }
       }
     }
@@ -74,8 +59,6 @@ export function WalletConnect({ minimal = false }: Props) {
     authenticated,
     user,
     isConnected,
-    hasCalledAPI,
-    createOrUpdateWallet,
     setState,
   ]);
 
@@ -114,7 +97,6 @@ export function WalletConnect({ minimal = false }: Props) {
     try {
       await logout();
       setIsConnected(false);
-      setHasCalledAPI(false);
       setState({ address: "" });
       toast({
         title: "Wallet Disconnected",

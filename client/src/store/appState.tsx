@@ -6,6 +6,7 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 interface AppState {
   isConnected?: boolean;
   address?: string | null;
+  chain?: "ethereum" | "solana" | "base";
 }
 
 // Define the context type
@@ -20,7 +21,7 @@ const AppStateContext = createContext<AppStateContextType | undefined>(
 );
 
 // Create Provider component
-export const AppStateProvider = ({ children }: { children: ReactNode }) => {
+export const AppStateProvider = ({ children }: { children: ReactNode; }) => {
   const [state, setState] = useState<AppState>({
     isConnected: false,
     address: null,

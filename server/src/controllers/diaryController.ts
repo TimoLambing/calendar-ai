@@ -53,34 +53,47 @@ export async function getDiaryEntriesByDate(req: Request, res: Response) {
 
 /**
  * createDiaryEntry
- * Controller for POST /diary-entries
+ * Controller for POST /api/diary-entries
  * Creates a new diary entry
  */
 export async function createDiaryEntry(req: Request, res: Response) {
   try {
     const {
-      walletId,
       comment,
       timestamp,
       portfolioValue,
       valueChange,
       authorAddress,
+      wallet, // Match the field sent in the request
     } = req.body;
 
-    const wallet = await prisma.wallet.upsert({
-      where: { address: walletId },
+    // Validate required fields
+    if (!comment || !timestamp || !portfolioValue || !valueChange || !authorAddress || !wallet) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Ensure wallet is a string (assuming walletData is an address)
+    const walletAddress = typeof wallet === "string" ? wallet : wallet.address;
+    if (!walletAddress) {
+      return res.status(400).json({ error: "Invalid wallet address" });
+    }
+
+    // Upsert the wallet
+    const walletRecord = await prisma.wallet.upsert({
+      where: { address: walletAddress },
       update: {},
-      create: { address: walletId },
+      create: { address: walletAddress },
     });
 
+    // Create the diary entry
     const entry = await prisma.tradingDiaryEntry.create({
       data: {
-        comment: comment,
+        comment,
         timestamp: new Date(timestamp),
-        portfolioValue: portfolioValue,
-        valueChange: valueChange,
-        authorAddress: authorAddress,
-        walletId: wallet.id,
+        portfolioValue,
+        valueChange,
+        authorAddress,
+        walletAddress: walletRecord.address, // Use walletAddress as per schema
       },
       include: { comments: true },
     });
@@ -91,7 +104,6 @@ export async function createDiaryEntry(req: Request, res: Response) {
     res.status(500).json({ error: "Failed to create diary entry" });
   }
 }
-
 /**
  * getDiaryComments
  * Controller for GET /diary-entries/:entryId/comments

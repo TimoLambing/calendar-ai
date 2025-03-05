@@ -27,7 +27,7 @@ interface WalletDetails {
 export default function WalletDetail({
   params,
 }: {
-  params: { address: string };
+  params: { address: string; };
 }) {
   const { toast } = useToast();
   const { address } = params;
@@ -41,7 +41,7 @@ export default function WalletDetail({
   const { data: walletDetails, isLoading: isLoadingDetails } =
     useQuery<WalletDetails>({
       queryKey: ["wallet-details", address],
-      queryFn: () => getMockWalletDetails(address),
+      queryFn: () => getMockWalletDetails(),
     });
 
   // Fetch wallet history for calendar
@@ -159,11 +159,10 @@ export default function WalletDetail({
                   <div>
                     <div className="text-sm text-gray-500">24h Change</div>
                     <div
-                      className={`text-xl font-bold ${
-                        walletDetails.performanceStats["24h"] >= 0
+                      className={`text-xl font-bold ${walletDetails.performanceStats["24h"] >= 0
                           ? "text-green-500"
                           : "text-red-500"
-                      }`}
+                        }`}
                     >
                       {walletDetails.performanceStats["24h"] >= 0 ? "+" : ""}
                       {walletDetails.performanceStats["24h"].toFixed(2)}%
@@ -172,11 +171,10 @@ export default function WalletDetail({
                   <div>
                     <div className="text-sm text-gray-500">7d Change</div>
                     <div
-                      className={`text-xl font-bold ${
-                        walletDetails.performanceStats["7d"] >= 0
+                      className={`text-xl font-bold ${walletDetails.performanceStats["7d"] >= 0
                           ? "text-green-500"
                           : "text-red-500"
-                      }`}
+                        }`}
                     >
                       {walletDetails.performanceStats["7d"] >= 0 ? "+" : ""}
                       {walletDetails.performanceStats["7d"].toFixed(2)}%
@@ -185,11 +183,10 @@ export default function WalletDetail({
                   <div>
                     <div className="text-sm text-gray-500">30d Change</div>
                     <div
-                      className={`text-xl font-bold ${
-                        walletDetails.performanceStats["30d"] >= 0
+                      className={`text-xl font-bold ${walletDetails.performanceStats["30d"] >= 0
                           ? "text-green-500"
                           : "text-red-500"
-                      }`}
+                        }`}
                     >
                       {walletDetails.performanceStats["30d"] >= 0 ? "+" : ""}
                       {walletDetails.performanceStats["30d"].toFixed(2)}%

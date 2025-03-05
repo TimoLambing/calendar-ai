@@ -47,7 +47,7 @@ export function WalletConnect({ minimal = false }: Props) {
         if (!isConnected) {
           setIsConnected(true);
           setState({
-            address,
+            address: linkedWallet.address,
             chain: walletChain,
 
           });

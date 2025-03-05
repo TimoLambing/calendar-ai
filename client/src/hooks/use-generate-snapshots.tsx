@@ -53,8 +53,8 @@ export default function useGenerateSnapshots() {
             setIsGenerating(true);
 
             try {
-                await apiRequest("POST", "/api/wallets/snapshots", {
-                    address,
+
+                await apiRequest("POST", `/api/wallets/${address}/snapshots`, {
                     chain,
                     startDate: start.toISOString(),
                     endDate: end.toISOString()

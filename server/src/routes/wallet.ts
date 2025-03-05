@@ -14,7 +14,7 @@ import {
 const router = Router();
 
 router.get("/wallets/:address/history", getWalletHistory);
-router.post("/wallets/:address", generateWalletSnapshots);
+router.post("/wallets/:address/snapshots", generateWalletSnapshots);
 router.get("/wallets/:address/snapshots", getWalletSnapshots);
 router.get("/wallets/:address", getWallet);
 

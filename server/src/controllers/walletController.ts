@@ -345,7 +345,6 @@ export async function getWalletSnapshots(req: Request, res: Response) {
   try {
     const { address } = req.params;
     const { startDate, endDate } = req.query;
-
     if (!address) return res.status(400).json({ error: "Address is required" });
 
     // Parse and validate dates if provided
@@ -582,7 +581,8 @@ export async function createOrUpdateWallet(req: Request, res: Response) {
  */
 export async function generateWalletSnapshots(req: Request, res: Response) {
   try {
-    const { address, chain = "ethereum", startDate, endDate } = req.body;
+    const { address } = req.params;
+    const { chain = "ethereum", startDate, endDate } = req.body;
     if (!address) return res.status(400).json({ error: "Address is required" });
 
     // Validate date parameters

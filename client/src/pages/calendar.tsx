@@ -15,7 +15,6 @@ import useGenerateSnapshots from "@/hooks/use-generate-snapshots";
 export default function Calendar() {
   const { state: { address } } = useAppState();
   const { generate, isGenerating } = useGenerateSnapshots();
-
   // State for current month/year
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -62,42 +61,42 @@ export default function Calendar() {
     );
   }
 
-  if (isGenerating || isLoading || (!snapshots?.length && !error)) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center text-gray-300">
-        <div className="flex flex-col items-center gap-4">
-          <svg
-            className="animate-spin h-8 w-8 text-gray-400"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-              fill="none"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v8h-8z"
-            />
-          </svg>
-          <span>Loading wallet snapshots...</span>
-        </div>
-      </div>
-    );
-  }
+  // if (isGenerating || isLoading || (!snapshots?.length && !error)) {
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center text-gray-300">
+  //       <div className="flex flex-col items-center gap-4">
+  //         <svg
+  //           className="animate-spin h-8 w-8 text-gray-400"
+  //           viewBox="0 0 24 24"
+  //         >
+  //           <circle
+  //             className="opacity-25"
+  //             cx="12"
+  //             cy="12"
+  //             r="10"
+  //             stroke="currentColor"
+  //             strokeWidth="4"
+  //             fill="none"
+  //           />
+  //           <path
+  //             className="opacity-75"
+  //             fill="currentColor"
+  //             d="M4 12a8 8 0 018-8v8h-8z"
+  //           />
+  //         </svg>
+  //         <span>Loading wallet snapshots...</span>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center text-red-500">
-        Failed to load snapshots: {error.message}
-      </div>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center text-red-500">
+  //       Failed to load snapshots: {error.message}
+  //     </div>
+  //   );
+  // }
 
   const validSnapshots = snapshots?.filter((s: any) => s.timestamp) || [];
   const sorted = [...validSnapshots].sort(

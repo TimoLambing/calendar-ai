@@ -12,19 +12,16 @@ import {
 } from "recharts";
 
 interface Props {
-  walletId: string;
+  snapshots: Snapshot[];
 }
 
 type Snapshot = {
   timestamp: string;
   totalValue: string;
 };
-export function PortfolioValue({ walletId }: Props) {
-  const { data: snapshots } = useQuery<Snapshot[]>({
-    queryKey: [`/api/wallets/${walletId}/snapshots`],
-  });
+export function PortfolioValue({ snapshots }: Props) {
 
-  if (!snapshots) return null;
+  if (!snapshots) return;
 
   const chartData = snapshots?.map((snapshot: Snapshot) => ({
     date: new Date(snapshot.timestamp).toLocaleDateString(),

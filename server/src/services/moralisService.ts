@@ -17,19 +17,26 @@ async function initializeMoralis() {
  * @param chain Chain ID ("0x1" for Ethereum, "0x2105" for Base)
  * @returns ETH price in USD
  */
-export async function getEthPrice(
+async function getHistoricalEthPrices(
+  blockNumbers: string[],
   chain: "0x1" | "0x2105" = "0x1"
-): Promise<number> {
-  try {
-    const response = await Moralis.EvmApi.token.getTokenPrice({
-      address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", // ETH address
-      chain,
-    });
-    return response.toJSON().usdPrice || 2100.92; // Default to $2,100.92 if no price
-  } catch (error) {
-    console.error("[getEthPrice] Error:", error);
-    return 2100.92; // Fallback price
+): Promise<Record<string, number>> {
+  const priceMap: Record<string, number> = {};
+  for (const blockNumber of blockNumbers) {
+    try {
+      const response = await Moralis.EvmApi.token.getTokenPrice({
+        address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH as a proxy for ETH
+        chain,
+        toBlock: Number(blockNumber), // Fetch price at this block
+      });
+      const data = response.toJSON();
+      priceMap[blockNumber] = data.usdPrice || 2100.92; // Fallback to 2100.92 if no price
+    } catch (error) {
+      console.error(`[getHistoricalEthPrices] Error for block ${blockNumber}:`, error);
+      priceMap[blockNumber] = 2100.92; // Fallback to 2100.92 if fetch fails
+    }
   }
+  return priceMap;
 }
 
 /**
@@ -48,23 +55,34 @@ export async function fetchEvmTransactions(
       `[fetchEvmTransactions] wallet = ${walletAddress}, chain = ${chain}`
     );
 
-    const response = await Moralis.EvmApi.transaction.getWalletTransactions({
+    const response = await Moralis.EvmApi.transaction.getWalletTransactionsVerbose({
       address: walletAddress,
       chain,
       limit: 100,
     });
-    const ethPrice = await getEthPrice(chain);
+
     const transactions = response.toJSON().result || [];
 
-    return transactions.map((tx) => ({
-      ...tx,
-      value_usd: parseFloat(ethers.formatEther(tx.value || "0")) * ethPrice,
-    }));
+    // Get unique block numbers and fetch prices once
+    const blockNumbers = [...new Set(transactions.map(tx => tx.block_number))];
+    const priceMap = await getHistoricalEthPrices(blockNumbers, chain);
+
+    // Map transactions with cached prices
+    return transactions.map((tx) => {
+      const ethValue = parseFloat(ethers.formatEther(tx.value || "0"));
+      const usdValue = ethValue * (priceMap[tx.block_number] || 0);
+      return {
+        ...tx,
+        value_usd: `$${usdValue.toFixed(2)}`, // Verbose USD value, e.g., "$392.88"
+      };
+    });
   } catch (error) {
     console.error("[fetchEvmTransactions] Error:", error);
     return [];
   }
 }
+
+
 
 /**
  * Fetches EVM token transfers (ERC-20) for a wallet.
@@ -146,10 +164,10 @@ export async function fetchSolanaTokenBalances(walletAddress: string) {
     const allTokens = [
       {
         symbol: "SOL",
-        balance: solBalance?.balance || "0",
+        balance: solBalance.solana || "0",
         decimals: "9",
-        usdValue: solBalance?.balance
-          ? await getSolPrice(solBalance.balance)
+        usdValue: solBalance.solana
+          ? await getSolPrice(solBalance.solana)
           : 0,
         logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111111/logo.png",
         thumbnail:

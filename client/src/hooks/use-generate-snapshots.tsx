@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { apiRequest } from '@/lib/queryClient';
 import { toast } from './use-toast';
 import { useAppState } from '@/store/appState';
@@ -8,15 +8,21 @@ interface GenerateSnapshotsParams {
     startDate: Date | string;
     endDate: Date | string;
 }
+
 /**
- *  Custom hook to manage snapshot generation and navigating between months.
+ * Custom hook to manage snapshot generation and navigating between months.
  */
 export default function useGenerateSnapshots() {
     const { state: { address, chain } } = useAppState();
     const { ready, authenticated, user } = usePrivy();
     const [isGenerating, setIsGenerating] = useState(false);
     const [currentDate, setCurrentDate] = useState(new Date());
-
+    const startDateRef = useRef<Date>(
+        new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+    );
+    const endDateRef = useRef<Date>(
+        new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+    );
 
     const goToPreviousMonth = useCallback(() => {
         setCurrentDate(prev => {
@@ -34,11 +40,8 @@ export default function useGenerateSnapshots() {
         });
     }, []);
 
-
-
     const generate = useCallback(
-        async ({ startDate, endDate }: GenerateSnapshotsParams) => {
-            // Prevent new generation if already in progress
+        async ({ startDate: startDateParam, endDate: endDateParam }: GenerateSnapshotsParams) => {
             if (isGenerating) return;
 
             if (!ready || !authenticated || !user) {
@@ -50,9 +53,8 @@ export default function useGenerateSnapshots() {
                 return;
             }
 
-            // Validate dates
-            const start = new Date(startDate);
-            const end = new Date(endDate);
+            const start = new Date(startDateParam);
+            const end = new Date(endDateParam);
 
             if (isNaN(start.getTime()) || isNaN(end.getTime())) {
                 toast({
@@ -73,15 +75,15 @@ export default function useGenerateSnapshots() {
             }
 
             setIsGenerating(true);
+            startDateRef.current = start;
+            endDateRef.current = end;
 
             try {
-
                 await apiRequest("POST", `/api/wallets/${address}/snapshots`, {
                     chain,
                     startDate: start.toISOString(),
                     endDate: end.toISOString()
                 });
-
             } catch (error: any) {
                 console.error("Error generating snapshots:", error);
                 toast({
@@ -93,49 +95,30 @@ export default function useGenerateSnapshots() {
                 setIsGenerating(false);
             }
         },
-        [user, ready, authenticated, address, chain, isGenerating] // Include isGenerating in dependencies
+        [user, ready, authenticated, address, chain] // Removed isGenerating from dependencies
     );
 
+    // Run generate only on initial mount or when currentDate changes intentionally
     useEffect(() => {
-        const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        const newStartDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        const newEndDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-        generate({ startDate, endDate });
+        startDateRef.current = newStartDate;
+        endDateRef.current = newEndDate;
 
-    }, [currentDate]);
+        // Only generate if not already generating
+        if (!isGenerating) {
+            generate({ startDate: newStartDate, endDate: newEndDate });
+        }
+    }, [currentDate]); // Removed generate from dependencies
 
     return {
         currentDate,
+        startDate: startDateRef.current,
+        endDate: endDateRef.current,
         goToPreviousMonth,
         goToNextMonth,
         generate,
         isGenerating
     };
 }
-
-
-
-// Usage example:
-/*
-import useGenerateSnapshots from '@/hooks/useGenerateSnapshots';
-
-function SnapshotGenerator() {
-  const { generate, isGenerating } = useGenerateSnapshots();
-
-  const handleGenerate = () => {
-    generate({
-      startDate: '2025-03-01',
-      endDate: '2025-03-31'
-    });
-  };
-
-  return (
-    <button 
-      onClick={handleGenerate}
-      disabled={isGenerating}
-    >
-      {isGenerating ? 'Generating...' : 'Generate Snapshots'}
-    </button>
-  );
-}
-*/

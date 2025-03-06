@@ -8,7 +8,6 @@ import {
   fetchSolanaTransactions,
   fetchSolanaTokenBalances,
   fetchDailyTokenBalances,
-  getEthPrice,
 } from "../services/moralisService";
 
 /**
@@ -29,7 +28,6 @@ async function parseEvmTransaction(
   const type = isOutbound ? "SELL" : "BUY";
   const rawWei = tx.value || "0";
   const ethAmount = parseFloat(ethers.formatEther(rawWei));
-  const ethPrice = await getEthPrice(chain);
   const timeMs = tx.block_timestamp
     ? Date.parse(tx.block_timestamp)
     : Date.now();
@@ -38,7 +36,7 @@ async function parseEvmTransaction(
     symbol: "ETH",
     type,
     amount: ethAmount,
-    valueUsd: ethAmount * ethPrice,
+    valueUsd: ethAmount,
     timestamp: new Date(timeMs),
     txHash: tx.hash,
     toAddress: toAddr,
@@ -337,7 +335,7 @@ export async function getWalletHistory(req: Request, res: Response) {
 }
 
 /**
- * Fetches existing wallet snapshots.
+ * Fetches existing wallet snapshots, if startDate and endDate are provided, filters by date range.
  * @param req Express request object
  * @param res Express response object
  */
@@ -345,48 +343,52 @@ export async function getWalletSnapshots(req: Request, res: Response) {
   try {
     const { address } = req.params;
     const { startDate, endDate } = req.query;
-    if (!address) return res.status(400).json({ error: "Address is required" });
 
-    // Parse and validate dates if provided
-    let dateFilter = {};
+    if (!address) {
+      return res.status(400).json({ error: "Address is required" });
+    }
+
+    // Validate and parse dates
+    let dateFilter: Record<string, Date> | undefined;
     if (startDate || endDate) {
-      dateFilter = {
-        ...(startDate && { gte: new Date(startDate as string) }),
-        ...(endDate && { lte: new Date(endDate as string) }),
-      };
-
-      // Validate date formats
       if (startDate && isNaN(Date.parse(startDate as string))) {
         return res.status(400).json({ error: "Invalid startDate format" });
       }
       if (endDate && isNaN(Date.parse(endDate as string))) {
         return res.status(400).json({ error: "Invalid endDate format" });
       }
+
+      dateFilter = {
+        ...(startDate ? { gte: new Date(startDate as string) } : {}),
+        ...(endDate ? { lte: new Date(endDate as string) } : {}),
+      };
     }
 
     const wallet = await prisma.wallet.findUnique({
       where: { address },
       include: {
         snapshots: {
-          where: {
-            timestamp: dateFilter,
-          },
+          where: dateFilter ? { timestamp: dateFilter } : undefined, // Only apply filter if dates exist
           orderBy: { timestamp: "desc" },
           include: {
             balances: true,
-            transactions: true
+            transactions: true,
           },
         },
       },
     });
 
-    if (!wallet) return res.status(404).json({ error: "Wallet not found" });
+    if (!wallet) {
+      return res.status(404).json({ error: "Wallet not found" });
+    }
+
     return res.json(wallet.snapshots);
   } catch (error) {
     console.error("Error fetching snapshots:", error);
     return res.status(500).json({ error: "Failed to fetch snapshots" });
   }
 }
+
 
 /**
  * Fetches wallet details and performance stats.
@@ -557,11 +559,11 @@ export async function createOrUpdateWallet(req: Request, res: Response) {
 
     const wallet = await prisma.wallet.upsert({
       where: { address },
-      update: { ...rest },
       create: {
         address,
         createdAt: new Date(),
       },
+      update: { ...rest },
     });
 
     return res.json({

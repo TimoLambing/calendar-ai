@@ -9,8 +9,9 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Calendar, ScrollText } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getMockJournalEntries } from "@/lib/web3";
+import { fetchAllSnapshots, getMockJournalEntries } from "@/lib/web3";
 import { useAppState } from "@/store/appState";
+import { useMemo } from "react";
 
 type WalletData = {
   id: string;
@@ -25,14 +26,29 @@ export default function Dashboard() {
     queryKey: [`/api/wallets/${address}`],
     enabled: !!address,
   });
-
-  // Fetch journal entries
-  const { data: journalEntries } = useQuery({
-    queryKey: ["journal-entries", address],
-    queryFn: () => getMockJournalEntries(address || ""),
+  const currentDate = new Date();
+  // Get the latest snapshot
+  const {
+    data: snapshots = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: [
+      "wallet-snapshots",
+      address,
+    ],
+    queryFn: () => fetchAllSnapshots(
+      address || "",
+      new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+      ,),
     enabled: !!address,
   });
-  console.log(journalEntries);
+
+  const latestSnapshot = useMemo(() => {
+    if (snapshots.length === 0) return null;
+    return snapshots[snapshots.length - 1];
+  }, [snapshots]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,9 +77,9 @@ export default function Dashboard() {
 
             <div className="grid gap-8 md:grid-cols-2">
               {/* TODO: Remove non null assertion */}
-              <PortfolioValue walletId={walletData?.id!} />
+              <PortfolioValue snapshots={snapshots} />
               <CoinPerformance
-                balances={walletData?.latestSnapshot?.balances || []}
+                balances={latestSnapshot?.balances || []}
               />
             </div>
 

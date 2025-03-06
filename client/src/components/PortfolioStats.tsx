@@ -10,8 +10,8 @@ interface Props {
 
 export function PortfolioStats({ data }: Props) {
   // Create chronological order array for calculations
+  if (!data) return null;
   const chronologicalData = [...data].reverse();
-
   // Calculate statistics
   const profitDays = chronologicalData.filter((day, index) => {
     if (index === 0) return false;
@@ -22,10 +22,9 @@ export function PortfolioStats({ data }: Props) {
 
   // Calculate coin performance with safety checks
   const coinPerformance = new Map<string, number>();
-
   // Only process if we have data
-  if (chronologicalData.length > 0) {
-    chronologicalData[0]?.coins.forEach((coin) => {
+  if (chronologicalData?.length > 0) {
+    chronologicalData[0]?.coins?.forEach((coin) => {
       const firstPrice = parseFloat(coin.valueUsd);
       const lastPrice = parseFloat(
         chronologicalData[chronologicalData.length - 1]?.coins.find(

@@ -1,17 +1,3 @@
-/**
- * This updated WalletConnect component now uses the Privy login flow,
- * instead of connecting to a mock address. It relies on the Privy
- * Auth Context (usePrivy) to handle authentication. Once logged in,
- * it retrieves the user's linked wallet address for display
- * (and calls onConnect).
- *
- * Usage:
- *   <WalletConnect onConnect={(addr) => console.log("Got address:", addr)} />
- *
- * See https://docs.privy.io/guides/react for details on hooking up
- * the Privy provider in your root application.
- */
-
 // client/src/components/WalletConnect.tsx
 
 import { Button } from "@/components/ui/button";
@@ -19,9 +5,8 @@ import { Wallet } from "lucide-react";
 import useWalletConnect from "@/hooks/use-wallet-connect";
 
 export function WalletConnect({ minimal = false }) {
-  const dummyWalletAddress = "0x1e58fdeff054b68cdd33db44b9f724e7bd87dfe7";
-  const { isConnected, address, connect, disconnect } =
-    useWalletConnect(dummyWalletAddress);
+  // const dummyWalletAddress = "0x1e58fdeff054b68cdd33db44b9f724e7bd87dfe7";
+  const { isConnected, address, connect, disconnect } = useWalletConnect();
 
   if (minimal) {
     return isConnected ? (

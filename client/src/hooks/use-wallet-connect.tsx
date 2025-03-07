@@ -13,6 +13,7 @@ export default function useWalletConnect(dummyWalletAddress?: string) {
   } = useAppState();
   const { toast } = useToast();
   const { ready, authenticated, user, login, logout } = usePrivy();
+  console.log("useWalletConnect -> user", user, authenticated, ready);
   const [isConnected, setIsConnected] = useState(false);
 
   const createOrUpdateWallet = useCallback(

@@ -12,13 +12,16 @@
  * the Privy provider in your root application.
  */
 
+// client/src/components/WalletConnect.tsx
+
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
 import useWalletConnect from "@/hooks/use-wallet-connect";
 
 export function WalletConnect({ minimal = false }) {
   const dummyWalletAddress = "0x1e58fdeff054b68cdd33db44b9f724e7bd87dfe7";
-  const { isConnected, address, connect, disconnect } = useWalletConnect(dummyWalletAddress);
+  const { isConnected, address, connect, disconnect } =
+    useWalletConnect(dummyWalletAddress);
 
   if (minimal) {
     return isConnected ? (

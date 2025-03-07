@@ -1,3 +1,5 @@
+// server/src/services/moralisService.ts
+
 import Moralis from "moralis";
 import { config } from "../config/environment-config";
 import { ethers } from "ethers";
@@ -32,7 +34,10 @@ async function getHistoricalEthPrices(
       const data = response.toJSON();
       priceMap[blockNumber] = data.usdPrice || 2100.92; // Fallback to 2100.92 if no price
     } catch (error) {
-      console.error(`[getHistoricalEthPrices] Error for block ${blockNumber}:`, error);
+      console.error(
+        `[getHistoricalEthPrices] Error for block ${blockNumber}:`,
+        error
+      );
       priceMap[blockNumber] = 2100.92; // Fallback to 2100.92 if fetch fails
     }
   }
@@ -55,16 +60,19 @@ export async function fetchEvmTransactions(
       `[fetchEvmTransactions] wallet = ${walletAddress}, chain = ${chain}`
     );
 
-    const response = await Moralis.EvmApi.transaction.getWalletTransactionsVerbose({
-      address: walletAddress,
-      chain,
-      limit: 100,
-    });
+    const response =
+      await Moralis.EvmApi.transaction.getWalletTransactionsVerbose({
+        address: walletAddress,
+        chain,
+        limit: 100,
+      });
 
     const transactions = response.toJSON().result || [];
 
     // Get unique block numbers and fetch prices once
-    const blockNumbers = [...new Set(transactions.map(tx => tx.block_number))];
+    const blockNumbers = [
+      ...new Set(transactions.map((tx) => tx.block_number)),
+    ];
     const priceMap = await getHistoricalEthPrices(blockNumbers, chain);
 
     // Map transactions with cached prices
@@ -81,8 +89,6 @@ export async function fetchEvmTransactions(
     return [];
   }
 }
-
-
 
 /**
  * Fetches EVM token transfers (ERC-20) for a wallet.
@@ -166,9 +172,7 @@ export async function fetchSolanaTokenBalances(walletAddress: string) {
         symbol: "SOL",
         balance: solBalance.solana || "0",
         decimals: "9",
-        usdValue: solBalance.solana
-          ? await getSolPrice(solBalance.solana)
-          : 0,
+        usdValue: solBalance.solana ? await getSolPrice(solBalance.solana) : 0,
         logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111111/logo.png",
         thumbnail:
           "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111111/logo.png",

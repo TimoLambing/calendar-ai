@@ -1,3 +1,5 @@
+// server/src/controllers/walletController.ts
+
 import { Request, Response } from "express";
 import { prisma } from "../prisma/prisma";
 import { ethers } from "ethers";
@@ -120,13 +122,13 @@ async function createOrUpdateDailySnapshot(
   const txsToCreate =
     chain !== "solana"
       ? [
-        ...(await Promise.all(
-          rawTxs.map((tx) =>
-            parseEvmTransaction(tx, address, chainId as "0x1" | "0x2105")
-          )
-        )),
-        ...rawTokenTxs.map((tx) => parseEvmTokenTransfer(tx, address)),
-      ]
+          ...(await Promise.all(
+            rawTxs.map((tx) =>
+              parseEvmTransaction(tx, address, chainId as "0x1" | "0x2105")
+            )
+          )),
+          ...rawTokenTxs.map((tx) => parseEvmTokenTransfer(tx, address)),
+        ]
       : rawTxs.map((tx) => parseSolanaTransaction(tx, address));
 
   const coinBalances = rawBalances.map((token) => ({
@@ -198,33 +200,33 @@ export async function dailyFullHistory(req: Request, res: Response) {
     const allTxs =
       chain !== "solana"
         ? [
-          ...(await fetchEvmTransactions(
-            address,
-            chainId as "0x1" | "0x2105"
-          )),
-          ...(await fetchEvmTokenTransfers(
-            address,
-            chainId as "0x1" | "0x2105"
-          )),
-        ]
+            ...(await fetchEvmTransactions(
+              address,
+              chainId as "0x1" | "0x2105"
+            )),
+            ...(await fetchEvmTokenTransfers(
+              address,
+              chainId as "0x1" | "0x2105"
+            )),
+          ]
         : await fetchSolanaTransactions(address);
 
     const parsedTxs =
       chain !== "solana"
         ? await Promise.all(
-          allTxs.map((tx) =>
-            tx.value
-              ? parseEvmTransaction(tx, address, chainId as "0x1" | "0x2105")
-              : parseEvmTokenTransfer(tx, address)
+            allTxs.map((tx) =>
+              tx.value
+                ? parseEvmTransaction(tx, address, chainId as "0x1" | "0x2105")
+                : parseEvmTokenTransfer(tx, address)
+            )
           )
-        )
         : allTxs.map((tx) => parseSolanaTransaction(tx, address));
 
     let earliestDate = parsedTxs.length
       ? parsedTxs.reduce(
-        (min, tx) => (tx.timestamp < min ? tx.timestamp : min),
-        new Date()
-      )
+          (min, tx) => (tx.timestamp < min ? tx.timestamp : min),
+          new Date()
+        )
       : new Date(Date.now() - 86400000);
     const now = new Date();
 
@@ -389,7 +391,6 @@ export async function getWalletSnapshots(req: Request, res: Response) {
   }
 }
 
-
 /**
  * Fetches wallet details and performance stats.
  * @param req Express request object
@@ -422,7 +423,7 @@ export async function getWallet(req: Request, res: Response) {
       );
       return prevSnap
         ? ((latest.totalValue - prevSnap.totalValue) / prevSnap.totalValue) *
-        100
+            100
         : 0;
     };
 
@@ -526,7 +527,7 @@ export async function getFollowedWallets(req: Request, res: Response) {
       );
       return prevSnap
         ? ((latest.totalValue - prevSnap.totalValue) / prevSnap.totalValue) *
-        100
+            100
         : 0;
     };
 
@@ -591,12 +592,17 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
     let start = startDate ? new Date(startDate) : null;
     let end = endDate ? new Date(endDate) : null;
 
-    if ((startDate && isNaN(start!.getTime())) || (endDate && isNaN(end!.getTime()))) {
+    if (
+      (startDate && isNaN(start!.getTime())) ||
+      (endDate && isNaN(end!.getTime()))
+    ) {
       return res.status(400).json({ error: "Invalid date format" });
     }
 
     if (start && end && start > end) {
-      return res.status(400).json({ error: "startDate must be before endDate" });
+      return res
+        .status(400)
+        .json({ error: "startDate must be before endDate" });
     }
 
     const chainId =
@@ -618,7 +624,9 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
       where: { address },
     });
     if (!wallet) {
-      return res.status(404).json({ error: "Wallet not found. Please create wallet first." });
+      return res
+        .status(404)
+        .json({ error: "Wallet not found. Please create wallet first." });
     }
 
     // Check for existing snapshots in the date range
@@ -636,7 +644,7 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
     });
 
     const existingDates = new Set(
-      existingSnapshots.map(s => s.timestamp.toDateString())
+      existingSnapshots.map((s) => s.timestamp.toDateString())
     );
 
     // Generate list of missing dates
@@ -663,30 +671,26 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
     const allTxs =
       chain !== "solana"
         ? [
-          ...(await fetchEvmTransactions(
-            address,
-            chainId as "0x1" | "0x2105"
-          )),
-          ...(await fetchEvmTokenTransfers(
-            address,
-            chainId as "0x1" | "0x2105"
-          )),
-        ]
+            ...(await fetchEvmTransactions(
+              address,
+              chainId as "0x1" | "0x2105"
+            )),
+            ...(await fetchEvmTokenTransfers(
+              address,
+              chainId as "0x1" | "0x2105"
+            )),
+          ]
         : await fetchSolanaTransactions(address);
 
     const parsedTxs =
       chain !== "solana"
         ? await Promise.all(
-          allTxs.map((tx) =>
-            tx.value
-              ? parseEvmTransaction(
-                tx,
-                address,
-                chainId as "0x1" | "0x2105"
-              )
-              : parseEvmTokenTransfer(tx, address)
+            allTxs.map((tx) =>
+              tx.value
+                ? parseEvmTransaction(tx, address, chainId as "0x1" | "0x2105")
+                : parseEvmTokenTransfer(tx, address)
+            )
           )
-        )
         : allTxs.map((tx) => parseSolanaTransaction(tx, address));
 
     // Fetch daily balances for the specified range
@@ -741,10 +745,14 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
 
     return res.json({
       createdSnapshotsCount: createdSnapshots.length,
-      message: `Processed ${createdSnapshots.length} new snapshots from ${start.toDateString()} to ${end.toDateString()}`,
+      message: `Processed ${
+        createdSnapshots.length
+      } new snapshots from ${start.toDateString()} to ${end.toDateString()}`,
     });
   } catch (error) {
     console.error("Error generating wallet snapshots:", error);
-    return res.status(500).json({ error: "Failed to generate wallet snapshots" });
+    return res
+      .status(500)
+      .json({ error: "Failed to generate wallet snapshots" });
   }
 }

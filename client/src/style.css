@@ -1641,6 +1641,11 @@ body {
   border-color: hsl(var(--input));
 }
 
+.border-neutral-50 {
+  --tw-border-opacity: 1;
+  border-color: rgb(250 250 250 / var(--tw-border-opacity, 1));
+}
+
 .border-orange-400 {
   --tw-border-opacity: 1;
   border-color: rgb(251 146 60 / var(--tw-border-opacity, 1));
@@ -2224,11 +2229,6 @@ body {
   color: hsl(var(--foreground) / 0.5);
 }
 
-.text-gray-300 {
-  --tw-text-opacity: 1;
-  color: rgb(209 213 219 / var(--tw-text-opacity, 1));
-}
-
 .text-gray-400 {
   --tw-text-opacity: 1;
   color: rgb(156 163 175 / var(--tw-text-opacity, 1));
@@ -2323,10 +2323,6 @@ body {
 
 .opacity-0 {
   opacity: 0;
-}
-
-.opacity-25 {
-  opacity: 0.25;
 }
 
 .opacity-50 {

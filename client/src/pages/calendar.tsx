@@ -1,3 +1,5 @@
+// client/src/pages/calendar.tsx
+
 import { CalendarCard } from "@/components/CalendarCard";
 import { PortfolioStats } from "@/components/PortfolioStats";
 import { WalletConnect } from "@/components/WalletConnect";
@@ -13,24 +15,41 @@ import { Loader } from "lucide-react";
 import { useMemo } from "react";
 
 export default function Calendar() {
-  const { state: { address } } = useAppState();
-  const { currentDate, startDate, endDate, isGenerating, goToNextMonth, goToPreviousMonth } = useGenerateSnapshots();
+  const {
+    state: { address },
+  } = useAppState();
+  const {
+    currentDate,
+    startDate,
+    endDate,
+    isGenerating,
+    goToNextMonth,
+    goToPreviousMonth,
+  } = useGenerateSnapshots();
 
   const {
     data: snapshots = [],
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["wallet-snapshots", address, startDate.toISOString(), endDate.toISOString()],
+    queryKey: [
+      "wallet-snapshots",
+      address,
+      startDate.toISOString(),
+      endDate.toISOString(),
+    ],
     queryFn: () => fetchAllSnapshots(address || "", startDate, endDate),
     enabled: !!address,
-    refetchInterval: (data) => (Array.isArray(data) && data.length ? false : 5000),
+    refetchInterval: (data) =>
+      Array.isArray(data) && data.length ? false : 5000,
   });
 
   const isCurrentMonth = useMemo(() => {
     const now = new Date();
-    return currentDate.getFullYear() === now.getFullYear() &&
-      currentDate.getMonth() === now.getMonth();
+    return (
+      currentDate.getFullYear() === now.getFullYear() &&
+      currentDate.getMonth() === now.getMonth()
+    );
   }, [currentDate]);
 
   // Create a map of snapshots by date (ISO date string without time)
@@ -62,7 +81,6 @@ export default function Calendar() {
     month: "long",
     year: "numeric",
   });
-
 
   if (!address) {
     return (
@@ -147,7 +165,12 @@ export default function Calendar() {
             {monthDates.map((date, index) => {
               const dateKey = date.toISOString().split("T")[0];
               const snapshot = snapshotMap.get(dateKey);
-              const nextSnap = index < monthDates.length - 1 ? snapshotMap.get(monthDates[index + 1].toISOString().split("T")[0]) : undefined;
+              const nextSnap =
+                index < monthDates.length - 1
+                  ? snapshotMap.get(
+                      monthDates[index + 1].toISOString().split("T")[0]
+                    )
+                  : undefined;
 
               if (isLoading || isGenerating || !snapshot) {
                 return <LoadingCalendarCard key={dateKey} />;

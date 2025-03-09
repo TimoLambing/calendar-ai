@@ -22,7 +22,7 @@ import {
 async function parseEvmTransaction(
   tx: any,
   userAddr: string,
-  chain: "0x1" | "0x2105" = "0x1"
+  _chain: "0x1" | "0x2105" = "0x1"
 ) {
   const fromAddr = (tx.from || "").toLowerCase();
   const toAddr = (tx.to || "").toLowerCase();
@@ -132,7 +132,6 @@ async function createOrUpdateDailySnapshot(
         ]
       : rawTxs.map((tx) => parseSolanaTransaction(tx, address));
 
-  // Fix param type for `.map()`
   const coinBalances = rawBalances.map((token: any) => ({
     symbol: token.symbol || (chain === "solana" ? "SOL" : "ETH"),
     amount:
@@ -431,7 +430,7 @@ export async function getWallet(req: Request, res: Response) {
       const latest = arr[0];
       const periodMap = { "24h": 1, "7d": 7, "30d": 30 };
       const prevSnap = arr.find(
-        (s) =>
+        (s: any) =>
           (latest.timestamp - s.timestamp) / (24 * 60 * 60 * 1000) >=
           periodMap[period]
       );
@@ -537,7 +536,7 @@ export async function getFollowedWallets(req: Request, res: Response) {
       const latest = arr[0];
       const periodMap = { "24h": 1, "7d": 7, "30d": 30 };
       const prevSnap = arr.find(
-        (s) =>
+        (s: any) =>
           (latest.timestamp - s.timestamp) / (24 * 60 * 60 * 1000) >=
           periodMap[period]
       );

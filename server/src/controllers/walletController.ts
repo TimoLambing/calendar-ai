@@ -696,7 +696,7 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
     });
 
     const existingDates = new Set(
-      existingSnapshots.map((s) => s.timestamp.toDateString())
+      existingSnapshots.map((s: any) => s.timestamp.toDateString())
     );
 
     console.log(

@@ -68,7 +68,14 @@ export async function createDiaryEntry(req: Request, res: Response) {
     } = req.body;
 
     // Validate required fields
-    if (!comment || !timestamp || !portfolioValue || !valueChange || !authorAddress || !wallet) {
+    if (
+      !comment ||
+      !timestamp ||
+      !portfolioValue ||
+      !valueChange ||
+      !authorAddress ||
+      !wallet
+    ) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -98,10 +105,10 @@ export async function createDiaryEntry(req: Request, res: Response) {
       include: { comments: true },
     });
 
-    res.json(entry);
+    return res.json(entry);
   } catch (error) {
     console.error("Error creating diary entry:", error);
-    res.status(500).json({ error: "Failed to create diary entry" });
+    return res.status(500).json({ error: "Failed to create diary entry" });
   }
 }
 /**

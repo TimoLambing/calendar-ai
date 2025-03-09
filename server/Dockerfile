@@ -14,8 +14,6 @@ COPY . .
 # 3) Build the TS -> JS (this uses .env.production for anything needed at build time)
 RUN npm run build
 
-RUN npm prisma generate
-
 # 4) Expose the port that your server will listen on
 EXPOSE 6060
 

@@ -9,9 +9,6 @@
     "check": "tsc",
     "postinstall": "npx prisma generate"
   },
-  "prisma": {
-    "schema": "./src/prisma/schema.prisma"
-  },
   "dependencies": {
     "@prisma/client": "6.4.1",
     "date-fns": "^4.1.0",

@@ -7,11 +7,7 @@
     "dev": "cross-env dotenv -e .env.dev -- nodemon --watch src --ext ts --exec tsx src/index.ts",
     "check": "tsc --noEmit",
     "build": "cross-env dotenv -e .env.production -- tsc",
-    "start": "cross-env dotenv -e .env.production -- node dist/index.js",
-    "postinstall": "npx prisma generate"
-  },
-  "prisma": {
-    "schema": "./src/prisma/schema.prisma"
+    "start": "cross-env dotenv -e .env.production -- node dist/index.js"
   },
   "dependencies": {
     "@prisma/client": "6.4.1",

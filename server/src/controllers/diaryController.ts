@@ -1,6 +1,6 @@
 // server/src/controllers/diaryController.ts
 
-import { prisma } from "../../prisma/prisma";
+import { prisma } from "../prisma/prisma";
 import { Request, Response } from "express";
 
 /**

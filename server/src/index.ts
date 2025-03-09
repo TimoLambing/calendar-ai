@@ -1,6 +1,6 @@
 // server/src/index.ts
 import express from "express";
-import { prisma } from "./prisma/prisma";
+const { prisma } = require("./prisma/prisma");
 import { log } from "./utils/log";
 import { testDatabaseConnection } from "./utils/test-db";
 import { logMiddleware } from "./middleware/log";

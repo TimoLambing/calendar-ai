@@ -1,23 +1,27 @@
-# Use a Debian-based Node.js image instead of Alpine
+# calendar-ai/server/Dockerfile
+# Dockerfile for the backend (Express + Prisma)
+
 FROM node:20-bullseye-slim
 
-# Set the working directory
+# Create app directory
 WORKDIR /app
 
-# Install pnpm globally
-RUN npm install -g pnpm
+# Copy package.json and package-lock.json first
+COPY package.json package-lock.json ./
 
-# Copy the package.json and install dependencies
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install
+# Install dependencies using npm
+RUN npm install
 
-# Copy the rest of the application code
+# Copy the remaining application files
 COPY . .
 
-RUN pnpm prisma generate
+# Generate Prisma client (if needed)
+RUN npx prisma generate
 
-# Expose the ports
-EXPOSE 4000
+# Expose the port that your server actually listens on
+# In your server/index.ts, you have httpServer.listen(6060),
+# so the container will run on 6060 internally:
+EXPOSE 6060
 
-# Start the server with clinic.js
-CMD ["pnpm", "start"]
+# Start the server using npm
+CMD ["npm", "start"]

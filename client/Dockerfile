@@ -1,35 +1,28 @@
-# Dockerfile for frontend
+# calendar-ai/client/Dockerfile
+# Dockerfile for the frontend (React + Vite)
 
-# Use an official Node.js image as a parent image
 FROM node:20-alpine
 
-# Set the working directory inside the container
+# Set the working directory
 WORKDIR /app
 
-# Install pnpm globally
-RUN npm install -g pnpm
+# Copy only package.json and package-lock.json first (for build caching)
+COPY package.json package-lock.json ./
 
-# Manually set PNPM_HOME and update PATH
-ENV PNPM_HOME=/root/.local/share/pnpm
-ENV PATH=$PNPM_HOME:$PATH
-
-# Install serve globally
-RUN pnpm add -g serve
-
-# Copy application files
-COPY package.json pnpm-lock.yaml ./
-
-# Install dependencies
-RUN pnpm install
+# Install dependencies using npm (instead of pnpm)
+RUN npm install
 
 # Copy the rest of the application files
 COPY . .
 
 # Build the application
-RUN pnpm run build
+RUN npm run build
 
-# Specify the command to run your application using 'serve'
-CMD ["serve", "-s", "build"]
+# Install 'serve' (so we can serve the production build)
+RUN npm install -g serve
 
-# Expose the port your app runs on
+# Expose the port your React app will run on inside the container
 EXPOSE 3000
+
+# Use 'serve' to serve the production build by default
+CMD ["serve", "-s", "build"]

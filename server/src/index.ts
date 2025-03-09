@@ -1,3 +1,4 @@
+// server/src/index.ts
 import express from "express";
 import { prisma } from "./prisma/prisma";
 import { log } from "./utils/log";
@@ -11,11 +12,15 @@ import walletRoutes from "./routes/wallet";
 import { createServer } from "http";
 import { Server } from "socket.io";
 
+// -- Read from environment (example):
+console.log("DATABASE_URL:", process.env.DATABASE_URL);
+
 const app = express();
 const httpServer = createServer(app);
+
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5000", // Adjust to your frontend URL (Vite default)
+    origin: process.env.SOCKET_ORIGIN || "http://localhost:5000",
     methods: ["GET", "POST"],
   },
 });
@@ -55,8 +60,9 @@ if (!isDbConnected) {
 }
 
 // NOTE: we changed to 6060 below to avoid Chrome's unsafe port block
-httpServer.listen(6060, () => {
-  log(`Server running on port 6060`);
+const PORT = process.env.PORT ? Number(process.env.PORT) : 6060;
+httpServer.listen(PORT, () => {
+  log(`Server running on port ${PORT}`);
 });
 
 process.on("beforeExit", async () => {

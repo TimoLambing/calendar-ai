@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 
-# 2) Copy the rest of the code (including src/ and .env.production, if you want it inside the container)
+# 2) Copy the rest of your code (including src/, tsconfig.json, etc.)
 COPY . .
 
 # 3) Build the TS -> JS (this uses .env.production for anything needed at build time)
@@ -17,5 +17,5 @@ RUN npm run build
 # 4) Expose the port that your server will listen on
 EXPOSE 6060
 
-# 5) Start the compiled app, also reading .env.production at runtime
+# 5) Start the compiled app
 CMD ["npm", "start"]

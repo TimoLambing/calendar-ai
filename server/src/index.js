@@ -1,18 +1,17 @@
-// server/src/index.ts
-import express from "express";
+// server/src/index.js
+
+const express = require("express");
 const { prisma } = require("./prisma/prisma");
-import { log } from "./utils/log";
-import { testDatabaseConnection } from "./utils/test-db";
-import { logMiddleware } from "./middleware/log";
-import { errorMiddleware } from "./middleware/error";
+const { log } = require("./utils/log");
+const { testDatabaseConnection } = require("./utils/test-db");
+const { logMiddleware } = require("./middleware/log");
+const { errorMiddleware } = require("./middleware/error");
+const diaryRoutes = require("./routes/diary");
+const walletRoutes = require("./routes/wallet");
+const { createServer } = require("http");
+const { Server } = require("socket.io");
 
-// Updated route imports if filenames changed
-import diaryRoutes from "./routes/diary";
-import walletRoutes from "./routes/wallet";
-import { createServer } from "http";
-import { Server } from "socket.io";
-
-// -- Read from environment (example):
+// Log environment variables
 console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
 const app = express();
@@ -25,24 +24,23 @@ const io = new Server(httpServer, {
   },
 });
 
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// Middlewares
 app.use(logMiddleware);
 app.use(errorMiddleware);
 
-// API routes
+// Routes
 app.use("/api", diaryRoutes);
 app.use("/api", walletRoutes);
 
-// WebSocket connection
+// WebSocket
 io.on("connection", (socket) => {
   console.log("A client connected:", socket.id);
 
-  socket.on("joinWalletRoom", (walletAddress: string) => {
+  socket.on("joinWalletRoom", (walletAddress) => {
     console.log(`Client joined room for wallet: ${walletAddress}`);
-    socket.join(walletAddress); // Join a room for the wallet address
+    socket.join(walletAddress);
   });
 
   socket.on("disconnect", () => {
@@ -53,18 +51,21 @@ io.on("connection", (socket) => {
 // Make io accessible in controllers
 app.set("socketio", io);
 
-// Confirm DB connection
-const isDbConnected = await testDatabaseConnection();
-if (!isDbConnected) {
-  throw new Error("Could not establish database connection");
-}
+// Check DB connection in an async IIFE
+(async () => {
+  const isDbConnected = await testDatabaseConnection();
+  if (!isDbConnected) {
+    throw new Error("Could not establish database connection");
+  }
+})();
 
-// NOTE: we changed to 6060 below to avoid Chrome's unsafe port block
+// Start the server
 const PORT = process.env.PORT ? Number(process.env.PORT) : 6060;
 httpServer.listen(PORT, () => {
   log(`Server running on port ${PORT}`);
 });
 
+// Clean up Prisma on process exit
 process.on("beforeExit", async () => {
   await prisma.$disconnect();
 });

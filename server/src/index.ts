@@ -1,14 +1,14 @@
 // server/src/index.ts
 import express from "express";
-import { prisma } from "./prisma/prisma";
-import { log } from "./src/utils/log";
-import { testDatabaseConnection } from "./src/utils/test-db";
-import { logMiddleware } from "./src/middleware/log";
-import { errorMiddleware } from "./src/middleware/error";
+import { prisma } from "../prisma/prisma";
+import { log } from "./utils/log";
+import { testDatabaseConnection } from "./utils/test-db";
+import { logMiddleware } from "./middleware/log";
+import { errorMiddleware } from "./middleware/error";
 
 // Updated route imports if filenames changed
-import diaryRoutes from "./src/routes/diary";
-import walletRoutes from "./src/routes/wallet";
+import diaryRoutes from "./routes/diary";
+import walletRoutes from "./routes/wallet";
 import { createServer } from "http";
 import { Server } from "socket.io";
 

@@ -3,7 +3,6 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
-    container_name: calendar_frontend_blue
     ports:
       - "8086:3000" # Exposes your React build on host:port 8086
     networks:
@@ -16,7 +15,6 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-      container_name: calendar_backend_blue
     # If you want the server to read from .env.dev
     ports:
       - "5002:6060" # Exposes Express on host:port 5002
@@ -33,7 +31,6 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
-    container_name: calendar_frontend_green
     ports:
       - "8087:3000" # Exposes your React build on host:port 8087
     networks:
@@ -46,7 +43,6 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-      container_name: calendar_backend_green
     ports:
       - "5001:4000"
     env_file:

@@ -1,19 +1,18 @@
-# client/Dockerfile
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package manifests first
+# Copy package files
 COPY package.json package-lock.json ./
 
+# Copy your src/index.css (and anything else the postinstall depends on)
+COPY src/index.css src/index.css
+
+# Now npm install (the postinstall => build:tw => tailwindcss -i ./src/index.css ... will succeed)
 RUN npm install
 
-# Now copy everything (including ./src/index.css)
+# Finally copy the rest
 COPY . .
-
-# Now do the build steps
-RUN npm run build:tw       # Or remove if your main build script already does it
-RUN npm run build
 
 RUN npm install -g serve
 EXPOSE 3000

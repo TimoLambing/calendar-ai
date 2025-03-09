@@ -4,9 +4,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
     ports:
-      - "8086:3000" # Exposes your React build on host:port 8086
-    networks:
-      - app-network
+      - "8086:3000"
     depends_on:
       - backend-blue
     restart: always
@@ -15,26 +13,21 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-    # If you want the server to read from .env.dev
     ports:
-      - "5002:6060" # Exposes Express on host:port 5002
+      - "5002:6060" # Not 5000 or 5001
     env_file:
       - ./server/.env.dev
     volumes:
       - uploads:/app/public/uploads
     restart: always
-    networks:
-      - app-network
-    command: node /app/src/index.ts
+    # Remove "command" so Dockerfile's CMD is used
 
   frontend-green:
     build:
       context: ./client
       dockerfile: Dockerfile
     ports:
-      - "8087:3000" # Exposes your React build on host:port 8087
-    networks:
-      - app-network
+      - "8087:3000"
     depends_on:
       - backend-green
     restart: always
@@ -44,19 +37,13 @@ services:
       context: ./server
       dockerfile: Dockerfile
     ports:
-      - "5001:4000"
+      - "5003:6060" # Use 5003 to avoid conflict
     env_file:
       - ./server/.env.dev
     volumes:
       - uploads:/app/public/uploads
     restart: always
-    networks:
-      - app-network
-    command: node /app/src/index.ts
-
-networks:
-  app-network:
-    external: true
+    # Remove "command" override
 
 volumes:
   uploads:

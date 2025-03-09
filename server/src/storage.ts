@@ -1,6 +1,6 @@
 // server/src/storage.ts
 
-import { prisma } from "../src/prisma/prisma";
+import { prisma } from "./prisma/prisma";
 
 // The storage interface is now implemented directly in the routes
 // using Prisma client. This file is kept for reference of the

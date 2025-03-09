@@ -1,6 +1,6 @@
 // server/src/index.ts
 import express from "express";
-import { prisma } from "../src/prisma/prisma";
+import { prisma } from "./prisma/prisma";
 import { log } from "./utils/log";
 import { testDatabaseConnection } from "./utils/test-db";
 import { logMiddleware } from "./middleware/log";

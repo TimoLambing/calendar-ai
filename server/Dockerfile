@@ -1,19 +1,19 @@
+# server/Dockerfile
 FROM node:20-bullseye-slim
 
 WORKDIR /app
 
-# Copy package files so Docker can cache the install layers
 COPY package.json package-lock.json ./
-
-# Copy just the Prisma schema folder
-COPY src/prisma ./src/prisma
-
-# Now do npm install (the postinstall step will succeed
-# because schema.prisma is present)
 RUN npm install
 
-# Then copy everything else
+# Copy everything else
 COPY . .
 
+# (Optional) If you want to compile from TS -> JS:
+# e.g. "build": "tsc" in package.json
+RUN npm run build
+
 EXPOSE 6060
-CMD ["npm", "start"]
+
+# Then run the compiled code
+CMD ["node", "dist/index.js"]

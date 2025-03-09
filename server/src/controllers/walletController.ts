@@ -1,7 +1,7 @@
 // server/src/controllers/walletController.ts
 
 import { Request, Response } from "express";
-import { prisma } from "../../prisma/prisma";
+import { prisma } from "../prisma/prisma";
 import { ethers } from "ethers";
 import {
   fetchEvmTransactions,

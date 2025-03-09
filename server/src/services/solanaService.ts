@@ -1,11 +1,6 @@
 /*************************************************
- * server/src/services/solanaService.ts (UPDATED)
- *
- * Purpose:
- * 1) Provide a named function that returns Solana
- *    wallet data via Helius, matching your usage.
+ * server/src/services/solanaService.ts
  *************************************************/
-
 import { config } from "../config/environment-config";
 
 /**
@@ -33,15 +28,16 @@ export async function fetchSolanaData(walletAddress: string) {
 }
 
 /**
- * parseSolanaTransaction (optional)
- * Example placeholder for Solana transaction parsing
+ * parseSolanaTransaction (example placeholder)
+ * Underscore `_userAddress` if it's never actually used
  */
-export function parseSolanaTransaction(tx: any, userAddress: string) {
+export function parseSolanaTransaction(tx: any, _userAddress: string) {
   return {
     symbol: "SOL",
     type: "UNKNOWN",
     amount: 0,
     valueUsd: 0,
     timestamp: new Date(),
+    txHash: tx.signature || null,
   };
 }

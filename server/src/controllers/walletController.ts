@@ -63,7 +63,7 @@ function parseEvmTokenTransfer(tx: any, userAddr: string) {
     symbol: tx.token_symbol || "Unknown",
     type,
     amount,
-    valueUsd: tx.value_usd || amount * (tx.usdPrice || 0), // Use token USD price if available
+    valueUsd: tx.value_usd || amount * (tx.usdPrice || 0),
     timestamp: new Date(tx.block_timestamp),
     txHash: tx.transaction_hash,
     toAddress: toAddr,
@@ -76,7 +76,7 @@ function parseEvmTokenTransfer(tx: any, userAddr: string) {
  * @param userAddr User's wallet address
  * @returns Parsed transaction object
  */
-function parseSolanaTransaction(tx: any, userAddr: string) {
+function parseSolanaTransaction(tx: any, _userAddr: string) {
   return {
     symbol: "SOL",
     type: "UNKNOWN",
@@ -100,6 +100,7 @@ async function createOrUpdateDailySnapshot(
 ) {
   const chainId =
     chain === "ethereum" ? "0x1" : chain === "base" ? "0x2105" : "solana";
+
   let rawTxs: any[] = [];
   let rawTokenTxs: any[] = [];
   let rawBalances: any[] = [];
@@ -131,7 +132,8 @@ async function createOrUpdateDailySnapshot(
         ]
       : rawTxs.map((tx) => parseSolanaTransaction(tx, address));
 
-  const coinBalances = rawBalances.map((token) => ({
+  // Fix param type for `.map()`
+  const coinBalances = rawBalances.map((token: any) => ({
     symbol: token.symbol || (chain === "solana" ? "SOL" : "ETH"),
     amount:
       parseFloat(token.balance) /
@@ -142,7 +144,11 @@ async function createOrUpdateDailySnapshot(
     thumbnail: token.thumbnail || null,
   }));
 
-  const totalValue = coinBalances.reduce((sum, c) => sum + c.valueUsd, 0);
+  const totalValue = coinBalances.reduce(
+    (sum: number, c: any) => sum + c.valueUsd,
+    0
+  );
+
   const wallet = await prisma.wallet.upsert({
     where: { address },
     update: {},
@@ -214,20 +220,21 @@ export async function dailyFullHistory(req: Request, res: Response) {
     const parsedTxs =
       chain !== "solana"
         ? await Promise.all(
-            allTxs.map((tx) =>
+            allTxs.map((tx: any) =>
               tx.value
                 ? parseEvmTransaction(tx, address, chainId as "0x1" | "0x2105")
                 : parseEvmTokenTransfer(tx, address)
             )
           )
-        : allTxs.map((tx) => parseSolanaTransaction(tx, address));
+        : allTxs.map((tx: any) => parseSolanaTransaction(tx, address));
 
     let earliestDate = parsedTxs.length
       ? parsedTxs.reduce(
-          (min, tx) => (tx.timestamp < min ? tx.timestamp : min),
+          (min: Date, tx: any) => (tx.timestamp < min ? tx.timestamp : min),
           new Date()
         )
       : new Date(Date.now() - 86400000);
+
     const now = new Date();
 
     const dailyBalances = await fetchDailyTokenBalances(
@@ -243,10 +250,12 @@ export async function dailyFullHistory(req: Request, res: Response) {
       const dayStart = new Date(currentDate);
       const dayEnd = new Date(currentDate.setDate(currentDate.getDate() + 1));
       const dayTxs = parsedTxs.filter(
-        (tx) => tx.timestamp >= dayStart && tx.timestamp < dayEnd
+        (t: any) => t.timestamp >= dayStart && t.timestamp < dayEnd
       );
+
       const found = dailyBalances.find(
-        (db) => new Date(db.date).toDateString() === dayStart.toDateString()
+        (db: any) =>
+          new Date(db.date).toDateString() === dayStart.toDateString()
       );
       const tokensForDay = found ? found.tokens : [];
       const coinBalances = tokensForDay.map((t: any) => ({
@@ -260,7 +269,11 @@ export async function dailyFullHistory(req: Request, res: Response) {
         thumbnail: t.thumbnail,
       }));
 
-      const totalValue = coinBalances.reduce((sum, cb) => sum + cb.valueUsd, 0);
+      const totalValue = coinBalances.reduce(
+        (sum: number, cb: any) => sum + cb.valueUsd,
+        0
+      );
+
       const wallet = await prisma.wallet.upsert({
         where: { address },
         update: {},
@@ -370,7 +383,7 @@ export async function getWalletSnapshots(req: Request, res: Response) {
       where: { address },
       include: {
         snapshots: {
-          where: dateFilter ? { timestamp: dateFilter } : undefined, // Only apply filter if dates exist
+          where: dateFilter ? { timestamp: dateFilter } : undefined,
           orderBy: { timestamp: "desc" },
           include: {
             balances: true,
@@ -412,6 +425,7 @@ export async function getWallet(req: Request, res: Response) {
 
     const snapArr = wallet.snapshots || [];
     const totalValue = snapArr[0]?.totalValue || 0;
+
     const calcPerformance = (arr: any[], period: "24h" | "7d" | "30d") => {
       if (arr.length < 2) return 0;
       const latest = arr[0];
@@ -451,10 +465,11 @@ export async function getWallet(req: Request, res: Response) {
 export async function followWallet(req: Request, res: Response) {
   try {
     const { address, currentUserAddress } = req.body;
-    if (!address || !currentUserAddress)
+    if (!address || !currentUserAddress) {
       return res
         .status(400)
         .json({ error: "Missing address or currentUserAddress" });
+    }
 
     await prisma.wallet.update({
       where: { address: currentUserAddress },
@@ -480,10 +495,11 @@ export async function unfollowWallet(req: Request, res: Response) {
   try {
     const { address } = req.params;
     const { currentUserAddress } = req.body;
-    if (!address || !currentUserAddress)
+    if (!address || !currentUserAddress) {
       return res
         .status(400)
         .json({ error: "Missing address or currentUserAddress" });
+    }
 
     await prisma.wallet.update({
       where: { address: currentUserAddress },
@@ -531,7 +547,7 @@ export async function getFollowedWallets(req: Request, res: Response) {
         : 0;
     };
 
-    const followedWallets = wallet.following.map((f, i) => {
+    const followedWallets = wallet.following.map((f: any, i: number) => {
       const sArr = f.snapshots || [];
       const totalValue = sArr[0]?.totalValue || 0;
       return {
@@ -563,14 +579,11 @@ export async function createOrUpdateWallet(req: Request, res: Response) {
       create: {
         address,
         createdAt: new Date(),
-        // If chainId is provided, store it in the "chains" array, and also set currentChain
         chains: chainId ? [chainId] : [],
         currentChain: chainId || null,
       },
       update: {
-        ...rest, // Spread any other fields from req.body if needed
-        // If chainId is provided, push it into the "chains" array
-        // Also update currentChain to chainId
+        ...rest,
         ...(chainId
           ? {
               chains: {
@@ -582,7 +595,7 @@ export async function createOrUpdateWallet(req: Request, res: Response) {
       },
     });
 
-    // Ensure chains array is unique (in case chainId was added multiple times).
+    // Ensure chains array is unique
     const uniqueChains = [...new Set(wallet.chains)];
     if (uniqueChains.length !== wallet.chains.length) {
       await prisma.wallet.update({
@@ -623,7 +636,6 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
       endDate
     );
 
-    // Validate date parameters
     let start = startDate ? new Date(startDate) : null;
     let end = endDate ? new Date(endDate) : null;
 
@@ -643,14 +655,13 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
     const chainId =
       chain === "ethereum" ? "0x1" : chain === "base" ? "0x2105" : "solana";
 
-    // Set default range to last 70 days if no dates provided
+    // Default range
     if (!start || !end) {
       end = new Date();
       start = new Date(end);
       start.setDate(end.getDate() - 30);
     }
 
-    // Normalize dates to start/end of day
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
 
@@ -661,7 +672,7 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
       end
     );
 
-    // Verify wallet exists
+    // Check wallet
     const wallet = await prisma.wallet.findUnique({
       where: { address },
     });
@@ -671,7 +682,7 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
         .json({ error: "Wallet not found. Please create wallet first." });
     }
 
-    // Check for existing snapshots in the date range
+    // Existing snapshots
     const existingSnapshots = await prisma.walletSnapshot.findMany({
       where: {
         walletAddress: address,
@@ -694,7 +705,7 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
       existingDates.size
     );
 
-    // Generate list of missing dates
+    // Missing dates
     const missingDates: Date[] = [];
     let currentDate = new Date(start);
     while (currentDate <= end) {
@@ -711,7 +722,6 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
       missingDates.length
     );
 
-    // If no missing dates, return early
     if (missingDates.length === 0) {
       return res.json({
         createdSnapshotsCount: 0,
@@ -719,7 +729,7 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
       });
     }
 
-    // Fetch all transactions (we'll filter later)
+    // Fetch transactions
     const allTxs =
       chain !== "solana"
         ? [
@@ -737,15 +747,14 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
     const parsedTxs =
       chain !== "solana"
         ? await Promise.all(
-            allTxs.map((tx) =>
+            allTxs.map((tx: any) =>
               tx.value
                 ? parseEvmTransaction(tx, address, chainId as "0x1" | "0x2105")
                 : parseEvmTokenTransfer(tx, address)
             )
           )
-        : allTxs.map((tx) => parseSolanaTransaction(tx, address));
+        : allTxs.map((tx: any) => parseSolanaTransaction(tx, address));
 
-    // Fetch daily balances for the specified range
     const dailyBalances = await fetchDailyTokenBalances(
       address,
       start,
@@ -755,21 +764,20 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
 
     const createdSnapshots = [];
 
-    // ADDED: retrieve Socket.IO instance from Express
     const io = req.app.get("socketio");
 
-    // Process only missing dates
     for (const dayStart of missingDates) {
       console.log("[generateWalletSnapshots] Processing date:", dayStart);
       const dayEnd = new Date(dayStart);
       dayEnd.setHours(23, 59, 59, 999);
 
       const dayTxs = parsedTxs.filter(
-        (tx) => tx.timestamp >= dayStart && tx.timestamp <= dayEnd
+        (tx: any) => tx.timestamp >= dayStart && tx.timestamp <= dayEnd
       );
 
       const foundBalance = dailyBalances.find(
-        (db) => new Date(db.date).toDateString() === dayStart.toDateString()
+        (db: any) =>
+          new Date(db.date).toDateString() === dayStart.toDateString()
       );
 
       const tokensForDay = foundBalance ? foundBalance.tokens : [];
@@ -784,10 +792,11 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
         thumbnail: token.thumbnail || null,
       }));
 
-      const totalValue = coinBalances.reduce((sum, cb) => sum + cb.valueUsd, 0);
+      const totalValue = coinBalances.reduce(
+        (sum: number, cb: any) => sum + cb.valueUsd,
+        0
+      );
 
-      // We include balances and transactions in the creation,
-      // so the client can get the full snapshot in the WebSocket event
       const snapshot = await prisma.walletSnapshot.create({
         data: {
           walletAddress: address,
@@ -802,10 +811,7 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
         },
       });
 
-      // ADDED: broadcast partial update for this day
-      // We assume the front-end joined a room with name == address
       io.to(address).emit("snapshotGenerated", snapshot);
-
       createdSnapshots.push(snapshot);
     }
 
@@ -814,7 +820,6 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
       createdSnapshots.length
     );
 
-    // Optionally emit a final "done" event
     io.to(address).emit("snapshotsGenerated", {
       walletAddress: address,
       startDate: start.toISOString(),

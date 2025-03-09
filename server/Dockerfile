@@ -1,19 +1,23 @@
-# server/Dockerfile
+# /calendar-ai/server/Dockerfile
+
 FROM node:20-bullseye-slim
 
 WORKDIR /app
 
+# 1) Copy only package.json + lock for caching
 COPY package.json package-lock.json ./
 RUN npm install
 
-# Copy everything else
+# 2) Copy the rest of the code (including src/ and .env.production, if you want it inside the container)
 COPY . .
 
-# (Optional) If you want to compile from TS -> JS:
-# e.g. "build": "tsc" in package.json
+# 3) Build the TS -> JS (this uses .env.production for anything needed at build time)
 RUN npm run build
 
+RUN pnpm prisma generate
+
+# 4) Expose the port that your server will listen on
 EXPOSE 6060
 
-# Then run the compiled code
-CMD ["node", "dist/index.js"]
+# 5) Start the compiled app, also reading .env.production at runtime
+CMD ["npm", "start"]

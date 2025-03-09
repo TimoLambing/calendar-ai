@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8086:3000"
+    networks:
+      - calendar-network
     depends_on:
       - backend-blue
     restart: always
@@ -14,13 +16,15 @@ services:
       context: ./server
       dockerfile: Dockerfile
     ports:
-      - "5002:6060" # Not 5000 or 5001
+      - "5002:6060"
     env_file:
-      - ./server/.env.dev
+      - .env.production
     volumes:
       - uploads:/app/public/uploads
     restart: always
-    # Remove "command" so Dockerfile's CMD is used
+    networks:
+      - calendar-network
+    command: node /app/index.js
 
   frontend-green:
     build:
@@ -28,6 +32,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8087:3000"
+    networks:
+      - calendar-network
     depends_on:
       - backend-green
     restart: always
@@ -37,13 +43,19 @@ services:
       context: ./server
       dockerfile: Dockerfile
     ports:
-      - "5003:6060" # Use 5003 to avoid conflict
+      - "5003:6060"
     env_file:
-      - ./server/.env.dev
+      - .env.production
     volumes:
       - uploads:/app/public/uploads
     restart: always
-    # Remove "command" override
+    networks:
+      - calendar-network
+    command: node /app/index.js
+
+networks:
+  calendar-network:
+    external: true
 
 volumes:
   uploads:

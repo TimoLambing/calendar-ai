@@ -24,7 +24,7 @@ services:
     restart: always
     networks:
       - calendar-network
-    command: node /app/index.js
+    command: node /app/dist/index.js
 
   frontend-green:
     build:
@@ -51,7 +51,7 @@ services:
     restart: always
     networks:
       - calendar-network
-    command: node /app/index.js
+    command: node /app/dist/index.js
 
 networks:
   calendar-network:

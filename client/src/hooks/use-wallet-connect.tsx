@@ -2,24 +2,30 @@
 
 import { apiRequest } from "@/lib/queryClient";
 import { usePrivy } from "@privy-io/react-auth";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useToast } from "./use-toast";
 import { useAppState } from "@/store/appState";
 
 export default function useWalletConnect(dummyWalletAddress?: string) {
   const {
-    state: { address },
+    state: { isConnected, currentWallet, connectedWallets },
     setState,
   } = useAppState();
   const { toast } = useToast();
   const { ready, authenticated, user, login, logout } = usePrivy();
-  console.log("useWalletConnect -> user", user, authenticated, ready);
-  const [isConnected, setIsConnected] = useState(false);
 
   const createOrUpdateWallet = useCallback(
-    async (address: string, chain: string) => {
+    async (wallet: { address: string; chainId: string; chainType: string }) => {
       try {
-        await apiRequest("POST", "/api/wallets", { address, chain });
+        const response = await apiRequest("POST", "/api/wallets", {
+          address: wallet.address,
+          chainId: wallet.chainId,
+          chain: wallet.chainType,
+        });
+        console.log("createOrUpdateWallet -> response", response);
+        const data = await response.json();
+        console.log("createOrUpdateWallet -> data", data);
+        return data.wallet; // Return the wallet object from the backend
       } catch (error) {
         console.error("Error creating/updating wallet:", error);
         toast({
@@ -27,10 +33,15 @@ export default function useWalletConnect(dummyWalletAddress?: string) {
           description: "Failed to register wallet with server.",
           variant: "destructive",
         });
+        throw error;
       }
     },
-    []
+    [toast]
   );
+
+  useEffect(() => {
+    console.log("useWalletConnect -> user", user, authenticated, ready);
+  }, [user, authenticated, ready]); // Only logs when these change
 
   useEffect(() => {
     if (ready && authenticated && user) {
@@ -38,25 +49,60 @@ export default function useWalletConnect(dummyWalletAddress?: string) {
         (acct) => acct.type === "wallet" && "address" in acct
       );
       if (linkedWallet && "address" in linkedWallet) {
-        const walletChain = linkedWallet.chainId?.includes("solana")
+        const walletChainType = linkedWallet.chainId?.includes("solana")
           ? "solana"
           : linkedWallet.chainId?.includes("8453")
           ? "base"
-          : "ethereum"; // Base chain ID is 8453
-        if (!isConnected) {
-          setIsConnected(true);
-          setState({
-            address: dummyWalletAddress || linkedWallet.address,
-            chain: walletChain,
-          });
-          createOrUpdateWallet(
-            dummyWalletAddress || linkedWallet.address,
-            walletChain
-          );
-        }
+          : "ethereum";
+        const walletData = {
+          address: dummyWalletAddress || linkedWallet.address,
+          chainId: linkedWallet.chainId || "eip155:1",
+          chainType: walletChainType as "ethereum" | "solana" | "base", // Type assertion to match WalletMetadata
+          connectorType: linkedWallet.connectorType || "unknown",
+          walletClientType: linkedWallet.walletClientType || "unknown",
+        };
+
+        setState((prev) => {
+          const address = walletData.address;
+          const currentChainId = walletData.chainId;
+          const needsUpdate =
+            !prev.isConnected ||
+            prev.currentWallet?.address !== address ||
+            prev.currentWallet?.chainId !== currentChainId;
+
+          if (needsUpdate) {
+            // Async update with backend response
+            createOrUpdateWallet(walletData).then((walletFromServer) => {
+              setState({
+                isConnected: true,
+                address: walletFromServer.address, // Set address explicitly
+                currentWallet: {
+                  ...walletData,
+                  chainId: walletFromServer.currentChain, // Use server's currentChain
+                },
+                connectedWallets: {
+                  ...prev.connectedWallets,
+                  [address]: [
+                    ...(prev.connectedWallets[address] || []),
+                    walletFromServer.currentChain,
+                  ].filter((v, i, a) => a.indexOf(v) === i), // Dedupe chains
+                },
+              });
+            });
+            return prev; // Return previous state while async update happens
+          }
+          return prev;
+        });
       }
     }
-  }, [ready, authenticated, user, isConnected, setState]);
+  }, [
+    ready,
+    authenticated,
+    user,
+    setState,
+    createOrUpdateWallet,
+    dummyWalletAddress,
+  ]);
 
   const connect = useCallback(async () => {
     try {
@@ -67,7 +113,7 @@ export default function useWalletConnect(dummyWalletAddress?: string) {
           variant: "default",
         });
       if (!authenticated) await login();
-      else if (!address)
+      else if (!currentWallet?.address)
         toast({
           title: "No Wallet Found",
           description: "Logged in but no wallet linked.",
@@ -76,7 +122,10 @@ export default function useWalletConnect(dummyWalletAddress?: string) {
       else
         toast({
           title: "Already Connected",
-          description: `Wallet: ${address.slice(0, 6)}...${address.slice(-4)}`,
+          description: `Wallet: ${currentWallet.address.slice(
+            0,
+            6
+          )}...${currentWallet.address.slice(-4)}`,
           variant: "default",
         });
     } catch (err) {
@@ -87,13 +136,17 @@ export default function useWalletConnect(dummyWalletAddress?: string) {
         variant: "destructive",
       });
     }
-  }, [ready, authenticated, address]);
+  }, [ready, authenticated, currentWallet, login, toast]);
 
   const disconnect = useCallback(async () => {
     try {
       await logout();
-      setIsConnected(false);
-      setState({ address: "" });
+      setState({
+        isConnected: false,
+        address: null, // Reset address
+        currentWallet: null,
+        connectedWallets: {},
+      });
       toast({
         title: "Wallet Disconnected",
         description: "You have been logged out.",
@@ -107,7 +160,12 @@ export default function useWalletConnect(dummyWalletAddress?: string) {
         variant: "destructive",
       });
     }
-  }, []);
+  }, [logout, setState, toast]);
 
-  return { isConnected, address, disconnect, connect };
+  return {
+    isConnected,
+    address: currentWallet?.address || null,
+    disconnect,
+    connect,
+  };
 }

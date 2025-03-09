@@ -555,7 +555,7 @@ export async function getFollowedWallets(req: Request, res: Response) {
  */
 export async function createOrUpdateWallet(req: Request, res: Response) {
   try {
-    const { address, chain = "ethereum", ...rest } = req.body;
+    const { address, chainId, chain, ...rest } = req.body;
     if (!address) return res.status(400).json({ error: "Address is required" });
 
     const wallet = await prisma.wallet.upsert({
@@ -563,9 +563,33 @@ export async function createOrUpdateWallet(req: Request, res: Response) {
       create: {
         address,
         createdAt: new Date(),
+        // If chainId is provided, store it in the "chains" array, and also set currentChain
+        chains: chainId ? [chainId] : [],
+        currentChain: chainId || null,
       },
-      update: { ...rest },
+      update: {
+        ...rest, // Spread any other fields from req.body if needed
+        // If chainId is provided, push it into the "chains" array
+        // Also update currentChain to chainId
+        ...(chainId
+          ? {
+              chains: {
+                push: chainId,
+              },
+              currentChain: chainId,
+            }
+          : {}),
+      },
     });
+
+    // Ensure chains array is unique (in case chainId was added multiple times).
+    const uniqueChains = [...new Set(wallet.chains)];
+    if (uniqueChains.length !== wallet.chains.length) {
+      await prisma.wallet.update({
+        where: { address },
+        data: { chains: uniqueChains },
+      });
+    }
 
     return res.json({
       wallet,
@@ -587,6 +611,17 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
     const { address } = req.params;
     const { chain = "ethereum", startDate, endDate } = req.body;
     if (!address) return res.status(400).json({ error: "Address is required" });
+
+    console.log(
+      "[generateWalletSnapshots] Request - address:",
+      address,
+      "chain:",
+      chain,
+      "startDate:",
+      startDate,
+      "endDate:",
+      endDate
+    );
 
     // Validate date parameters
     let start = startDate ? new Date(startDate) : null;
@@ -619,6 +654,13 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
 
+    console.log(
+      "[generateWalletSnapshots] Processed dates - start:",
+      start,
+      "end:",
+      end
+    );
+
     // Verify wallet exists
     const wallet = await prisma.wallet.findUnique({
       where: { address },
@@ -647,6 +689,11 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
       existingSnapshots.map((s) => s.timestamp.toDateString())
     );
 
+    console.log(
+      "[generateWalletSnapshots] Existing dates count:",
+      existingDates.size
+    );
+
     // Generate list of missing dates
     const missingDates: Date[] = [];
     let currentDate = new Date(start);
@@ -658,6 +705,11 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
       }
       currentDate.setDate(currentDate.getDate() + 1);
     }
+
+    console.log(
+      "[generateWalletSnapshots] Missing dates count:",
+      missingDates.length
+    );
 
     // If no missing dates, return early
     if (missingDates.length === 0) {
@@ -703,8 +755,12 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
 
     const createdSnapshots = [];
 
+    // ADDED: retrieve Socket.IO instance from Express
+    const io = req.app.get("socketio");
+
     // Process only missing dates
     for (const dayStart of missingDates) {
+      console.log("[generateWalletSnapshots] Processing date:", dayStart);
       const dayEnd = new Date(dayStart);
       dayEnd.setHours(23, 59, 59, 999);
 
@@ -730,6 +786,8 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
 
       const totalValue = coinBalances.reduce((sum, cb) => sum + cb.valueUsd, 0);
 
+      // We include balances and transactions in the creation,
+      // so the client can get the full snapshot in the WebSocket event
       const snapshot = await prisma.walletSnapshot.create({
         data: {
           walletAddress: address,
@@ -738,10 +796,34 @@ export async function generateWalletSnapshots(req: Request, res: Response) {
           balances: { create: coinBalances },
           transactions: { create: dayTxs },
         },
+        include: {
+          balances: true,
+          transactions: true,
+        },
       });
+
+      // ADDED: broadcast partial update for this day
+      // We assume the front-end joined a room with name == address
+      io.to(address).emit("snapshotGenerated", snapshot);
 
       createdSnapshots.push(snapshot);
     }
+
+    console.log(
+      "[generateWalletSnapshots] Created snapshots count:",
+      createdSnapshots.length
+    );
+
+    // Optionally emit a final "done" event
+    io.to(address).emit("snapshotsGenerated", {
+      walletAddress: address,
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      createdSnapshotsCount: createdSnapshots.length,
+      message: `Processed ${
+        createdSnapshots.length
+      } new snapshots from ${start.toDateString()} to ${end.toDateString()}`,
+    });
 
     return res.json({
       createdSnapshotsCount: createdSnapshots.length,

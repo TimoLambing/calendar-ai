@@ -2,11 +2,21 @@
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
+// Define the shape of a wallet's metadata
+interface WalletMetadata {
+  address: string;
+  chainId: string; // e.g., "eip155:1"
+  chainType: "ethereum" | "solana" | "base"; // Simplified chain type
+  connectorType: string; // e.g., "injected"
+  walletClientType: string; // e.g., "metamask"
+}
+
 // Define the shape of the state
 interface AppState {
-  isConnected?: boolean;
-  address?: string | null;
-  chain?: "ethereum" | "solana" | "base";
+  isConnected: boolean;
+  address: string | null; // Added to maintain compatibility
+  currentWallet: WalletMetadata | null; // Current active wallet
+  connectedWallets: Record<string, string[]>; // address -> array of chainIds
 }
 
 // Define the context type
@@ -21,10 +31,12 @@ const AppStateContext = createContext<AppStateContextType | undefined>(
 );
 
 // Create Provider component
-export const AppStateProvider = ({ children }: { children: ReactNode; }) => {
+export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<AppState>({
     isConnected: false,
-    address: null,
+    address: null, // Initialize as null
+    currentWallet: null,
+    connectedWallets: {},
   });
 
   return (

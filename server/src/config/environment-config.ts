@@ -11,7 +11,7 @@ export const config = {
   HELIUS_API_KEY: process.env.HELIUS_API_KEY!,
 
   // Server
-  PORT: process.env.PORT || 6000,
+  PORT: process.env.PORT || 6060,
 };
 
 // Validate required environment variables

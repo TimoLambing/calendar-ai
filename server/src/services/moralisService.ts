@@ -3,6 +3,7 @@
 import Moralis from "moralis";
 import { config } from "../config/environment-config";
 import { ethers } from "ethers";
+
 /**
  * Initializes Moralis with the API key if not already started.
  */
@@ -16,6 +17,7 @@ async function initializeMoralis() {
 
 /**
  * Fetches the current ETH price for a given chain.
+ * @param blockNumbers: string[] Array of block numbers
  * @param chain Chain ID ("0x1" for Ethereum, "0x2105" for Base)
  * @returns ETH price in USD
  */
@@ -26,6 +28,10 @@ async function getHistoricalEthPrices(
   const priceMap: Record<string, number> = {};
   for (const blockNumber of blockNumbers) {
     try {
+      console.log(
+        "[getHistoricalEthPrices] Fetching price for block:",
+        blockNumber
+      );
       const response = await Moralis.EvmApi.token.getTokenPrice({
         address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH as a proxy for ETH
         chain,
@@ -33,6 +39,12 @@ async function getHistoricalEthPrices(
       });
       const data = response.toJSON();
       priceMap[blockNumber] = data.usdPrice || 2100.92; // Fallback to 2100.92 if no price
+      console.log(
+        "[getHistoricalEthPrices] Success for block:",
+        blockNumber,
+        "price:",
+        priceMap[blockNumber]
+      );
     } catch (error) {
       console.error(
         `[getHistoricalEthPrices] Error for block ${blockNumber}:`,
@@ -93,7 +105,7 @@ export async function fetchEvmTransactions(
 /**
  * Fetches EVM token transfers (ERC-20) for a wallet.
  * @param walletAddress Wallet address
- * @param chain Chain ID ("0x1" for Ethereum, "0x2105" for Base)z
+ * @param chain Chain ID ("0x1" for Ethereum, "0x2105" for Base)
  * @returns Array of token transfer transactions
  */
 export async function fetchEvmTokenTransfers(
@@ -227,7 +239,7 @@ export async function fetchSolanaTransactions(walletAddress: string) {
 }
 
 /**
- * Fetches daily token balances from startDate to endDate for EVM or Solana.
+ * Fetches daily token balances from startDate to endDate for EVM or Solana with optimization.
  * @param walletAddress Wallet address
  * @param startDate Start date
  * @param endDate End date
@@ -242,14 +254,16 @@ export async function fetchDailyTokenBalances(
 ) {
   await initializeMoralis();
   console.log(
-    `[fetchDailyTokenBalances] wallet = ${walletAddress}, chain = ${chain}`
+    `[fetchDailyTokenBalances] wallet = ${walletAddress}, chain = ${chain}, startDate = ${startDate}, endDate = ${endDate}`
   );
 
   const dailyResults = [];
   let currentDate = new Date(startDate);
   currentDate.setHours(0, 0, 0, 0);
+  let lastValidBalance = null;
 
   while (currentDate <= endDate) {
+    console.log("[fetchDailyTokenBalances] Processing date:", currentDate);
     try {
       if (chain === "0x1" || chain === "0x2105") {
         const blockResponse = await Moralis.EvmApi.block.getDateToBlock({
@@ -258,6 +272,10 @@ export async function fetchDailyTokenBalances(
         });
         const blockNumber = blockResponse.raw.block;
 
+        console.log(
+          "[fetchDailyTokenBalances] Fetching balances for block:",
+          blockNumber
+        );
         const balancesResponse =
           await Moralis.EvmApi.wallets.getWalletTokenBalancesPrice({
             address: walletAddress,
@@ -266,7 +284,7 @@ export async function fetchDailyTokenBalances(
           });
         const tokensArray = balancesResponse.response.result || [];
 
-        dailyResults.push({
+        const dailyBalance = {
           date: new Date(currentDate),
           blockNumber,
           tokens: tokensArray.map((token: any) => ({
@@ -277,7 +295,16 @@ export async function fetchDailyTokenBalances(
             logo: token.logo,
             thumbnail: token.thumbnail,
           })),
-        });
+        };
+
+        dailyResults.push(dailyBalance);
+        lastValidBalance = dailyBalance; // Cache the last valid balance
+        console.log(
+          "[fetchDailyTokenBalances] Success for date:",
+          currentDate,
+          "tokens:",
+          tokensArray.length
+        );
       } else if (chain === "solana") {
         const balances = await fetchSolanaTokenBalances(walletAddress);
         dailyResults.push({
@@ -292,16 +319,52 @@ export async function fetchDailyTokenBalances(
             thumbnail: token.thumbnail,
           })),
         });
+        lastValidBalance = dailyResults[dailyResults.length - 1];
+        console.log(
+          "[fetchDailyTokenBalances] Success for Solana date:",
+          currentDate,
+          "balances:",
+          balances.length
+        );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(
         `[fetchDailyTokenBalances] Error at ${currentDate.toDateString()}:`,
         error
       );
+      if (lastValidBalance && error.details?.status === 400) {
+        // Fallback to last valid balance for unsynced blocks
+        dailyResults.push({
+          date: new Date(currentDate),
+          blockNumber: lastValidBalance.blockNumber,
+          tokens: lastValidBalance.tokens.map((token) => ({
+            ...token,
+            usdValue: token.usdValue || 0, // Preserve last known USD value
+          })),
+        });
+        console.log(
+          "[fetchDailyTokenBalances] Fallback applied for:",
+          currentDate
+        );
+      } else {
+        dailyResults.push({
+          date: new Date(currentDate),
+          blockNumber: null,
+          tokens: [],
+        });
+        console.log(
+          "[fetchDailyTokenBalances] No fallback, empty tokens for:",
+          currentDate
+        );
+      }
     }
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
+  console.log(
+    "[fetchDailyTokenBalances] Returning dailyResults length:",
+    dailyResults.length
+  );
   return dailyResults;
 }
 

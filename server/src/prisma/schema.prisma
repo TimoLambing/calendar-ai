@@ -8,16 +8,19 @@ datasource db {
 }
 
 model Wallet {
-  address   String   @id
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  diaryEntries TradingDiaryEntry[]
-  snapshots WalletSnapshot[]
-  Snapshot Snapshot[]
-  following  Wallet[] @relation("WalletFollows")
-  followedBy Wallet[] @relation("WalletFollows")
+  address       String   @id
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  chains        String[] @default([]) // Array of chainIds (e.g., ["eip155:1", "eip155:8453"])
+  currentChain  String?  // Current active chainId
+  diaryEntries  TradingDiaryEntry[]
+  snapshots     WalletSnapshot[]
+  Snapshot      Snapshot[]
+  following     Wallet[] @relation("WalletFollows")
+  followedBy    Wallet[] @relation("WalletFollows")
 }
 
+// Remaining models unchanged
 model TradingDiaryEntry {
   id             String            @id @default(cuid())
   comment        String

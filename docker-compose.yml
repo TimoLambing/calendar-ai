@@ -1,0 +1,61 @@
+services:
+  frontend-blue:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "8084:3000"
+    networks:
+      - app-network
+    depends_on:
+      - backend-blue
+    restart: always
+
+  backend-blue:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "5002:4000"
+    env_file:
+      - .env.production
+    volumes:
+      - uploads:/app/public/uploads
+    restart: always
+    networks:
+      - app-network
+    command: node /app/server.js
+
+  frontend-green:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "8085:3000"
+    networks:
+      - app-network
+    depends_on:
+      - backend-green
+    restart: always
+
+  backend-green:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "5003:4000"
+    env_file:
+      - .env.production
+    volumes:
+      - uploads:/app/public/uploads
+    restart: always
+    networks:
+      - app-network
+    command: node /app/server.js
+
+networks:
+  app-network:
+    external: true
+
+volumes:
+  uploads:

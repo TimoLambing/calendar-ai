@@ -7,7 +7,7 @@ services:
     ports:
       - "8086:3000" # Exposes your React build on host:port 8086
     networks:
-      - calendar_network
+      - app-network
     depends_on:
       - backend-blue
     restart: always
@@ -16,15 +16,18 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: calendar_backend_blue
+      container_name: calendar_backend_blue
     # If you want the server to read from .env.dev
-    env_file:
-      - ./server/.env.dev
     ports:
       - "5002:6060" # Exposes Express on host:port 5002
-    networks:
-      - calendar_network
+    env_file:
+      - ./server/.env.dev
+    volumes:
+      - uploads:/app/public/uploads
     restart: always
+    networks:
+      - app-network
+    command: node /app/src/index.ts
 
   frontend-green:
     build:
@@ -34,7 +37,7 @@ services:
     ports:
       - "8087:3000" # Exposes your React build on host:port 8087
     networks:
-      - calendar_network
+      - app-network
     depends_on:
       - backend-green
     restart: always
@@ -43,15 +46,21 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: calendar_backend_green
+      container_name: calendar_backend_green
+    ports:
+      - "5001:4000"
     env_file:
       - ./server/.env.dev
-    ports:
-      - "5003:6060" # Exposes Express on host:port 5003
-    networks:
-      - calendar_network
+    volumes:
+      - uploads:/app/public/uploads
     restart: always
+    networks:
+      - app-network
+    command: node /app/src/index.ts
 
 networks:
-  calendar_network:
-    driver: bridge
+  app-network:
+    external: true
+
+volumes:
+  uploads:

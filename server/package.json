@@ -9,6 +9,9 @@
     "build": "cross-env dotenv -e .env.production -- tsc",
     "start": "cross-env dotenv -e .env.production -- node dist/index.js"
   },
+  "prisma": {
+    "schema": "./src/prisma/schema.prisma"
+  },
   "dependencies": {
     "@prisma/client": "6.4.1",
     "date-fns": "^4.1.0",

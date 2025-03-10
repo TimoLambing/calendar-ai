@@ -20,7 +20,7 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.SOCKET_ORIGIN || "http://localhost:5000",
+    origin: process.env.SOCKET_ORIGIN || "http://localhost:3000",
     methods: ["GET", "POST"],
   },
 });

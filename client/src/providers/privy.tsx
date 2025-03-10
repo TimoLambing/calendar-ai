@@ -12,7 +12,7 @@ export default function PrivyProvider({
 }) {
   return (
     <CorePrivyProvider
-      appId={import.meta.env.VITE_PRIVY_APP_ID}
+      appId="cm7g8ol1e03hjkjjrsp9ojyzh"
       config={{
         embeddedWallets: {
           createOnLogin: "users-without-wallets",

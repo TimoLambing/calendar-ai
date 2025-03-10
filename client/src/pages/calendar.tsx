@@ -200,7 +200,7 @@ export default function Calendar() {
 
               if (!snapshot) {
                 // show loading card
-                return <LoadingCalendarCard key={dateKey} date={date} />;
+                return <LoadingCalendarCard key={dateKey} />;
               }
               return (
                 <CalendarCard

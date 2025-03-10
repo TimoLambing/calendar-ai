@@ -243,7 +243,7 @@ export function CalendarCard({
                       (t) => t.symbol === coin.symbol
                     );
                     const performance =
-                      prevDayCoin && prevDayCoin.valueUsd !== 0
+                      prevDayCoin && parseFloat(prevDayCoin.valueUsd) !== 0
                         ? ((parseFloat(coin.valueUsd.toString()) -
                             parseFloat(prevDayCoin.valueUsd)) /
                             parseFloat(prevDayCoin.valueUsd)) *
@@ -303,7 +303,7 @@ export function CalendarCard({
               <div className="space-y-4">
                 {transactions.map((tx) => {
                   const performance =
-                    tx.currentValue && tx.valueUsd !== 0
+                    tx.currentValue && parseFloat(tx.valueUsd) !== 0
                       ? ((parseFloat(tx.currentValue) -
                           parseFloat(tx.valueUsd)) /
                           parseFloat(tx.valueUsd)) *

@@ -98,7 +98,7 @@ export function JournalEntries({ date, value, valueChange, entries }: Props) {
       });
 
       // Refresh the comments for this entry
-      queryClient.invalidateQueries(["diary-comments"]);
+      queryClient.invalidateQueries({ queryKey: ["diary-comments"] });
 
       toast({
         title: "Comment Added",
@@ -157,32 +157,42 @@ export function JournalEntries({ date, value, valueChange, entries }: Props) {
                           className={cn(
                             "text-sm font-medium flex items-center gap-1",
                             parseFloat(
-                              (entry.valueChange?.toString() || valueChange?.toString() || "")
+                              entry.valueChange?.toString() ||
+                                valueChange?.toString() ||
+                                ""
                             ) > 0
                               ? "text-green-600"
                               : "text-red-600"
                           )}
                         >
                           {parseFloat(
-                            (entry.valueChange?.toString() || valueChange?.toString() || "")
+                            entry.valueChange?.toString() ||
+                              valueChange?.toString() ||
+                              ""
                           ) > 0 ? (
                             <TrendingUp className="h-4 w-4" />
                           ) : (
                             <TrendingDown className="h-4 w-4" />
                           )}
                           {parseFloat(
-                            (entry.valueChange?.toString() || valueChange?.toString() || "")
+                            entry.valueChange?.toString() ||
+                              valueChange?.toString() ||
+                              ""
                           ) > 0
                             ? "+"
                             : ""}
                           {parseFloat(
-                            (entry.valueChange?.toString() || valueChange?.toString() || "")
+                            entry.valueChange?.toString() ||
+                              valueChange?.toString() ||
+                              ""
                           ).toFixed(2)}
                           %
                           <span className="text-muted-foreground ml-2">
                             $
                             {parseFloat(
-                              (entry.portfolioValue?.toString() || value?.toString() || "0")
+                              entry.portfolioValue?.toString() ||
+                                value?.toString() ||
+                                "0"
                             ).toLocaleString()}
                           </span>
                         </div>

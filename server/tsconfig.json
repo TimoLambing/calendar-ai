@@ -1,23 +1,16 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
-    "target": "ES2022",
-    "moduleResolution": "node",
-    "lib": ["es2015", "dom"],
-    "sourceMap": true,
+    "target": "ESNext",
+    "module": "CommonJS",
     "outDir": "./dist",
-    "strict": true,
-    "strictPropertyInitialization": false,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "resolveJsonModule": true,
+    "rootDir": "./",
+    "moduleResolution": "Node",
     "esModuleInterop": true,
-    "inlineSources": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "skipLibCheck": true
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "sourceMap": true
   },
-  "include": ["./**/*"],
-  "exclude": ["./dist/**/*", "./public/**/*"]
+  "include": ["src/**/*", "prisma", "prisma"],
+  "exclude": ["node_modules", "dist"]
 }

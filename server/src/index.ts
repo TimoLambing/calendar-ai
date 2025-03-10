@@ -1,6 +1,6 @@
 // server/src/index.ts
 import express from "express";
-import { prisma } from "./prisma/prisma";
+import { prisma } from "../prisma/prisma";
 import { log } from "./utils/log";
 import { testDatabaseConnection } from "./utils/test-db";
 import { logMiddleware } from "./middleware/log";
@@ -64,7 +64,6 @@ app.set("socketio", io);
     log(`Server running on port ${PORT}`);
   });
 })();
-
 
 process.on("beforeExit", async () => {
   await prisma.$disconnect();

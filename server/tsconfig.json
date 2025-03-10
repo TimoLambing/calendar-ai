@@ -1,17 +1,17 @@
 {
   "compilerOptions": {
+    "target": "es2022",
     "module": "ESNext",
-    "target": "ES2022",
-    "moduleResolution": "node",
     "lib": ["es2015", "dom"],
     "sourceMap": true,
-    "outDir": "./dist",
+    "outDir": "./dist/src",
     "strict": true,
     "strictPropertyInitialization": false,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "inlineSources": true,
     "experimentalDecorators": true,
@@ -19,5 +19,5 @@
     "skipLibCheck": true
   },
   "include": ["./**/*"],
-  "exclude": ["./dist/**/*", "./public/**/*"]
+  "exclude": ["./dist/**/*", "./src/public/**/*"]
 }

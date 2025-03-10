@@ -1,6 +1,6 @@
 // server/src/index.ts
 import express from "express";
-import { prisma } from "../src/prisma/prisma";
+import { prisma } from "./prisma/prisma";
 import { log } from "./utils/log";
 import { testDatabaseConnection } from "./utils/test-db";
 import { logMiddleware } from "./middleware/log";
@@ -53,17 +53,18 @@ io.on("connection", (socket) => {
 // Make io accessible in controllers
 app.set("socketio", io);
 
-// Confirm DB connection
-const isDbConnected = await testDatabaseConnection();
-if (!isDbConnected) {
-  throw new Error("Could not establish database connection");
-}
+(async () => {
+  const isDbConnected = await testDatabaseConnection();
+  if (!isDbConnected) {
+    throw new Error("Could not establish database connection");
+  }
 
-// NOTE: we changed to 6060 below to avoid Chrome's unsafe port block
-const PORT = process.env.PORT ? Number(process.env.PORT) : 6060;
-httpServer.listen(PORT, () => {
-  log(`Server running on port ${PORT}`);
-});
+  const PORT = process.env.PORT ? Number(process.env.PORT) : 6060;
+  httpServer.listen(PORT, () => {
+    log(`Server running on port ${PORT}`);
+  });
+})();
+
 
 process.on("beforeExit", async () => {
   await prisma.$disconnect();

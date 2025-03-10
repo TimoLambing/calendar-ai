@@ -1,23 +1,16 @@
 {
   "compilerOptions": {
-    "target": "es2022",
-    "module": "ESNext",
-    "lib": ["es2015", "dom"],
-    "sourceMap": true,
-    "outDir": "./dist/src",
-    "strict": true,
-    "strictPropertyInitialization": false,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "target": "ESNext",
+    "module": "CommonJS",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "moduleResolution": "Node",
     "esModuleInterop": true,
-    "inlineSources": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "skipLibCheck": true
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "sourceMap": true
   },
-  "include": ["./**/*"],
-  "exclude": ["./dist/**/*", "./src/public/**/*"]
+  "include": [ "src/**/*" ],
+  "exclude": [ "node_modules", "dist" ]
 }
